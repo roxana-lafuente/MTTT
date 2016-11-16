@@ -1,58 +1,50 @@
-# !/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-##############################################################################
-#
-# PyKeylogger: TTT for Linux and Windows
-# Copyright (C) 2016 Roxana Lafuente <roxana.lafuente@gmail.com>
-#                    Miguel Lemos <miguelemosreverte@gmail.com>
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 3
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-##############################################################################
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 from gi.repository import Gdk
+from git_tools import GitWrapper
+import os
 
 class PostEditing:
 
-    def __init__(self, post_editing_source_label, post_editing_reference_label, back_button, next_button, REC_button, postEditing_file_menu_grid):
+    def __init__(self, post_editing_source_label, post_editing_reference_label, back_button, next_button, postEditing_file_menu_grid):
         self.post_editing_source = post_editing_source_label
         self.post_editing_reference = post_editing_reference_label
         self.back_button = back_button
         self.next_button = next_button
-        self.REC_button = REC_button
         self.postEditing_file_menu_grid = postEditing_file_menu_grid
+        self.lastLineChangedWas = -1
+        self.git = GitWrapper()
+        user = "miguelemosreverte"
+        passw = "Alatriste007"
+        self.git.clone_this(user, passw, "@github.com/" + user + "/YourTypicalStudentRepo.git")
 
-    def _saveChangedFromPostEditing(self):
+    def _saveToTheCloud(self):#reconstruct all cells from the table of the target column
+        modified_reference = ""
+        for index in range(0, len(self.translation_reference_text_lines)):
+            if index in self.translation_reference_text_TextViews_modified_flag:
+                modified_reference = self.translation_reference_text_TextViews_modified_flag[index]
+            else:
+                modified_reference += self.translation_reference_text_lines[index]
+
+        self.changesMadeWorthSaving = 0
+        self.postEditing_file_menu_grid.remove(self.save_post_editing_changes_button)
+
+        self.git.commitNpush(modified_reference)
+
+    def _saveChangedFromPostEditing(self, button):
         #reconstruct all cells from the table of the target column
         modified_reference = ""
         for index in range(0, len(self.translation_reference_text_lines)):
             if index in self.translation_reference_text_TextViews_modified_flag:
-                modified_reference += self.translation_reference_text_TextViews_modified_flag[index]
+                modified_reference = self.translation_reference_text_TextViews_modified_flag[index]
             else:
                 modified_reference += self.translation_reference_text_lines[index]
-        #save to file
-        text_file = open(self.post_editing_reference.get_text(), "w")
-        text_file.write(modified_reference)
-        text_file.close()
 
         self.changesMadeWorthSaving = 0
         self.postEditing_file_menu_grid.remove(self.save_post_editing_changes_button)
-    def _saveChangedFromPostEditing_event(self, button):
-        self._saveChangedFromPostEditing()
+
+        self.git.commitNpush(modified_reference)
 
     def _search_button_action(self, button, line_index):
         self._move_in_translation_table(line_index - self.translation_table_index - 1)
@@ -98,6 +90,9 @@ class PostEditing:
             self.search_and_mark(text_to_search_for, match_end, text_buffer)
 
     def cell_in_translation_table_changed(self, text_buffer_object, user_data, direction):
+        if user_data != self.lastLineChangedWas and self.lastLineChangedWas != -1:
+            self._saveToTheCloud()
+        self.lastLineChangedWas = user_data
         self.changesMadeWorthSaving += 1
         if self.changesMadeWorthSaving == 1:
             #add save button
@@ -105,10 +100,8 @@ class PostEditing:
             self.save_post_editing_changes_button.set_image(Gtk.Image(stock=Gtk.STOCK_SAVE))
             self.save_post_editing_changes_button.set_label("Save changes")
             self.save_post_editing_changes_button.show()
-            self.save_post_editing_changes_button.connect("clicked", self._saveChangedFromPostEditing_event)
+            self.save_post_editing_changes_button.connect("clicked", self._saveChangedFromPostEditing)
             self.postEditing_file_menu_grid.attach(self.save_post_editing_changes_button, 3, 0, 1 ,1)
-            if self.REC_button.get_active():
-                self._saveChangedFromPostEditing()
 
         if direction == "source":
             self.translation_source_text_TextViews_modified_flag[user_data] = text_buffer_object.get_text(text_buffer_object.get_start_iter(),text_buffer_object.get_end_iter(),True);
