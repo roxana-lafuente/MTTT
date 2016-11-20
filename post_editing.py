@@ -31,6 +31,7 @@ import os
 import difflib
 import sys
 import urlparse
+import textwrap
 
 class PostEditing:
 
@@ -45,6 +46,37 @@ class PostEditing:
         self.notebook = notebook
         self.alreadyAddedGitStatistics = False
 
+    def prepareHTML(self):
+        lines = []
+        filtered_lines = []
+        with open(self.statistics_html_filepath) as f:
+            lines = f.read().splitlines()
+        for line in lines:
+            if "<thead>" not in line and "</thead>" not in line:
+                filtered_lines.append(line)
+        #TODO filter the ugly row numbers using regex
+        #they are written in the following pattern >number<
+        #so it should be easy.
+        '''        
+        final_string = example_string
+        pat = r'.*?\>(\d)<.*'
+        #pat = r'\>(?:(\d+))\<'
+        for m in re.finditer(pat, example_string):
+            start = m.start(0) + 1
+            end = m.end(0) - 1
+            print (start, end)
+            final_string = final_string[:start] + final_string[end:]
+        '''
+        text_file = open(self.statistics_html_filepath, "w")
+        text_file.write('\n'.join(filtered_lines))
+        text_file.close()
+
+    def prepare_text_for_HTML_output(self, text):
+        text = '\n\n'.join(['\n'.join(textwrap.wrap(line, 40,
+                 break_long_words=False, replace_whitespace=False))
+                 for line in text.splitlines() if line.strip() != ''])
+        return text
+
     def calculateGitStatistics(self, filename):
         filename = self.user_local_repository_path + filename
         filename_without_extension = os.path.splitext(filename)[0]
@@ -55,11 +87,13 @@ class PostEditing:
         fromlines = open(fromfile, 'U').readlines()
         tolines = open(tofile, 'U').readlines()
 
-        diff = difflib.HtmlDiff(8,40).make_file(fromlines,tolines,fromfile,tofile)
-
-        text_file = open(self.user_local_repository_path + "/index.html", "w")
+        #diff = difflib.HtmlDiff(8,40).make_file(fromlines,tolines,fromfile,tofile)
+        diff = difflib.HtmlDiff().make_file(fromlines,tolines,fromfile,tofile)
+        self.statistics_html_filepath = self.user_local_repository_path + "/index.html"
+        text_file = open(self.statistics_html_filepath, "w")
         text_file.write(diff)
         text_file.close()
+        self.prepareHTML()
 
     def addGitStatistics(self):
         html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
@@ -97,12 +131,14 @@ class PostEditing:
         i = self.post_editing_reference.get_text().rfind('.')
         filename_without_extension = os.path.splitext(filename)[0]
         filename_extension = os.path.splitext(filename)[1]
-        text_file = open(self.user_local_repository_path + filename_without_extension + "_modified" + filename_extension, "w")
-        text_file.write(modified_reference)
-        text_file.close()
-        text_file = open(self.user_local_repository_path + filename, "w")
-        text_file.write('\n'.join(self.translation_reference_text_lines))
-        text_file.close()
+        #lets see how using closure is seen by the team... here's hope it plays out!
+        def savefile(text, filename):
+            text_file = open(filename, "w")
+            text = self.prepare_text_for_HTML_output(text)
+            text_file.write(text)
+            text_file.close()
+        savefile('\n'.join(self.translation_reference_text_lines), self.user_local_repository_path + filename)
+        savefile(modified_reference, self.user_local_repository_path + filename_without_extension + "_modified" + filename_extension)
 
         if not self.alreadyAddedGitStatistics:
             self.alreadyAddedGitStatistics = True
