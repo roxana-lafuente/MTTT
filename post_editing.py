@@ -25,16 +25,63 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 from gi.repository import Gdk
+gi.require_version('WebKit', '3.0')
+from gi.repository import WebKit
+import os
+import difflib
+import sys
+import urlparse
 
 class PostEditing:
 
-    def __init__(self, post_editing_source_label, post_editing_reference_label, back_button, next_button, REC_button, postEditing_file_menu_grid):
+    def __init__(self, post_editing_source_label, post_editing_reference_label, back_button, next_button, REC_button, notebook, postEditing_file_menu_grid, user_local_repository_path):
         self.post_editing_source = post_editing_source_label
         self.post_editing_reference = post_editing_reference_label
         self.back_button = back_button
         self.next_button = next_button
         self.REC_button = REC_button
         self.postEditing_file_menu_grid = postEditing_file_menu_grid
+        self.user_local_repository_path = user_local_repository_path
+        self.notebook = notebook
+        self.alreadyAddedGitStatistics = False
+
+    def calculateGitStatistics(self, filename):
+        filename = self.user_local_repository_path + filename
+        filename_without_extension = os.path.splitext(filename)[0]
+        filename_extension = os.path.splitext(filename)[1]
+
+        fromfile = filename
+        tofile =  filename_without_extension + "_modified" + filename_extension
+        fromlines = open(fromfile, 'U').readlines()
+        tolines = open(tofile, 'U').readlines()
+
+        diff = difflib.HtmlDiff(8,40).make_file(fromlines,tolines,fromfile,tofile)
+
+        text_file = open(self.user_local_repository_path + "/index.html", "w")
+        text_file.write(diff)
+        text_file.close()
+
+    def addGitStatistics(self):
+        html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
+        win = Gtk.Window()
+        view = WebKit.WebView()
+        view.open(html)
+        uri = self.user_local_repository_path + '/index.html'
+        uri = os.path.realpath(uri)
+        uri = urlparse.ParseResult('file', '', uri, '', '', '')
+        uri = urlparse.urlunparse(uri)
+        view.load_uri(uri)
+        win.add(view)
+        childWidget = win.get_child()
+        win.remove(childWidget)
+        win.destroy()
+
+        scrolledwindow = Gtk.ScrolledWindow()
+        scrolledwindow.set_hexpand(True)
+        scrolledwindow.set_vexpand(True)
+        scrolledwindow.add(childWidget)
+        self.notebook.append_page(scrolledwindow, Gtk.Label('Statistics'))
+        self.notebook.show_all()
 
     def _saveChangedFromPostEditing(self):
         #reconstruct all cells from the table of the target column
@@ -45,12 +92,26 @@ class PostEditing:
             else:
                 modified_reference += self.translation_reference_text_lines[index]
         #save to file
-        text_file = open(self.post_editing_reference.get_text(), "w")
+        i = self.post_editing_reference.get_text().rfind('/')
+        filename = self.post_editing_reference.get_text()[i:]
+        i = self.post_editing_reference.get_text().rfind('.')
+        filename_without_extension = os.path.splitext(filename)[0]
+        filename_extension = os.path.splitext(filename)[1]
+        text_file = open(self.user_local_repository_path + filename_without_extension + "_modified" + filename_extension, "w")
         text_file.write(modified_reference)
         text_file.close()
+        text_file = open(self.user_local_repository_path + filename, "w")
+        text_file.write('\n'.join(self.translation_reference_text_lines))
+        text_file.close()
+
+        if not self.alreadyAddedGitStatistics:
+            self.alreadyAddedGitStatistics = True
+            self.calculateGitStatistics(filename)
+            self.addGitStatistics()
 
         self.changesMadeWorthSaving = 0
         self.postEditing_file_menu_grid.remove(self.save_post_editing_changes_button)
+
     def _saveChangedFromPostEditing_event(self, button):
         self._saveChangedFromPostEditing()
 

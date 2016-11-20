@@ -53,6 +53,7 @@ from files_processing import *
 from evaluation import *
 from post_editing import PostEditing
 from constants import moses_dir_fn
+from login import *
 
 UI_INFO = """
 <ui>
@@ -99,6 +100,9 @@ class MyWindow(Gtk.Window):
                 f = open(moses_dir_fn, 'w')
                 f.write(self.moses_dir)
                 f.close()
+
+        self.user = UserLogin()
+        self.user_local_repository_path = self.user.get_user_local_repository_path()
 
         # Main title
         Gtk.Window.__init__(self, title="Translators' Training Tool")
@@ -190,6 +194,9 @@ class MyWindow(Gtk.Window):
             response = dialog.run()
             directory = entry.get_text()
             dialog.destroy()
+        '''
+        #COMMENTED SO THAT THE PROGRAMS LETS ME WORK
+        #TODO RESTORE CHANGES
         # If it is not valid, keep asking until valid or user leaves.
         if response in [Gtk.ResponseType.REJECT,
                         Gtk.ResponseType.CLOSE,
@@ -197,6 +204,13 @@ class MyWindow(Gtk.Window):
             # TODO: Show error and exit
             exit(1)
         else: # Gtk.ResponseType.ACCEPT
+            self.moses_dir = directory
+        '''
+        #this is the non-program-breaking solution to the problem
+        #is a temporary solution
+        if response not in [Gtk.ResponseType.REJECT,
+                        Gtk.ResponseType.CLOSE,
+                        Gtk.ResponseType.DELETE_EVENT]:
             self.moses_dir = directory
         return directory
 
@@ -817,7 +831,12 @@ class MyWindow(Gtk.Window):
         grid.add(term_search_frame)
 
         #binding of the buttons events to the PostEditing methods
-        self.PostEditing = PostEditing(self.post_editing_source,self.post_editing_reference, self.back_button, self.next_button, self.REC_button,self.postEditing_file_menu_grid)
+        self.PostEditing = PostEditing(self.post_editing_source,\
+            self.post_editing_reference, self.back_button, \
+            self.next_button, self.REC_button,\
+            self.notebook, \
+            self.postEditing_file_menu_grid,\
+            self.user_local_repository_path)
         self.post_editing_source.connect("changed", self.PostEditing._check_if_both_files_are_choosen_post_edition)
         self.post_editing_reference.connect("changed", self.PostEditing._check_if_both_files_are_choosen_post_edition)
         self.increase_rows_translation_table.connect("clicked", self.PostEditing._increase_translation_table_rows)
