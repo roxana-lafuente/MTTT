@@ -16,6 +16,8 @@ class UserLogin():
     def __init__(self):
         #TODO DO NOT ALLOW USER TO ACCESS THIS FOLDER (./university database)
         self.DIR_NAME = "./university database"
+        self.filepath = os.path.abspath("saved")
+        self.user = "guest"
         self.retrieve_university_database()
 
         self.users = []
@@ -27,31 +29,20 @@ class UserLogin():
         self.create_login_window()
         Gtk.main()
 
-    def search_and_mark_wrapper(self, text_buffer_object):
+    def search(self, text_buffer_object):
         text_to_search_for =  text_buffer_object.get_text()
-        line_index = 0
         for a in self.search_buttons_array:
             a.destroy()
         self.search_buttons_array[:]=[]
         if text_to_search_for != "":
             for line in self.users:
-                line_index += 1
                 if text_to_search_for in line:
-                    self.create_search_button(line, line_index)
+                    self.create_search_button(line)
+        else:
+            for line in self.users:
+                self.create_search_button(line)
 
-    def search_and_mark(self, text_to_search_for, start, text_buffer):
-        end = text_buffer.get_end_iter()
-        match = start.forward_search(text_to_search_for, 0, end)
-
-        if match != None:
-            match_start, match_end = match
-            tagtable = text_buffer.get_tag_table()
-            tag = tagtable.lookup("found")
-            if tag is None: text_buffer.create_tag("found",background="yellow"); tag = tagtable.lookup("found")
-            text_buffer.apply_tag(tag, match_start, match_end)
-            self.search_and_mark(text_to_search_for, match_end, text_buffer)
-        #self._move_in_translation_table(line_index - self.translation_table_index - 1)
-    def create_search_button (self, text, line_index):
+    def create_search_button (self, text):
         search_button = Gtk.Button()
         self.search_buttons_array.append(search_button)
         cell = Gtk.TextView()
@@ -88,25 +79,23 @@ class UserLogin():
         loginHbox1 = Gtk.HBox(homogeneous=False, spacing=1)
         loginUserL = Gtk.Label("Username:")
         self.loginUserT = Gtk.Entry()
-        self.loginUserT.connect("changed", self.search_and_mark_wrapper)
+        self.loginUserT.connect("changed", self.search)
 
 
         loginVbox.pack_start(loginHbox1, expand=False, fill = True, padding = 0)
         loginHbox1.pack_start(loginUserL, expand=False, fill = True, padding = 0)
         loginHbox1.pack_start(self.loginUserT, expand=True, fill = True, padding = 0)
 
-        evaluation_results_frame = Gtk.Frame(label="Results")
         scrolledwindow = Gtk.ScrolledWindow()
         scrolledwindow.set_hexpand(True)
         scrolledwindow.set_vexpand(True)
         self.search_buttons_table = Gtk.Table(1,1, True)
         self.search_buttons_array = []
         for line in self.users:
-            self.create_search_button(line, 1)
+            self.create_search_button(line)
         scrolledwindow.add(self.search_buttons_table)
-        evaluation_results_frame.add(scrolledwindow)
 
-        loginVbox.pack_start(evaluation_results_frame, expand=True, fill = True, padding = 0)
+        loginVbox.pack_start(scrolledwindow, expand=True, fill = True, padding = 0)
 
         self.HorizontalBox.pack_start(loginVbox, expand=True, fill = True, padding = 0)
 
