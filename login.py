@@ -36,7 +36,7 @@ class UserLogin():
         self.search_buttons_array[:]=[]
         if text_to_search_for != "":
             for line in self.users:
-                if text_to_search_for in line:
+                if text_to_search_for.upper() in line.upper():
                     self.create_search_button(line)
         else:
             for line in self.users:

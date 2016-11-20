@@ -133,20 +133,8 @@ class PostEditing:
         if text_to_search_for != "":
             for line in self.translation_reference_text_lines:
                 line_index += 1
-                if text_to_search_for in line:
+                if text_to_search_for.upper() in line.upper():
                     self.create_search_button(line, line_index)
-
-    def search_and_mark(self, text_to_search_for, start, text_buffer):
-        end = text_buffer.get_end_iter()
-        match = start.forward_search(text_to_search_for, 0, end)
-
-        if match != None:
-            match_start, match_end = match
-            tagtable = text_buffer.get_tag_table()
-            tag = tagtable.lookup("found")
-            if tag is None: text_buffer.create_tag("found",background="yellow"); tag = tagtable.lookup("found")
-            text_buffer.apply_tag(tag, match_start, match_end)
-            self.search_and_mark(text_to_search_for, match_end, text_buffer)
 
     def cell_in_translation_table_changed(self, text_buffer_object, user_data):
         self.changesMadeWorthSaving += 1
