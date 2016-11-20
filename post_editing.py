@@ -32,6 +32,7 @@ import difflib
 import sys
 import urlparse
 import textwrap
+import re
 
 class PostEditing:
 
@@ -54,21 +55,20 @@ class PostEditing:
         for line in lines:
             if "<thead>" not in line and "</thead>" not in line:
                 filtered_lines.append(line)
-        #TODO filter the ugly row numbers using regex
-        #they are written in the following pattern >number<
-        #so it should be easy.
-        '''        
-        final_string = example_string
-        pat = r'.*?\>(\d)<.*'
-        #pat = r'\>(?:(\d+))\<'
-        for m in re.finditer(pat, example_string):
-            start = m.start(0) + 1
-            end = m.end(0) - 1
-            print (start, end)
+
+        final_string = '\n'.join(filtered_lines)
+        pat = r'>(\d+)<'
+        offset = 0
+        for m in re.finditer(pat, '\n'.join(filtered_lines)):
+            start = m.start(0) + offset
+            end = m.end(0) + offset
+            #print "before " + final_string[start:end]
             final_string = final_string[:start] + final_string[end:]
-        '''
+            offset -= len (final_string[start:end])
+            #print "after " + final_string[start:end]
+
         text_file = open(self.statistics_html_filepath, "w")
-        text_file.write('\n'.join(filtered_lines))
+        text_file.write(final_string)
         text_file.close()
 
     def prepare_text_for_HTML_output(self, text):
