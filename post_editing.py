@@ -62,10 +62,8 @@ class PostEditing:
         for m in re.finditer(pat, '\n'.join(filtered_lines)):
             start = m.start(0) + offset
             end = m.end(0) + offset
-            #print "before " + final_string[start:end]
             final_string = final_string[:start] + final_string[end:]
             offset -= len (final_string[start:end])
-            #print "after " + final_string[start:end]
 
         text_file = open(self.statistics_html_filepath, "w")
         text_file.write(final_string)
@@ -194,7 +192,7 @@ class PostEditing:
             text_buffer.apply_tag(tag, match_start, match_end)
             self.search_and_mark(text_to_search_for, match_end, text_buffer)
 
-    def cell_in_translation_table_changed(self, text_buffer_object, user_data, direction):
+    def cell_in_translation_table_changed(self, text_buffer_object, user_data):
         self.changesMadeWorthSaving += 1
         if self.changesMadeWorthSaving == 1:
             #add save button
@@ -206,13 +204,14 @@ class PostEditing:
             self.postEditing_file_menu_grid.attach(self.save_post_editing_changes_button, 3, 0, 1 ,1)
             if self.REC_button.get_active():
                 self._saveChangedFromPostEditing()
-
-        if direction == "source":
-            self.translation_source_text_TextViews_modified_flag[user_data] = text_buffer_object.get_text(text_buffer_object.get_start_iter(),text_buffer_object.get_end_iter(),True);
-            self.translation_source_text_TextViews[user_data].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
-        if direction == "reference":
-            self.translation_reference_text_TextViews_modified_flag[user_data] = text_buffer_object.get_text(text_buffer_object.get_start_iter(),text_buffer_object.get_end_iter(),True);
-            self.translation_reference_text_TextViews[user_data].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
+        def fix_text(text):
+            new_line_index = text.rfind("\n")
+            if new_line_index == -1:
+                text += "\n"
+            return text
+        text = fix_text(text_buffer_object.get_text(text_buffer_object.get_start_iter(),text_buffer_object.get_end_iter(),True) )
+        self.translation_reference_text_TextViews_modified_flag[user_data] = text
+        self.translation_reference_text_TextViews[user_data].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
 
     def _fill_translation_table(self):
         if self.post_editing_source.get_text() != "" and self.post_editing_reference.get_text() != "":
@@ -290,7 +289,6 @@ class PostEditing:
                 self.translation_source_text_TextViews[index] = cell
                 if index in self.translation_source_text_TextViews_modified_flag:
                     self.translation_source_text_TextViews[index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
-                cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index, "source")
                 cell.set_right_margin(20)
                 cell.set_wrap_mode(2)#2 == Gtk.WRAP_WORD
                 cell.show()
@@ -304,7 +302,7 @@ class PostEditing:
                 self.translation_reference_text_TextViews[index] = cell
                 if index in self.translation_reference_text_TextViews_modified_flag:
                     self.translation_reference_text_TextViews[index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
-                cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index, "reference")
+                cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index)
                 cell.set_right_margin(20)
                 cell.set_wrap_mode(2)#2 == Gtk.WRAP_WORD
                 cell.show()
