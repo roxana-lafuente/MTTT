@@ -43,13 +43,13 @@ class PostEditing:
         self.postEditing_file_menu_grid = postEditing_file_menu_grid
         self.user_local_repository_path = user_local_repository_path
         self.notebook = notebook
-        self.alreadyAddedGitStatistics = False
         self.diff2html = Diff2HTML(self.user_local_repository_path)
 
     def calculateGitStatistics(self, filename):
         self.diff2html.calculateGitStatistics(filename)
 
     def addGitStatistics(self):
+        self.notebook.remove_page(5)
         html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
         win = Gtk.Window()
         view = WebKit.WebView()
@@ -68,7 +68,7 @@ class PostEditing:
         scrolledwindow.set_hexpand(True)
         scrolledwindow.set_vexpand(True)
         scrolledwindow.add(childWidget)
-        self.notebook.append_page(scrolledwindow, Gtk.Label('Statistics'))
+        self.notebook.insert_page(scrolledwindow, Gtk.Label('Statistics'), 5)
         self.notebook.show_all()
 
     def _saveChangedFromPostEditing(self):
@@ -94,10 +94,8 @@ class PostEditing:
         savefile('\n'.join(self.translation_reference_text_lines), self.user_local_repository_path + filename)
         savefile(modified_reference, self.user_local_repository_path + filename_without_extension + "_modified" + filename_extension)
 
-        if not self.alreadyAddedGitStatistics:
-            self.alreadyAddedGitStatistics = True
-            self.calculateGitStatistics(filename)
-            self.addGitStatistics()
+        self.calculateGitStatistics(filename)
+        self.addGitStatistics()
 
         self.changesMadeWorthSaving = 0
         self.postEditing_file_menu_grid.remove(self.save_post_editing_changes_button)

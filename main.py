@@ -348,8 +348,8 @@ class MyWindow(Gtk.Window):
                                     expand=True,
                                     fill=True,
                                     padding=30)
-        self.notebook.append_page(self.preparation,
-                                  Gtk.Label('Corpus preparation'))
+        self.notebook.insert_page(self.preparation,
+                                  Gtk.Label('Corpus preparation'),0)
 
     def _prepare_corpus(self, button):
         output_directory = self.output_text.get_text()
@@ -507,7 +507,7 @@ class MyWindow(Gtk.Window):
                             1)
 
         self.training.add(grid)
-        self.notebook.append_page(self.training, Gtk.Label('Training'))
+        self.notebook.insert_page(self.training, Gtk.Label('Training'),1)
 
     def _train(self, button):
         output_directory = self.output_text.get_text()
@@ -632,8 +632,8 @@ class MyWindow(Gtk.Window):
                             10)
 
         self.translation.add(grid)
-        self.notebook.append_page(self.translation,
-                                  Gtk.Label('Machine Translation'))
+        self.notebook.insert_page(self.translation,
+                                  Gtk.Label('Machine Translation'),2)
 
     def _machine_translation(self, button):
         in_file = adapt_path_for_cygwin(self.is_windows, self.mt_in_text.get_text())
@@ -759,7 +759,7 @@ class MyWindow(Gtk.Window):
 
         self.preparation.pack_start(grid, expand =True, fill =True, padding =0)
         #self.preparation.pack_start(gridBelow, expand =True, fill =True, padding =0)
-        self.notebook.append_page(self.preparation, Gtk.Label('Evaluation'))
+        self.notebook.insert_page(self.preparation, Gtk.Label('Evaluation'),3)
 
     def _evaluate(self, button):
         checkbox_indexes = [False] * 8 #checkbox_indexes["WER","PER","HTER", "GTM", "BLEU","BLEU2GRAM","BLEU3GRAM"]
@@ -879,7 +879,7 @@ class MyWindow(Gtk.Window):
 
         self.preparation.pack_start(grid, expand =True, fill =True, padding =0)
         #self.preparation.pack_start(gridBelow, expand =True, fill =True, padding =0)
-        self.notebook.append_page(self.preparation, Gtk.Label('Post Editing'))
+        self.notebook.insert_page(self.preparation, Gtk.Label('Post Editing'),4)
 
 
     def gtk_change_visuals(self, light_option = "unchanged", theme = "unchanged"):
