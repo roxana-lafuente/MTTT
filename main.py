@@ -21,6 +21,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
+
+from git import Repo
 try:
     import gi
     gi.require_version('Gtk', '3.0')
@@ -100,9 +102,13 @@ class MyWindow(Gtk.Window):
                 f.write(self.moses_dir)
                 f.close()
 
-        self.user_local_repository_path = "./saved"
+        self.repository_name = "git_repository"
+        self.saved_absolute_path = os.path.abspath("saved")
+        self.user_local_repository_path = self.saved_absolute_path + "/" + self.repository_name
+        self.saved_relative_filepath = "./saved"
         if not os.path.exists(self.user_local_repository_path):
             os.makedirs(self.user_local_repository_path)
+        self.user_local_repository = Repo.init(os.path.join(self.saved_relative_filepath, self.repository_name))
 
         # Main title
         Gtk.Window.__init__(self, title="Translators' Training Tool")
@@ -831,12 +837,14 @@ class MyWindow(Gtk.Window):
         grid.add(term_search_frame)
 
         #binding of the buttons events to the PostEditing methods
-        self.PostEditing = PostEditing(self.post_editing_source,\
-            self.post_editing_reference, self.back_button, \
-            self.next_button, self.REC_button,\
-            self.notebook, \
-            self.postEditing_file_menu_grid,\
-            self.user_local_repository_path)
+        self.PostEditing = PostEditing(self.post_editing_source,
+            self.post_editing_reference, self.back_button,
+            self.next_button, self.REC_button,
+            self.notebook,
+            self.postEditing_file_menu_grid,
+            self.saved_absolute_path,
+            self.user_local_repository_path,
+            self.user_local_repository)
         self.post_editing_source.connect("changed", self.PostEditing._check_if_both_files_are_choosen_post_edition)
         self.post_editing_reference.connect("changed", self.PostEditing._check_if_both_files_are_choosen_post_edition)
         self.increase_rows_translation_table.connect("clicked", self.PostEditing._increase_translation_table_rows)

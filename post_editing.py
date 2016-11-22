@@ -31,25 +31,42 @@ import os
 import sys
 import urlparse
 from diff2html import Diff2HTML
+from git_tools import *
 
 class PostEditing:
 
-    def __init__(self, post_editing_source_label, post_editing_reference_label, back_button, next_button, REC_button, notebook, postEditing_file_menu_grid, user_local_repository_path):
+    def __init__(self, post_editing_source_label, post_editing_reference_label, back_button, next_button, REC_button, notebook, postEditing_file_menu_grid, saved_absolute_path, user_local_repository_path, user_local_repository):
         self.post_editing_source = post_editing_source_label
         self.post_editing_reference = post_editing_reference_label
         self.back_button = back_button
         self.next_button = next_button
         self.REC_button = REC_button
         self.postEditing_file_menu_grid = postEditing_file_menu_grid
+        self.saved_absolute_path = saved_absolute_path
         self.user_local_repository_path = user_local_repository_path
+        self.user_local_repository = user_local_repository
         self.notebook = notebook
-        self.diff2html = Diff2HTML(self.user_local_repository_path)
+        self.diff2html = Diff2HTML(self.saved_absolute_path)
 
-    def calculateGitStatistics(self, filename):
+    def calculateNonGitStatistics(self, filename):
         self.diff2html.calculateGitStatistics(filename)
 
+    def calculateGitStatistics(self):
+        import subprocess
+        command = "python ./gitinspector-master/gitinspector.py " + self.user_local_repository_path + " -F html -T"
+        html_output = []
+        proc = subprocess.Popen(command, shell=True,stdout=subprocess.PIPE)
+        while True:
+          line = proc.stdout.readline()
+          if line != '': html_output.append(line)
+          else: break
+        filepath_complete = self.user_local_repository_path + "/index.html"
+        text_file = open(filepath_complete, "w")
+        text_file.write('\n'.join(html_output))
+        text_file.close()
+
     def addGitStatistics(self):
-        self.notebook.remove_page(5)
+        self.notebook.remove_page(6)
         html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
         win = Gtk.Window()
         view = WebKit.WebView()
@@ -64,22 +81,33 @@ class PostEditing:
         win.remove(childWidget)
         win.destroy()
 
+        self.notebook.insert_page(childWidget, Gtk.Label('Git Statistics'), 6)
+        self.notebook.show_all()
+
+    def addNonGitStatistics(self):
+        self.notebook.remove_page(5)
+        html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
+        win = Gtk.Window()
+        view = WebKit.WebView()
+        view.open(html)
+        uri = self.saved_absolute_path + '/index.html'
+        uri = os.path.realpath(uri)
+        uri = urlparse.ParseResult('file', '', uri, '', '', '')
+        uri = urlparse.urlunparse(uri)
+        view.load_uri(uri)
+        win.add(view)
+        childWidget = win.get_child()
+        win.remove(childWidget)
+        win.destroy()
+
         scrolledwindow = Gtk.ScrolledWindow()
         scrolledwindow.set_hexpand(True)
         scrolledwindow.set_vexpand(True)
         scrolledwindow.add(childWidget)
-        self.notebook.insert_page(scrolledwindow, Gtk.Label('Statistics'), 5)
+        self.notebook.insert_page(scrolledwindow, Gtk.Label('Non Git Statistics'), 5)
         self.notebook.show_all()
 
-    def _saveChangedFromPostEditing(self):
-        #reconstruct all cells from the table of the target column
-        modified_reference = ""
-        for index in range(0, len(self.translation_reference_text_lines)):
-            if index in self.translation_reference_text_TextViews_modified_flag:
-                modified_reference += self.translation_reference_text_TextViews_modified_flag[index]
-            else:
-                modified_reference += self.translation_reference_text_lines[index]
-        #save to file
+    def save_not_using_git(self, modified_reference):
         i = self.post_editing_reference.get_text().rfind('/')
         filename = self.post_editing_reference.get_text()[i:]
         i = self.post_editing_reference.get_text().rfind('.')
@@ -91,10 +119,32 @@ class PostEditing:
             text = self.diff2html.prepare_text_for_HTML_output(text)
             text_file.write(text)
             text_file.close()
-        savefile('\n'.join(self.translation_reference_text_lines), self.user_local_repository_path + filename)
-        savefile(modified_reference, self.user_local_repository_path + filename_without_extension + "_modified" + filename_extension)
+        savefile('\n'.join(self.translation_reference_text_lines), self.saved_absolute_path + filename)
+        savefile(modified_reference, self.saved_absolute_path + filename_without_extension + "_modified" + filename_extension)
 
-        self.calculateGitStatistics(filename)
+    def save_using_git(self, modified_reference):
+        s = self.post_editing_reference.get_text()
+        i = s.rfind('/')
+        filename = s[i:]
+        filepath_complete = self.user_local_repository_path  + filename
+        saveNCommit(self.user_local_repository, filepath_complete, modified_reference)
+
+    def _saveChangedFromPostEditing(self):
+        #reconstruct all cells from the table of the target column
+        modified_reference = ""
+        for index in range(0, len(self.translation_reference_text_lines)):
+            if index in self.translation_reference_text_TextViews_modified_flag:
+                modified_reference += self.translation_reference_text_TextViews_modified_flag[index]
+            else:
+                modified_reference += self.translation_reference_text_lines[index]
+
+        self.save_not_using_git(modified_reference)
+        string = self.post_editing_reference.get_text()
+        self.calculateNonGitStatistics(string[string.rfind('/'):])
+        self.addNonGitStatistics()
+
+        self.save_using_git(modified_reference)
+        self.calculateGitStatistics()
         self.addGitStatistics()
 
         self.changesMadeWorthSaving = 0

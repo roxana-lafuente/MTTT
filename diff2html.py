@@ -5,8 +5,8 @@ import os
 
 class Diff2HTML:
 
-    def __init__(self, user_local_repository_path):
-        self.user_local_repository_path = user_local_repository_path
+    def __init__(self, saved_absolute_path):
+        self.saved_absolute_path = saved_absolute_path
 
     def prepareHTML(self):
         lines = []
@@ -37,7 +37,7 @@ class Diff2HTML:
         return text
 
     def calculateGitStatistics(self, filename):
-        filename = self.user_local_repository_path + filename
+        filename = self.saved_absolute_path + filename
         filename_without_extension = os.path.splitext(filename)[0]
         filename_extension = os.path.splitext(filename)[1]
 
@@ -48,7 +48,7 @@ class Diff2HTML:
 
         #diff = difflib.HtmlDiff(8,40).make_file(fromlines,tolines,fromfile,tofile)
         diff = difflib.HtmlDiff().make_file(fromlines,tolines,fromfile,tofile)
-        self.statistics_html_filepath = self.user_local_repository_path + "/index.html"
+        self.statistics_html_filepath = self.saved_absolute_path + "/index.html"
         text_file = open(self.statistics_html_filepath, "w")
         text_file.write(diff)
         text_file.close()
