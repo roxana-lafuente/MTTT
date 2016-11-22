@@ -107,7 +107,7 @@ class PostEditing:
         self.notebook.insert_page(scrolledwindow, Gtk.Label('Non Git Statistics'), 5)
         self.notebook.show_all()
 
-    def save_not_using_git(self, modified_reference):
+    def save_not_using_git(self):
         i = self.post_editing_reference.get_text().rfind('/')
         filename = self.post_editing_reference.get_text()[i:]
         i = self.post_editing_reference.get_text().rfind('.')
@@ -120,30 +120,33 @@ class PostEditing:
             text_file.write(text)
             text_file.close()
         savefile('\n'.join(self.translation_reference_text_lines), self.saved_absolute_path + filename)
-        savefile(modified_reference, self.saved_absolute_path + filename_without_extension + "_modified" + filename_extension)
+        savefile('\n'.join(self.modified_references),self.saved_absolute_path + filename_without_extension + "_modified" + filename_extension)
 
-    def save_using_git(self, modified_reference):
+    def save_using_git(self):
         s = self.post_editing_reference.get_text()
         i = s.rfind('/')
         filename = s[i:]
         filepath_complete = self.user_local_repository_path  + filename
-        saveNCommit(self.user_local_repository, filepath_complete, modified_reference)
+        saveNCommit(self.user_local_repository, filepath_complete, '\n'.join(self.modified_references))
+
+    def save_using_paulas_version_of_a_version_control_system(self):
+        pass
 
     def _saveChangedFromPostEditing(self):
         #reconstruct all cells from the table of the target column
-        modified_reference = ""
+        self.modified_references =  []
         for index in range(0, len(self.translation_reference_text_lines)):
             if index in self.translation_reference_text_TextViews_modified_flag:
-                modified_reference += self.translation_reference_text_TextViews_modified_flag[index]
+                self.modified_references.append(self.translation_reference_text_TextViews_modified_flag[index])
             else:
-                modified_reference += self.translation_reference_text_lines[index]
+                self.modified_references.append(self.translation_reference_text_lines[index])
 
-        self.save_not_using_git(modified_reference)
+        self.save_not_using_git()
         string = self.post_editing_reference.get_text()
         self.calculateNonGitStatistics(string[string.rfind('/'):])
         self.addNonGitStatistics()
 
-        self.save_using_git(modified_reference)
+        self.save_using_git()
         self.calculateGitStatistics()
         self.addGitStatistics()
 
