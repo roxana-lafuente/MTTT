@@ -25,16 +25,51 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 from gi.repository import Gdk
+gi.require_version('WebKit', '3.0')
+from gi.repository import WebKit
+import os
+import sys
+import urlparse
+from diff2html import Diff2HTML
 
 class PostEditing:
 
-    def __init__(self, post_editing_source_label, post_editing_reference_label, back_button, next_button, REC_button, postEditing_file_menu_grid):
+    def __init__(self, post_editing_source_label, post_editing_reference_label, back_button, next_button, REC_button, notebook, postEditing_file_menu_grid, user_local_repository_path):
         self.post_editing_source = post_editing_source_label
         self.post_editing_reference = post_editing_reference_label
         self.back_button = back_button
         self.next_button = next_button
         self.REC_button = REC_button
         self.postEditing_file_menu_grid = postEditing_file_menu_grid
+        self.user_local_repository_path = user_local_repository_path
+        self.notebook = notebook
+        self.diff2html = Diff2HTML(self.user_local_repository_path)
+
+    def calculateGitStatistics(self, filename):
+        self.diff2html.calculateGitStatistics(filename)
+
+    def addGitStatistics(self):
+        self.notebook.remove_page(5)
+        html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
+        win = Gtk.Window()
+        view = WebKit.WebView()
+        view.open(html)
+        uri = self.user_local_repository_path + '/index.html'
+        uri = os.path.realpath(uri)
+        uri = urlparse.ParseResult('file', '', uri, '', '', '')
+        uri = urlparse.urlunparse(uri)
+        view.load_uri(uri)
+        win.add(view)
+        childWidget = win.get_child()
+        win.remove(childWidget)
+        win.destroy()
+
+        scrolledwindow = Gtk.ScrolledWindow()
+        scrolledwindow.set_hexpand(True)
+        scrolledwindow.set_vexpand(True)
+        scrolledwindow.add(childWidget)
+        self.notebook.insert_page(scrolledwindow, Gtk.Label('Statistics'), 5)
+        self.notebook.show_all()
 
     def _saveChangedFromPostEditing(self):
         #reconstruct all cells from the table of the target column
@@ -45,12 +80,26 @@ class PostEditing:
             else:
                 modified_reference += self.translation_reference_text_lines[index]
         #save to file
-        text_file = open(self.post_editing_reference.get_text(), "w")
-        text_file.write(modified_reference)
-        text_file.close()
+        i = self.post_editing_reference.get_text().rfind('/')
+        filename = self.post_editing_reference.get_text()[i:]
+        i = self.post_editing_reference.get_text().rfind('.')
+        filename_without_extension = os.path.splitext(filename)[0]
+        filename_extension = os.path.splitext(filename)[1]
+        #lets see how using closure is seen by the team... here's hope it plays out!
+        def savefile(text, filename):
+            text_file = open(filename, "w")
+            text = self.diff2html.prepare_text_for_HTML_output(text)
+            text_file.write(text)
+            text_file.close()
+        savefile('\n'.join(self.translation_reference_text_lines), self.user_local_repository_path + filename)
+        savefile(modified_reference, self.user_local_repository_path + filename_without_extension + "_modified" + filename_extension)
+
+        self.calculateGitStatistics(filename)
+        self.addGitStatistics()
 
         self.changesMadeWorthSaving = 0
         self.postEditing_file_menu_grid.remove(self.save_post_editing_changes_button)
+
     def _saveChangedFromPostEditing_event(self, button):
         self._saveChangedFromPostEditing()
 
@@ -82,22 +131,10 @@ class PostEditing:
         if text_to_search_for != "":
             for line in self.translation_reference_text_lines:
                 line_index += 1
-                if text_to_search_for in line:
+                if text_to_search_for.upper() in line.upper():
                     self.create_search_button(line, line_index)
 
-    def search_and_mark(self, text_to_search_for, start, text_buffer):
-        end = text_buffer.get_end_iter()
-        match = start.forward_search(text_to_search_for, 0, end)
-
-        if match != None:
-            match_start, match_end = match
-            tagtable = text_buffer.get_tag_table()
-            tag = tagtable.lookup("found")
-            if tag is None: text_buffer.create_tag("found",background="yellow"); tag = tagtable.lookup("found")
-            text_buffer.apply_tag(tag, match_start, match_end)
-            self.search_and_mark(text_to_search_for, match_end, text_buffer)
-
-    def cell_in_translation_table_changed(self, text_buffer_object, user_data, direction):
+    def cell_in_translation_table_changed(self, text_buffer_object, user_data):
         self.changesMadeWorthSaving += 1
         if self.changesMadeWorthSaving == 1:
             #add save button
@@ -109,13 +146,14 @@ class PostEditing:
             self.postEditing_file_menu_grid.attach(self.save_post_editing_changes_button, 3, 0, 1 ,1)
             if self.REC_button.get_active():
                 self._saveChangedFromPostEditing()
-
-        if direction == "source":
-            self.translation_source_text_TextViews_modified_flag[user_data] = text_buffer_object.get_text(text_buffer_object.get_start_iter(),text_buffer_object.get_end_iter(),True);
-            self.translation_source_text_TextViews[user_data].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
-        if direction == "reference":
-            self.translation_reference_text_TextViews_modified_flag[user_data] = text_buffer_object.get_text(text_buffer_object.get_start_iter(),text_buffer_object.get_end_iter(),True);
-            self.translation_reference_text_TextViews[user_data].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
+        def fix_text(text):
+            new_line_index = text.rfind("\n")
+            if new_line_index == -1:
+                text += "\n"
+            return text
+        text = fix_text(text_buffer_object.get_text(text_buffer_object.get_start_iter(),text_buffer_object.get_end_iter(),True) )
+        self.translation_reference_text_TextViews_modified_flag[user_data] = text
+        self.translation_reference_text_TextViews[user_data].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
 
     def _fill_translation_table(self):
         if self.post_editing_source.get_text() != "" and self.post_editing_reference.get_text() != "":
@@ -193,7 +231,6 @@ class PostEditing:
                 self.translation_source_text_TextViews[index] = cell
                 if index in self.translation_source_text_TextViews_modified_flag:
                     self.translation_source_text_TextViews[index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
-                cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index, "source")
                 cell.set_right_margin(20)
                 cell.set_wrap_mode(2)#2 == Gtk.WRAP_WORD
                 cell.show()
@@ -207,7 +244,7 @@ class PostEditing:
                 self.translation_reference_text_TextViews[index] = cell
                 if index in self.translation_reference_text_TextViews_modified_flag:
                     self.translation_reference_text_TextViews[index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
-                cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index, "reference")
+                cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index)
                 cell.set_right_margin(20)
                 cell.set_wrap_mode(2)#2 == Gtk.WRAP_WORD
                 cell.show()
