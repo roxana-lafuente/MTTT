@@ -30,6 +30,7 @@ from gi.repository import WebKit
 import os
 import sys
 import urlparse
+import time
 from diff2html import Diff2HTML
 from git_tools import *
 
@@ -47,7 +48,13 @@ class PostEditing:
         self.user_local_repository = user_local_repository
         self.notebook = notebook
         self.diff2html = Diff2HTML(self.saved_absolute_path)
+        self.modified_references =  []
+        self.saved_modified_references = []
 
+        log_filepath = self.saved_absolute_path + '/paulaslog.json'
+        #TODO remove the following line, it destroys the last saved logs
+        os.remove(log_filepath)
+        
     def calculateNonGitStatistics(self, filename):
         self.diff2html.calculateGitStatistics(filename)
 
@@ -130,11 +137,35 @@ class PostEditing:
         saveNCommit(self.user_local_repository, filepath_complete, '\n'.join(self.modified_references))
 
     def save_using_paulas_version_of_a_version_control_system(self):
-        pass
+        import json
+        paulaslog = {}
+        log_filepath = self.saved_absolute_path + '/paulaslog.json'
+
+        if not os.path.exists(log_filepath):
+            open(log_filepath, 'w').close()
+        else:
+            with open(log_filepath) as json_data:
+                paulaslog= json.load(json_data)
+
+
+        for index in range(0, len(self.translation_reference_text_lines)):
+            if index in self.translation_reference_text_TextViews_modified_flag:
+                modified_reference = self.translation_reference_text_TextViews_modified_flag[index]
+                if modified_reference not in self.saved_modified_references:
+                    self.saved_modified_references.append(modified_reference)
+                    if self.last_change_timestamp not in paulaslog:
+                        paulaslog[self.last_change_timestamp] = {}
+                    paulaslog[self.last_change_timestamp][index] = modified_reference
+        print "Just saved the following to paula's log:"
+        print str(paulaslog)
+        print "--------------"
+
+        with open(log_filepath, 'w') as outfile:
+            json.dump(paulaslog, outfile)
 
     def _saveChangedFromPostEditing(self):
+        self.last_change_timestamp = int(time.time() * 1000)
         #reconstruct all cells from the table of the target column
-        self.modified_references =  []
         for index in range(0, len(self.translation_reference_text_lines)):
             if index in self.translation_reference_text_TextViews_modified_flag:
                 self.modified_references.append(self.translation_reference_text_TextViews_modified_flag[index])
@@ -149,6 +180,8 @@ class PostEditing:
         self.save_using_git()
         self.calculateGitStatistics()
         self.addGitStatistics()
+
+        self.save_using_paulas_version_of_a_version_control_system()
 
         self.changesMadeWorthSaving = 0
         self.postEditing_file_menu_grid.remove(self.save_post_editing_changes_button)
