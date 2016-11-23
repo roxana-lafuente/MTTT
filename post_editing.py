@@ -53,8 +53,9 @@ class PostEditing:
 
         log_filepath = self.saved_absolute_path + '/paulaslog.json'
         #TODO remove the following line, it destroys the last saved logs
-        os.remove(log_filepath)
-        
+        if os.path.exists(log_filepath):
+            os.remove(log_filepath)
+
     def calculateNonGitStatistics(self, filename):
         self.diff2html.calculateGitStatistics(filename)
 
