@@ -36,12 +36,7 @@ from git_tools import *
 
 class PostEditing:
 
-    def __init__(self, stupid_button, post_editing_source_label, post_editing_reference_label, notebook, postEditing_file_menu_grid, saved_absolute_path, user_local_repository_path, user_local_repository):
-
-        #TODO Replace the following line by using a completly different frame for the post-editing buttons
-        #so that a reference to this button is not needed
-        self.post_editing_reference_button = stupid_button
-
+    def __init__(self, post_editing_source_label, post_editing_reference_label, notebook, postEditing_file_menu_grid, saved_absolute_path, user_local_repository_path, user_local_repository):
         self.post_editing_source = post_editing_source_label
         self.post_editing_reference = post_editing_reference_label
         self.postEditing_file_menu_grid = postEditing_file_menu_grid
@@ -66,9 +61,13 @@ class PostEditing:
 
     def make_table_interface(self, table = "translation_table"):
         self.back_button = Gtk.Button("Back")
+        self.tables_contents[table][6].add(self.back_button)
+        '''
         if table == "diff_table":self.tables_contents[table][6].add(self.back_button)
         elif table == "translation_table":
             self.tables_contents[table][6].attach_next_to(self.back_button, self.post_editing_reference_button, Gtk.PositionType.BOTTOM, 1, 10)
+
+        '''
         self.next_button = Gtk.Button("Next")
         self.tables_contents[table][6].attach_next_to(self.next_button, self.back_button, Gtk.PositionType.RIGHT, 1, 10)
         self.reduce_rows_translation_table = Gtk.Button("- rows")
