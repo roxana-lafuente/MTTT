@@ -309,9 +309,10 @@ class PostEditing:
         self.source_text_views,
         self.reference_text_views,
         self.rows_ammount,
-        self.menu_grid) = range(7)
-        #source_text_lines, reference_text_lines, table_index, source_text_views, reference_text_views, rows_ammount, menu_grid
-        self.tables_contents[table] = [[],[],0,{},{}, 0, None]
+        self.menu_grid,
+        self.initialized) = range(8)
+        #source_text_lines, reference_text_lines, table_index, source_text_views, reference_text_views, rows_ammount, menu_grid, initialized
+        self.tables_contents[table] = [[],[],0,{},{}, 0, None, False]
         self.tables_contents[table][self.rows_ammount] = 5
 
         if table == "translation_table":
@@ -367,8 +368,8 @@ class PostEditing:
         self.tables[table].attach(cell, column_index, column_index+1, 1+row_index, 1+1+row_index)
 
     def _move_in_table(self, ammount_of_lines_to_move, table = "translation_table", feel_free_to_change_the_buttons = True):
-        #TODO move the following statement elsewhere
-        if len(self.tables_contents[table][self.source_text_lines]) == 0:
+        if not self.tables_contents[table][self.initialized]:
+            self.tables_contents[table][self.initialized] = True
             self._fill_table(table)
         #clean the translation_table
         self._clean_translation_table(table)
