@@ -166,7 +166,7 @@ class PostEditing:
         #lets see how using closure is seen by the team... here's hope it plays out!
         def savefile(text, filename):
             text_file = open(filename, "w")
-            text = self.diff2html.prepare_text_for_HTML_output(text)
+            #text = self.diff2html.prepare_text_for_HTML_output(text)
             text_file.write(text)
             text_file.close()
         saved_origin_filepath, saved_reference_filepath = self.get_saved_origin_and_reference_filepaths()
