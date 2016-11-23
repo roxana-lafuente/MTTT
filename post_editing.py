@@ -390,18 +390,18 @@ class PostEditing:
             else:
                 self.back_button.set_visible(True)
 
-    def _back_in_table(self, button, table = "translation_table"):
+    def _back_in_table(self, button, table):
         self._move_in_table(-1, table)
-    def _next_in_table(self, button, table = "translation_table"):
+    def _next_in_table(self, button, table):
         self._move_in_table(+1,table)
-    def _increase_table_rows(self, button, table = "translation_table"):
+    def _increase_table_rows(self, button, table):
         self.tables_contents[table][self.rows_ammount] += 1
         self.update_table(table)
-    def _reduce_table_rows(self, button, table = "translation_table"):
+    def _reduce_table_rows(self, button, table):
         if self.tables_contents[table][self.rows_ammount] > 1:
             self.tables_contents[table][self.rows_ammount] -= 1
             self.update_table(table)
-    def update_table(self, table = "translation_table", to_change_the_buttons_or_not = False):
+    def update_table(self, table, to_change_the_buttons_or_not = False):
         self._move_in_table(+1,table, to_change_the_buttons_or_not)
         self._move_in_table(-1,table, to_change_the_buttons_or_not)
     def _check_if_both_files_are_choosen_post_edition(self,object):
