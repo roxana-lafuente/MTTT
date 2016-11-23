@@ -280,7 +280,7 @@ class PostEditing:
         self.translation_reference_text_TextViews_modified_flag[user_data] = text
         self.tables_contents["translation_table"][4][user_data].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
 
-    def _fill_table(self, table = "translation_table"):
+    def _fill_table(self, table):
         origin = ""
         reference = ""
         if table == "translation_table":
@@ -302,7 +302,7 @@ class PostEditing:
                         self.tables_contents[table][self.reference_text_lines].append(line)
 
 
-    def _table_initializing(self, table = "translation_table"):
+    def _table_initializing(self, table):
         (self.source_text_lines,
         self.reference_text_lines,
         self.table_index,
@@ -335,7 +335,7 @@ class PostEditing:
 
         return self.tables[table]
 
-    def _clean_translation_table(self, table = "translation_table"):
+    def _clean_translation_table(self, table):
         table = self.tables[table]
         children = table.get_children();
         for element in children:
