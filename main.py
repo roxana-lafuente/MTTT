@@ -786,7 +786,7 @@ class MyWindow(Gtk.Window):
 
         #  Post Editing Frame.
         self.postEditing_file_menu_grid = Gtk.Grid()
-        texts_menu_frame = Gtk.Frame(label="Evaluation")
+        texts_menu_frame = Gtk.Frame(label="Post-Editing")
         # Post Editing : Source Text Picker
         post_editing_source_label = Gtk.Label("Select source file")
         self.postEditing_file_menu_grid.add(post_editing_source_label)
@@ -809,19 +809,6 @@ class MyWindow(Gtk.Window):
         self.post_editing_reference_button.connect("clicked", self._on_file_clicked, self.post_editing_reference)
         self.postEditing_file_menu_grid.attach_next_to(self.post_editing_reference_button, self.post_editing_source_button, Gtk.PositionType.BOTTOM, 1, 10)
 
-        # Post Editing : Fill the table button
-        self.translation_table_index = 0
-        self.back_button = Gtk.Button("Back")
-        self.postEditing_file_menu_grid.attach_next_to(self.back_button, self.post_editing_reference_button, Gtk.PositionType.BOTTOM, 1, 10)
-        self.next_button = Gtk.Button("Next")
-        self.postEditing_file_menu_grid.attach_next_to(self.next_button, self.back_button, Gtk.PositionType.RIGHT, 1, 10)
-        self.reduce_rows_translation_table = Gtk.Button("- rows")
-        self.postEditing_file_menu_grid.attach_next_to(self.reduce_rows_translation_table, self.back_button, Gtk.PositionType.BOTTOM, 1, 10)
-        self.increase_rows_translation_table = Gtk.Button("+ rows")
-        self.postEditing_file_menu_grid.attach_next_to(self.increase_rows_translation_table, self.next_button, Gtk.PositionType.BOTTOM, 1, 10)
-        self.REC_button = Gtk.CheckButton.new_with_label("REC")
-        self.postEditing_file_menu_grid.attach_next_to(self.REC_button, self.next_button, Gtk.PositionType.RIGHT, 1, 10)
-        self.postEditing_file_menu_grid.set_column_spacing(10)
 
 
         texts_menu_frame.add(self.postEditing_file_menu_grid)
@@ -837,24 +824,18 @@ class MyWindow(Gtk.Window):
         grid.add(term_search_frame)
 
         #binding of the buttons events to the PostEditing methods
-        self.PostEditing = PostEditing(self.post_editing_source,
-            self.post_editing_reference, self.back_button,
-            self.next_button, self.REC_button,
+        self.PostEditing = PostEditing(
+            self.post_editing_reference_button,
+            self.post_editing_source,
+            self.post_editing_reference,
             self.notebook,
             self.postEditing_file_menu_grid,
             self.saved_absolute_path,
             self.user_local_repository_path,
             self.user_local_repository)
-        self.post_editing_source.connect("changed", self.PostEditing._check_if_both_files_are_choosen_post_edition)
-        self.post_editing_reference.connect("changed", self.PostEditing._check_if_both_files_are_choosen_post_edition)
-        self.increase_rows_translation_table.connect("clicked", self.PostEditing._increase_translation_table_rows)
-        self.reduce_rows_translation_table.connect("clicked", self.PostEditing._reduce_translation_table_rows)
-        self.back_button.connect("clicked", self.PostEditing._back_in_translation_table)
-        self.next_button.connect("clicked", self.PostEditing._next_in_translation_table)
         term_search_entry.connect("changed", self.PostEditing.search_and_mark_wrapper)
-        self.PostEditing._translation_table_initializing()
 
-        self.translation_table = self.PostEditing.translation_table
+        self.translation_table = self.PostEditing.tables["translation_table"]
 
         # Post Editing: Results
         gridBelow = Gtk.Grid()
