@@ -287,6 +287,8 @@ class PostEditing:
 
         tagtable = text_buffer.get_tag_table()
         tag = tagtable.lookup(color)
+        if color == "red": color = "#F8CBCB"
+        if color == "green": color = "#A6F3A6"
         if tag is None: text_buffer.create_tag(color,background=color); tag = tagtable.lookup(color)
         text_buffer.apply_tag(tag, match_start, match_end)
 
