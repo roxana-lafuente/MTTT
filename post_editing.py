@@ -61,22 +61,16 @@ class PostEditing:
 
     def make_table_interface(self, table = "translation_table"):
         self.back_button = Gtk.Button("Back")
-        self.tables_contents[table][6].add(self.back_button)
-        '''
-        if table == "diff_table":self.tables_contents[table][6].add(self.back_button)
-        elif table == "translation_table":
-            self.tables_contents[table][6].attach_next_to(self.back_button, self.post_editing_reference_button, Gtk.PositionType.BOTTOM, 1, 10)
-
-        '''
+        self.tables_contents[table][self.menu_grid].add(self.back_button)
         self.next_button = Gtk.Button("Next")
-        self.tables_contents[table][6].attach_next_to(self.next_button, self.back_button, Gtk.PositionType.RIGHT, 1, 10)
+        self.tables_contents[table][self.menu_grid].attach_next_to(self.next_button, self.back_button, Gtk.PositionType.RIGHT, 1, 10)
         self.reduce_rows_translation_table = Gtk.Button("- rows")
-        self.tables_contents[table][6].attach_next_to(self.reduce_rows_translation_table, self.back_button, Gtk.PositionType.BOTTOM, 1, 10)
+        self.tables_contents[table][self.menu_grid].attach_next_to(self.reduce_rows_translation_table, self.back_button, Gtk.PositionType.BOTTOM, 1, 10)
         self.increase_rows_translation_table = Gtk.Button("+ rows")
-        self.tables_contents[table][6].attach_next_to(self.increase_rows_translation_table, self.next_button, Gtk.PositionType.BOTTOM, 1, 10)
+        self.tables_contents[table][self.menu_grid].attach_next_to(self.increase_rows_translation_table, self.next_button, Gtk.PositionType.BOTTOM, 1, 10)
         self.REC_button = Gtk.CheckButton.new_with_label("REC")
-        self.tables_contents[table][6].attach_next_to(self.REC_button, self.next_button, Gtk.PositionType.RIGHT, 1, 10)
-        self.tables_contents[table][6].set_column_spacing(10)
+        self.tables_contents[table][self.menu_grid].attach_next_to(self.REC_button, self.next_button, Gtk.PositionType.RIGHT, 1, 10)
+        self.tables_contents[table][self.menu_grid].set_column_spacing(10)
 
         self.post_editing_source.connect("changed", self._check_if_both_files_are_choosen_post_edition)
         self.post_editing_reference.connect("changed", self._check_if_both_files_are_choosen_post_edition)
@@ -146,7 +140,7 @@ class PostEditing:
         self.make_table_interface("diff_table")
         term_search_frame.add(self.tables_contents["diff_table"][6])
         grid.add(term_search_frame)
-        #grid.add(self.tables_contents[table][5])
+        #grid.add(self.tables_contents[table][self.rows_ammount])
         grid.set_row_spacing(1)
         grid.set_column_spacing(20)
 
@@ -240,7 +234,7 @@ class PostEditing:
         self._saveChangedFromPostEditing()
 
     def _search_button_action(self, button, line_index, table = "translation_table"):
-        self._move_in_table(line_index - self.tables_contents[table][2] - 1, table)
+        self._move_in_table(line_index - self.tables_contents[table][self.table_index] - 1, table)
 
     def create_search_button (self, text, line_index):
         search_button = Gtk.Button()
@@ -283,6 +277,7 @@ class PostEditing:
             if self.REC_button.get_active():
                 self._saveChangedFromPostEditing()
         def fix_text(text):
+            #in case the user deleted the endline character at the end of the text segment
             new_line_index = text.rfind("\n")
             if new_line_index == -1:
                 text += "\n"
@@ -304,18 +299,24 @@ class PostEditing:
                 for line in fp:
                     line = unicode(line, 'iso8859-15')
                     if line != '\n':
-                       self.tables_contents[table][0].append(line)
+                       self.tables_contents[table][self.source_text_lines].append(line)
 
             with open(reference) as fp:
                 for line in fp:
                     line = unicode(line, 'iso8859-15')
                     if line != '\n':
-                        self.tables_contents[table][1].append(line)
+                        self.tables_contents[table][self.reference_text_lines].append(line)
 
 
     def _table_initializing(self, table = "translation_table"):
-
-        #source text lines, reference text lines, table index, source_text_views, reference_text_views, rows_ammount, menu_grid
+        (self.source_text_lines,
+        self.reference_text_lines,
+        self.table_index,
+        self.source_text_views,
+        self.reference_text_views,
+        self.rows_ammount,
+        self.menu_grid) = range(7)
+        #source_text_lines, reference_text_lines, table_index, source_text_views, reference_text_views, rows_ammount, menu_grid
         self.tables_contents[table] = [[],[],0,{},{}, 0, None]
 
 
@@ -323,10 +324,10 @@ class PostEditing:
             self.translation_source_text_TextViews_modified_flag = {}
             self.translation_reference_text_TextViews_modified_flag = {}
             self.search_buttons_array = []
-            self.tables_contents[table][5] = 5
-            self.tables_contents[table][6] = self.postEditing_file_menu_grid
+            self.tables_contents[table][self.rows_ammount] = 5
+            self.tables_contents[table][self.menu_grid] = self.postEditing_file_menu_grid
         elif table == "diff_table":
-            self.tables_contents[table][6] = Gtk.Grid()
+            self.tables_contents[table][self.menu_grid] = Gtk.Grid()
 
         translation_table = Gtk.Table(1,1, True)
         self.tables[table] = translation_table
@@ -358,27 +359,27 @@ class PostEditing:
 
     def _move_in_table(self, ammount_of_lines_to_move, table = "translation_table", feel_free_to_change_the_buttons = True):
         #TODO move the following statement elsewhere
-        if len(self.tables_contents[table][0]) == 0:
+        if len(self.tables_contents[table][self.source_text_lines]) == 0:
             self._fill_table(table)
         #clean the translation_table
         self._clean_translation_table(table)
-        if ammount_of_lines_to_move > 0 or self.tables_contents[table][2] > 0:
-             self.tables_contents[table][2] += ammount_of_lines_to_move
-        if self.tables_contents[table][2] == 0:
+        if ammount_of_lines_to_move > 0 or self.tables_contents[table][self.table_index] > 0:
+             self.tables_contents[table][self.table_index] += ammount_of_lines_to_move
+        if self.tables_contents[table][self.table_index] == 0:
             self.back_button.set_visible(False)
         self.changesMadeWorthSaving = 0
-        for y in range (0,self.tables_contents[table][5]):
+        for y in range (0,self.tables_contents[table][self.rows_ammount]):
             try:
                 cell = Gtk.TextView()
                 cell.set_wrap_mode(True)
                 cell.set_editable(False)
                 cell.set_cursor_visible(False)
                 cellTextBuffer = cell.get_buffer()
-                index = y + self.tables_contents[table][2]
-                cellTextBuffer.set_text(self.tables_contents[table][0][index])
-                self.tables_contents[table][3][index] = cell
+                index = y + self.tables_contents[table][self.table_index]
+                cellTextBuffer.set_text(self.tables_contents[table][self.source_text_lines][index])
+                self.tables_contents[table][self.source_text_views][index] = cell
                 if index in self.translation_source_text_TextViews_modified_flag:
-                    self.tables_contents[table][3][index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
+                    self.tables_contents[table][self.source_text_views][index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
                 cell.set_right_margin(20)
                 cell.set_wrap_mode(2)#2 == Gtk.WRAP_WORD
                 cell.show()
@@ -387,11 +388,11 @@ class PostEditing:
                 cell = Gtk.TextView()
                 cell.set_wrap_mode(True)
                 cellTextBuffer = cell.get_buffer()
-                index = y + self.tables_contents[table][2]
-                cellTextBuffer.set_text(self.tables_contents[table][1][index])
-                self.tables_contents[table][4][index] = cell
+                index = y + self.tables_contents[table][self.table_index]
+                cellTextBuffer.set_text(self.tables_contents[table][self.reference_text_lines][index])
+                self.tables_contents[table][self.reference_text_views][index] = cell
                 if index in self.translation_reference_text_TextViews_modified_flag:
-                    self.tables_contents[table][4][index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
+                    self.tables_contents[table][self.reference_text_views][index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
                 cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index)
                 cell.set_right_margin(20)
                 cell.set_wrap_mode(2)#2 == Gtk.WRAP_WORD
@@ -410,11 +411,11 @@ class PostEditing:
     def _next_in_table(self, button, table = "translation_table"):
         self._move_in_table(+1,table)
     def _increase_table_rows(self, button, table = "translation_table"):
-        self.tables_contents[table][5] += 1
+        self.tables_contents[table][self.rows_ammount] += 1
         self.update_table(table)
     def _reduce_table_rows(self, button, table = "translation_table"):
-        if self.tables_contents[table][5] > 1:
-            self.tables_contents[table][5] -= 1
+        if self.tables_contents[table][self.rows_ammount] > 1:
+            self.tables_contents[table][self.rows_ammount] -= 1
             self.update_table(table)
     def update_table(self, table = "translation_table", to_change_the_buttons_or_not = False):
         self._move_in_table(+1,table, to_change_the_buttons_or_not)
