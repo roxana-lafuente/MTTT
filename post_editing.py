@@ -32,6 +32,7 @@ import sys
 import urlparse
 import time
 from git_tools import *
+import difflib
 
 class PostEditing:
 
@@ -51,6 +52,7 @@ class PostEditing:
         self._table_initializing("translation_table")
         self.make_table_interface("translation_table")
         self.changesMadeWorthSaving = 0
+        self.did_init_tags = False
 
         log_filepath = self.saved_absolute_path + '/paulaslog.json'
         #TODO remove the following line, it destroys the last saved logs
@@ -61,7 +63,7 @@ class PostEditing:
         self.back_button = Gtk.Button("Back")
         self.tables_contents[table][self.menu_grid].add(self.back_button)
         self.next_button = Gtk.Button("Next")
-        self.tables_contents[table][self.menu_grid].attach_next_to(self.next_button, self.back_button, Gtk.PositionType.RIGHT, 1, 10)
+        self.tables_contents[table][self.menu_grid].attach_next_to(self.next_button, self.back_button, Gtk.PositionType.RIGHT, 1, 1)
         self.reduce_rows_translation_table = Gtk.Button("- rows")
         self.tables_contents[table][self.menu_grid].attach_next_to(self.reduce_rows_translation_table, self.back_button, Gtk.PositionType.BOTTOM, 1, 10)
         self.increase_rows_translation_table = Gtk.Button("+ rows")
@@ -165,8 +167,8 @@ class PostEditing:
             text_file.write(text)
             text_file.close()
         saved_origin_filepath, saved_reference_filepath = self.get_saved_origin_and_reference_filepaths()
-        savefile('\n'.join(self.tables_contents["translation_table"][1]), saved_origin_filepath)
-        savefile('\n'.join(self.modified_references),saved_reference_filepath)
+        savefile('\n'.join(self.tables_contents["translation_table"][self.source_text_lines]), saved_origin_filepath)
+        savefile('\n'.join(self.tables_contents["translation_table"][self.reference_text_lines]),saved_reference_filepath)
 
     def save_using_git(self):
         s = self.post_editing_reference.get_text()
@@ -224,6 +226,8 @@ class PostEditing:
 
         self.tables_contents["translation_table"][6].remove(self.save_post_editing_changes_button)
 
+        self.changesMadeWorthSaving = 0
+
     def _saveChangedFromPostEditing_event(self, button):
         self._saveChangedFromPostEditing()
 
@@ -257,8 +261,36 @@ class PostEditing:
                 line_index += 1
                 if text_to_search_for.upper() in line.upper():
                     self.create_search_button(line, line_index)
+    '''
+    def search_and_mark(self, match_start,end, text_buffer):
+            end = text_buffer.get_end_iter()
+            match = start.forward_search(text_to_search_for, 0, end)
 
-    def cell_in_translation_table_changed(self, text_buffer_object, user_data):
+            if match != None:
+                match_start, match_end = match
+                tagtable = text_buffer.get_tag_table()
+                tag = tagtable.lookup("found")
+                if tag is None: text_buffer.create_tag("found",background="yellow"); tag = tagtable.lookup("found")
+                text_buffer.apply_tag(tag, match_start, match_end)
+                self.search_and_mark(text_to_search_for, match_end, text_buffer)
+    '''
+    def init_tags(self,text_buffer):
+        self.did_init_tags = True
+        text_buffer.create_tag("red",background="red")
+        text_buffer.create_tag("green",background="green")
+        text_buffer.create_tag("yellow",background="yellow")
+
+    def apply_tag(self, start,end, text_buffer, color = "yellow"):
+        if not self.did_init_tags: self.init_tags(text_buffer)
+        match_start = text_buffer.get_iter_at_offset(start)
+        match_end = text_buffer.get_iter_at_offset(end)
+
+        tagtable = text_buffer.get_tag_table()
+        tag = tagtable.lookup(color)
+        if tag is None: text_buffer.create_tag(color,background=color); tag = tagtable.lookup(color)
+        text_buffer.apply_tag(tag, match_start, match_end)
+
+    def cell_in_translation_table_changed(self, text_buffer_object, segment_index):
         self.changesMadeWorthSaving += 1
         if self.changesMadeWorthSaving == 1:
             #add save button
@@ -277,8 +309,9 @@ class PostEditing:
                 text += "\n"
             return text
         text = fix_text(text_buffer_object.get_text(text_buffer_object.get_start_iter(),text_buffer_object.get_end_iter(),True) )
-        self.translation_reference_text_TextViews_modified_flag[user_data] = text
-        self.tables_contents["translation_table"][4][user_data].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
+        self.tables_contents["translation_table"][self.reference_text_lines][segment_index] = text
+        self.translation_reference_text_TextViews_modified_flag[segment_index] = text
+        self.tables_contents["translation_table"][self.reference_text_views][segment_index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
 
     def _fill_table(self, table):
         origin = ""
@@ -335,7 +368,7 @@ class PostEditing:
 
         return self.tables[table]
 
-    def _clean_translation_table(self, table):
+    def _clean_table(self, table):
         table = self.tables[table]
         children = table.get_children();
         for element in children:
@@ -350,45 +383,78 @@ class PostEditing:
         target_label.show()
         table.attach(target_label, 2, 2+1, 0, 1+0)
 
-    def create_cell(self, table, text, column_index, row_index, editable):
+    def create_cell(self, table, text_line_type, text_view_type, row_index, editable):
         cell = Gtk.TextView()
-        cell.set_wrap_mode(True)
         cell.set_editable(editable)
         cell.set_cursor_visible(False)
         cellTextBuffer = cell.get_buffer()
         index = row_index + self.tables_contents[table][self.table_index]
-        cellTextBuffer.set_text(self.tables_contents[table][self.source_text_lines][index])
-        self.tables_contents[table][self.reference_text_views][index] = cell
-        if index in self.translation_reference_text_TextViews_modified_flag:
-            self.tables_contents[table][self.reference_text_views][index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
-        cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index)
+        cellTextBuffer.set_text(self.tables_contents[table][text_line_type][index])
+        self.tables_contents[table][text_view_type][index] = cell
+        if table == "translation_table":
+            cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index)
+            if index in self.translation_reference_text_TextViews_modified_flag:
+                self.tables_contents[table][self.reference_text_views][index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
+
         cell.set_right_margin(20)
         cell.set_wrap_mode(2)#2 == Gtk.WRAP_WORD
         cell.show()
-        self.tables[table].attach(cell, column_index, column_index+1, 1+row_index, 1+1+row_index)
+        self.tables[table].attach(cell, text_line_type + 1, text_line_type + 2, row_index + 1, row_index + 2)
 
-    def _move_in_table(self, ammount_of_lines_to_move, table = "translation_table", feel_free_to_change_the_buttons = True):
+    def get_insertion_and_deletions(self, original, modified):
+        s = difflib.SequenceMatcher(None, original, modified)
+        insertions = []
+        deletions = []
+        for tag, i1, i2, j1, j2 in s.get_opcodes():
+            if tag == "insert":insertions.append((j1,j2))
+            if tag == "delete":deletions.append((i1,i2))
+        return (insertions,deletions)
+
+
+    def create_cells(self, table):
+        for row_index in range (0,self.tables_contents[table][self.rows_ammount]):
+            try:
+                self.create_cell(table, self.source_text_lines, self.source_text_views, row_index, False)
+                self.create_cell(table, self.reference_text_lines, self.reference_text_views, row_index, True)
+            except IndexError:
+                self.next_button.set_visible(False)
+
+    def create_diff(self,table, text_buffers_array, color):
+        for row_index in range (0,self.tables_contents[table][self.rows_ammount]):
+            try:
+                index = row_index + self.tables_contents[table][self.table_index]
+                text_buffer = text_buffers_array[index].get_buffer()
+
+                original = self.tables_contents["translation_table"][self.source_text_lines][index]
+                modified = self.tables_contents["translation_table"][self.reference_text_lines][index]
+                insertions,deletions = self.get_insertion_and_deletions(original,modified)
+
+                if color == "green": start = insertions[0][0]; end = insertions[0][1]
+                if color == "red": start = deletions[0][0]; end = deletions[0][1]
+                self.apply_tag( start, end,text_buffer, color)
+            except IndexError: pass
+
+    def create_diffs(self, table):
+        self.create_diff(table,self.tables_contents[table][self.source_text_views],"red")
+        self.create_diff(table,self.tables_contents[table][self.reference_text_views],"green")
+
+    def _move_in_table(self, ammount_of_lines_to_move, table, feel_free_to_change_the_buttons = True):
         if not self.tables_contents[table][self.initialized]:
             self.tables_contents[table][self.initialized] = True
             self._fill_table(table)
-        #clean the translation_table
-        self._clean_translation_table(table)
+        self._clean_table(table)
         if ammount_of_lines_to_move > 0 or self.tables_contents[table][self.table_index] > 0:
              self.tables_contents[table][self.table_index] += ammount_of_lines_to_move
         if self.tables_contents[table][self.table_index] == 0:
             self.back_button.set_visible(False)
-        self.changesMadeWorthSaving = 0
-        for row_index in range (0,self.tables_contents[table][self.rows_ammount]):
-            try:
-                self.create_cell(table, self.source_text_views, 1, row_index, False)
-                self.create_cell(table, self.reference_text_views, 2, row_index, True)
-            except IndexError:
-                self.next_button.set_visible(False)
-        if feel_free_to_change_the_buttons:
-            if ammount_of_lines_to_move == -1:
-                self.next_button.set_visible(True)
-            else:
-                self.back_button.set_visible(True)
+        self.create_cells(table)
+        if table == "diff_table":
+            self.create_diffs(table)
+        if (feel_free_to_change_the_buttons
+            and ammount_of_lines_to_move == -1):
+            self.next_button.set_visible(True)
+        else:
+            self.back_button.set_visible(True)
 
     def _back_in_table(self, button, table):
         self._move_in_table(-1, table)
