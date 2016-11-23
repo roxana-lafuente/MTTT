@@ -31,7 +31,6 @@ import os
 import sys
 import urlparse
 import time
-from diff2html import Diff2HTML
 from git_tools import *
 
 class PostEditing:
@@ -44,7 +43,6 @@ class PostEditing:
         self.user_local_repository_path = user_local_repository_path
         self.user_local_repository = user_local_repository
         self.notebook = notebook
-        self.diff2html = Diff2HTML(self.saved_absolute_path)
         self.modified_references =  []
         self.saved_modified_references = []
         self.tables = {}
@@ -78,9 +76,6 @@ class PostEditing:
         self.reduce_rows_translation_table.connect("clicked", self._reduce_table_rows,table)
         self.back_button.connect("clicked", self._back_in_table,table)
         self.next_button.connect("clicked", self._next_in_table,table)
-
-    def calculateNonGitStatistics(self, filename):
-        self.diff2html.calculateGitStatistics(filename)
 
     def calculateGitStatistics(self):
         import subprocess
@@ -219,7 +214,6 @@ class PostEditing:
 
         self.save_not_using_git()
         string = self.post_editing_reference.get_text()
-        self.calculateNonGitStatistics(string[string.rfind('/'):])
         self.addNonGitStatistics()
 
         #self.save_using_git()
@@ -321,7 +315,6 @@ class PostEditing:
         self.tables_contents[table][self.rows_ammount] = 5
 
         if table == "translation_table":
-            self.translation_source_text_TextViews_modified_flag = {}
             self.translation_reference_text_TextViews_modified_flag = {}
             self.search_buttons_array = []
             self.tables_contents[table][self.menu_grid] = self.postEditing_file_menu_grid
@@ -356,6 +349,23 @@ class PostEditing:
         target_label.show()
         table.attach(target_label, 2, 2+1, 0, 1+0)
 
+    def create_cell(self, table, text, column_index, row_index, editable):
+        cell = Gtk.TextView()
+        cell.set_wrap_mode(True)
+        cell.set_editable(editable)
+        cell.set_cursor_visible(False)
+        cellTextBuffer = cell.get_buffer()
+        index = row_index + self.tables_contents[table][self.table_index]
+        cellTextBuffer.set_text(self.tables_contents[table][self.source_text_lines][index])
+        self.tables_contents[table][self.reference_text_views][index] = cell
+        if index in self.translation_reference_text_TextViews_modified_flag:
+            self.tables_contents[table][self.reference_text_views][index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
+        cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index)
+        cell.set_right_margin(20)
+        cell.set_wrap_mode(2)#2 == Gtk.WRAP_WORD
+        cell.show()
+        self.tables[table].attach(cell, column_index, column_index+1, 1+row_index, 1+1+row_index)
+
     def _move_in_table(self, ammount_of_lines_to_move, table = "translation_table", feel_free_to_change_the_buttons = True):
         #TODO move the following statement elsewhere
         if len(self.tables_contents[table][self.source_text_lines]) == 0:
@@ -367,36 +377,10 @@ class PostEditing:
         if self.tables_contents[table][self.table_index] == 0:
             self.back_button.set_visible(False)
         self.changesMadeWorthSaving = 0
-        for y in range (0,self.tables_contents[table][self.rows_ammount]):
+        for row_index in range (0,self.tables_contents[table][self.rows_ammount]):
             try:
-                cell = Gtk.TextView()
-                cell.set_wrap_mode(True)
-                cell.set_editable(False)
-                cell.set_cursor_visible(False)
-                cellTextBuffer = cell.get_buffer()
-                index = y + self.tables_contents[table][self.table_index]
-                cellTextBuffer.set_text(self.tables_contents[table][self.source_text_lines][index])
-                self.tables_contents[table][self.source_text_views][index] = cell
-                if index in self.translation_source_text_TextViews_modified_flag:
-                    self.tables_contents[table][self.source_text_views][index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
-                cell.set_right_margin(20)
-                cell.set_wrap_mode(2)#2 == Gtk.WRAP_WORD
-                cell.show()
-                self.tables[table].attach(cell, 1, 1+1, 1+y, 1+1+y)
-
-                cell = Gtk.TextView()
-                cell.set_wrap_mode(True)
-                cellTextBuffer = cell.get_buffer()
-                index = y + self.tables_contents[table][self.table_index]
-                cellTextBuffer.set_text(self.tables_contents[table][self.reference_text_lines][index])
-                self.tables_contents[table][self.reference_text_views][index] = cell
-                if index in self.translation_reference_text_TextViews_modified_flag:
-                    self.tables_contents[table][self.reference_text_views][index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
-                cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index)
-                cell.set_right_margin(20)
-                cell.set_wrap_mode(2)#2 == Gtk.WRAP_WORD
-                cell.show()
-                self.tables[table].attach(cell, 2, 2+1, 1+y, 1+1+y)
+                self.create_cell(table, self.source_text_views, 1, row_index, False)
+                self.create_cell(table, self.reference_text_views, 2, row_index, True)
             except IndexError:
                 self.next_button.set_visible(False)
         if feel_free_to_change_the_buttons:
