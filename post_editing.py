@@ -318,13 +318,12 @@ class PostEditing:
         self.menu_grid) = range(7)
         #source_text_lines, reference_text_lines, table_index, source_text_views, reference_text_views, rows_ammount, menu_grid
         self.tables_contents[table] = [[],[],0,{},{}, 0, None]
-
+        self.tables_contents[table][self.rows_ammount] = 5
 
         if table == "translation_table":
             self.translation_source_text_TextViews_modified_flag = {}
             self.translation_reference_text_TextViews_modified_flag = {}
             self.search_buttons_array = []
-            self.tables_contents[table][self.rows_ammount] = 5
             self.tables_contents[table][self.menu_grid] = self.postEditing_file_menu_grid
         elif table == "diff_table":
             self.tables_contents[table][self.menu_grid] = Gtk.Grid()
