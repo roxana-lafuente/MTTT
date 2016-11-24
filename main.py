@@ -147,8 +147,15 @@ class MyWindow(Gtk.Window):
                        "/scripts/training/train-model.perl",
                        "/bin/moses"
                       ]
+        if self.is_windows:
+            moses_files = [f.replace("/", "\\")
+                           for f in moses_files]
+            moses_files = [f + ".exe"
+                           for f in moses_files
+                           if "/bin" in f]
         is_valid = True
         for mfile in moses_files:
+            print "os.path.isfile(" + directory + mfile + ")", os.path.isfile(directory + mfile)
             is_valid = is_valid and os.path.isfile(directory + mfile)
         return is_valid
 
