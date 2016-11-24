@@ -542,11 +542,15 @@ class MyWindow(Gtk.Window):
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE,
                                         shell=True)
+                proc.wait()
                 (out, err) = proc.communicate()
                 if out != "":
                     output += out
                 elif err != "":
                     output += err
+                # TODO: Read training.out and add it to the program output
+                # with open("ROXANNE", "r") as f:
+	               #  out += f.read()
 
             # Set output to the output label.
             self.training_output_label.set_text(output)

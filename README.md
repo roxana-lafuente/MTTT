@@ -26,7 +26,7 @@ TTT is an under development post-editing suite which aims to improve the transla
 ### Dependencies
 - MOSES (Install with "--with-mm" and "--install-scripts" flags)
 - Cygwin (only on Windows)
-- GTK 3.0
+- GTK 3.0 (only on Linuxs)
 
 
 
