@@ -312,6 +312,10 @@ class PostEditing:
             return text
         text = fix_text(text_buffer_object.get_text(text_buffer_object.get_start_iter(),text_buffer_object.get_end_iter(),True) )
         self.tables_contents["translation_table"][self.reference_text_lines][segment_index] = text
+        try:
+            self.tables_contents["diff_table"][self.reference_text_lines][segment_index] = text
+        except:pass
+        
         self.translation_reference_text_TextViews_modified_flag[segment_index] = text
         self.tables_contents["translation_table"][self.reference_text_views][segment_index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
 
