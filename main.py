@@ -155,7 +155,6 @@ class MyWindow(Gtk.Window):
                            if "/bin" in f]
         is_valid = True
         for mfile in moses_files:
-            print "os.path.isfile(" + directory + mfile + ")", os.path.isfile(directory + mfile)
             is_valid = is_valid and os.path.isfile(directory + mfile)
         return is_valid
 
