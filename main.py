@@ -748,7 +748,6 @@ class MyWindow(Gtk.Window):
         grid.add(buttons_frame)
 
         # Evaluation: Results
-        gridBelow = Gtk.Grid()
         inside_grid = Gtk.Grid()
         evaluation_results_frame = Gtk.Frame(label="Results")
         scrolledwindow = Gtk.ScrolledWindow()
@@ -764,7 +763,6 @@ class MyWindow(Gtk.Window):
         grid.attach(evaluation_results_frame, 0, 1, 3, 1)
 
         self.preparation.pack_start(grid, expand =True, fill =True, padding =0)
-        #self.preparation.pack_start(gridBelow, expand =True, fill =True, padding =0)
         self.notebook.insert_page(self.preparation, Gtk.Label('Evaluation'),3)
 
     def _evaluate(self, button):
@@ -811,70 +809,27 @@ class MyWindow(Gtk.Window):
 
 
 
-        self.postEditing_file_translation_table_interface_grid = Gtk.Grid()
-        texts_menu_frame.add(self.postEditing_file_menu_grid)
-
-        texts_menu_frame2 = Gtk.Frame(label="Post-Editing")
-        texts_menu_frame2.add(self.postEditing_file_translation_table_interface_grid)
-
-        grid.add(texts_menu_frame)
-        grid.attach_next_to(texts_menu_frame2, texts_menu_frame, Gtk.PositionType.RIGHT, 1, 1)
-
+        grid.add(self.postEditing_file_menu_grid)
         grid.set_row_spacing(1)
         grid.set_column_spacing(20)
 
 
-        # Post Editing: Term Search
-        term_search_frame = Gtk.Frame(label="Term Search")
-        term_search_entry = Gtk.Entry()
-        term_search_frame.add(term_search_entry)
-        grid.add(term_search_frame)
 
         #binding of the buttons events to the PostEditing methods
         self.PostEditing = PostEditing(
-            self.post_editing_source,
-            self.post_editing_reference,
-            self.notebook,
-            self.postEditing_file_translation_table_interface_grid,
-            self.saved_absolute_path,
-            self.user_local_repository_path,
-            self.user_local_repository)
-        term_search_entry.connect("changed", self.PostEditing.search_and_mark_wrapper)
-
-        self.translation_table = self.PostEditing.tables["translation_table"]
-
-        # Post Editing: Results
-        gridBelow = Gtk.Grid()
-        inside_grid = Gtk.Grid()
-        evaluation_results_frame = Gtk.Frame(label="Results")
-        scrolledwindow = Gtk.ScrolledWindow()
-        scrolledwindow.set_hexpand(True)
-        scrolledwindow.set_vexpand(True)
+            self.post_editing_source,#so that it can read the source file
+            self.post_editing_reference,#so that it can read the reference file
+            self.notebook,#so that it can add the diff tab when needed
+            grid,#so that it can add search entry and table
+            self.saved_absolute_path,#so that it can save the files on the ./saved directory
+            self.user_local_repository_path,#so that it can save git repositories
+            self.user_local_repository)#so that it can use the local git repository
 
 
 
-        scrolledwindow.add(self.PostEditing.search_buttons_table)
-        evaluation_results_frame.add(scrolledwindow)
-        grid.attach_next_to(evaluation_results_frame, term_search_frame, Gtk.PositionType.BOTTOM, 2, 1)
 
-        # Post Editing: Table
-        gridBelow = Gtk.Grid()
-        inside_grid = Gtk.Grid()
-        evaluation_results_frame = Gtk.Frame()
-
-
-        scrolledwindow = Gtk.ScrolledWindow()
-        scrolledwindow.set_hexpand(True)
-        scrolledwindow.set_vexpand(True)
-        scrolledwindow.add(self.translation_table)
-        evaluation_results_frame.add(scrolledwindow)
-
-        grid.attach(evaluation_results_frame, 0, 1, 2, 1)
-
-        #grid.attach_next_to(evaluation_results_frame, texts_menu_frame, Gtk.PositionType.BOTTOM, 1, 1)
 
         self.preparation.pack_start(grid, expand =True, fill =True, padding =0)
-        #self.preparation.pack_start(gridBelow, expand =True, fill =True, padding =0)
         self.notebook.insert_page(self.preparation, Gtk.Label('Post Editing'),4)
 
 
