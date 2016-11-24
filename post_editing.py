@@ -65,11 +65,9 @@ class PostEditing:
         self.next_button = Gtk.Button("Next")
         self.tables_contents[table][self.menu_grid].attach_next_to(self.next_button, self.back_button, Gtk.PositionType.RIGHT, 1, 1)
         self.reduce_rows_translation_table = Gtk.Button("- rows")
-        self.tables_contents[table][self.menu_grid].attach_next_to(self.reduce_rows_translation_table, self.back_button, Gtk.PositionType.BOTTOM, 1, 10)
+        self.tables_contents[table][self.menu_grid].attach_next_to(self.reduce_rows_translation_table, self.back_button, Gtk.PositionType.TOP, 1, 10)
         self.increase_rows_translation_table = Gtk.Button("+ rows")
-        self.tables_contents[table][self.menu_grid].attach_next_to(self.increase_rows_translation_table, self.next_button, Gtk.PositionType.BOTTOM, 1, 10)
-        self.REC_button = Gtk.CheckButton.new_with_label("REC")
-        self.tables_contents[table][self.menu_grid].attach_next_to(self.REC_button, self.next_button, Gtk.PositionType.RIGHT, 1, 10)
+        self.tables_contents[table][self.menu_grid].attach_next_to(self.increase_rows_translation_table, self.next_button, Gtk.PositionType.TOP, 1, 10)
         self.tables_contents[table][self.menu_grid].set_column_spacing(10)
 
         self.post_editing_source.connect("changed", self._check_if_both_files_are_choosen_post_edition)
@@ -78,6 +76,11 @@ class PostEditing:
         self.reduce_rows_translation_table.connect("clicked", self._reduce_table_rows,table)
         self.back_button.connect("clicked", self._back_in_table,table)
         self.next_button.connect("clicked", self._next_in_table,table)
+
+        if table == "translation_table":
+            self.REC_button = Gtk.CheckButton.new_with_label("REC")
+            self.tables_contents[table][self.menu_grid].attach_next_to(self.REC_button, self.next_button, Gtk.PositionType.RIGHT, 1, 10)
+
 
     def calculateGitStatistics(self):
         import subprocess
@@ -261,27 +264,8 @@ class PostEditing:
                 line_index += 1
                 if text_to_search_for.upper() in line.upper():
                     self.create_search_button(line, line_index)
-    '''
-    def search_and_mark(self, match_start,end, text_buffer):
-            end = text_buffer.get_end_iter()
-            match = start.forward_search(text_to_search_for, 0, end)
-
-            if match != None:
-                match_start, match_end = match
-                tagtable = text_buffer.get_tag_table()
-                tag = tagtable.lookup("found")
-                if tag is None: text_buffer.create_tag("found",background="yellow"); tag = tagtable.lookup("found")
-                text_buffer.apply_tag(tag, match_start, match_end)
-                self.search_and_mark(text_to_search_for, match_end, text_buffer)
-    '''
-    def init_tags(self,text_buffer):
-        self.did_init_tags = True
-        text_buffer.create_tag("red",background="red")
-        text_buffer.create_tag("green",background="green")
-        text_buffer.create_tag("yellow",background="yellow")
 
     def apply_tag(self, start,end, text_buffer, color = "yellow"):
-        if not self.did_init_tags: self.init_tags(text_buffer)
         match_start = text_buffer.get_iter_at_offset(start)
         match_end = text_buffer.get_iter_at_offset(end)
 
@@ -315,7 +299,7 @@ class PostEditing:
         try:
             self.tables_contents["diff_table"][self.reference_text_lines][segment_index] = text
         except:pass
-        
+
         self.translation_reference_text_TextViews_modified_flag[segment_index] = text
         self.tables_contents["translation_table"][self.reference_text_views][segment_index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
 
