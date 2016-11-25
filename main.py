@@ -789,7 +789,7 @@ class MyWindow(Gtk.Window):
         post_editing_source_label = Gtk.Label("Select source file")
         self.postEditing_file_menu_grid.add(post_editing_source_label)
         self.post_editing_source = Gtk.Entry()
-        self.post_editing_source.set_text("/home/migue/Desktop/TTT/README.md")
+        self.post_editing_source.set_text("")
         self.post_editing_source.set_editable(False)
         self.postEditing_file_menu_grid.add(self.post_editing_source)
         self.post_editing_source_button = Gtk.Button("Choose File")
@@ -800,7 +800,7 @@ class MyWindow(Gtk.Window):
         post_editing_reference_label = Gtk.Label("Select MT file")
         self.postEditing_file_menu_grid.attach_next_to(post_editing_reference_label, post_editing_source_label, Gtk.PositionType.BOTTOM, 1, 10)
         self.post_editing_reference = Gtk.Entry()
-        self.post_editing_reference.set_text("/home/migue/Desktop/TTT/README.md")
+        self.post_editing_reference.set_text("")
         self.post_editing_reference.set_editable(False)
         self.postEditing_file_menu_grid.attach_next_to(self.post_editing_reference, self.post_editing_source, Gtk.PositionType.BOTTOM, 1, 10)
         self.post_editing_reference_button = Gtk.Button("Choose File")
@@ -820,10 +820,7 @@ class MyWindow(Gtk.Window):
             self.post_editing_source,#so that it can read the source file
             self.post_editing_reference,#so that it can read the reference file
             self.notebook,#so that it can add the diff tab when needed
-            grid,#so that it can add search entry and table
-            self.saved_absolute_path,#so that it can save the files on the ./saved directory
-            self.user_local_repository_path,#so that it can save git repositories
-            self.user_local_repository)#so that it can use the local git repository
+            grid)#so that it can add search entry and table
 
 
 

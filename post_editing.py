@@ -31,36 +31,24 @@ import os
 import sys
 import urlparse
 import time
-from git_tools import *
 import difflib
 from table import Table
 
 class PostEditing:
 
-    def __init__(self, post_editing_source_label, post_editing_reference_label, notebook, grid, saved_absolute_path, user_local_repository_path, user_local_repository):
+    def __init__(self, post_editing_source_label, post_editing_reference_label, notebook, grid):
         self.post_editing_source = post_editing_source_label
         self.post_editing_reference = post_editing_reference_label
         self.translation_tab_grid = grid
-        self.saved_absolute_path = saved_absolute_path
-        self.user_local_repository_path = user_local_repository_path
-        self.user_local_repository = user_local_repository
         self.notebook = notebook
         self.modified_references =  []
         self.saved_modified_references = []
-        self.did_init_tags = False
 
         self.tables = {}
 
-        i = self.post_editing_reference.get_text().rfind('/')
-        filename = self.post_editing_reference.get_text()[i:]
-        i = self.post_editing_reference.get_text().rfind('.')
-        filename_without_extension = os.path.splitext(filename)[0]
-        filename_extension = os.path.splitext(filename)[1]
-        self.saved_origin_filepath = self.saved_absolute_path + filename
-        self.saved_reference_filepath = self.saved_absolute_path + filename_without_extension + "_modified" + filename_extension
+        self.saved_absolute_path = os.path.abspath("saved")
 
-
-        self.tables["translation_table"] =  Table("translation_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing,self.saved_origin_filepath, self.saved_reference_filepath,self.translation_tab_grid)
+        self.tables["translation_table"] =  Table("translation_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing,self.translation_tab_grid)
 
         log_filepath = self.saved_absolute_path + '/paulaslog.json'
         #TODO remove the following line, it destroys the last saved logs
@@ -121,13 +109,6 @@ class PostEditing:
         savefile('\n'.join(self.tables["translation_table"].tables_content[self.tables["translation_table"].source_text_lines]), self.saved_origin_filepath)
         savefile('\n'.join(self.tables["translation_table"].tables_content[self.tables["translation_table"].reference_text_lines]),self.saved_reference_filepath)
 
-    def save_using_git(self):
-        s = self.post_editing_reference.get_text()
-        i = s.rfind('/')
-        filename = s[i:]
-        filepath_complete = self.user_local_repository_path  + filename
-        saveNCommit(self.user_local_repository, filepath_complete, '\n'.join(self.modified_references))
-
     def save_using_paulas_version_of_a_version_control_system(self):
         import json
         paulaslog = {}
@@ -166,17 +147,15 @@ class PostEditing:
         self.diff_tab_grid = Gtk.Grid()
         self.diff_tab_grid.set_row_spacing(1)
         self.diff_tab_grid.set_column_spacing(20)
-        self.tables["diff_table"] =  Table("diff_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing,self.saved_origin_filepath, self.saved_reference_filepath, self.diff_tab_grid)
+        self.tables["diff_table"] =  Table("diff_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing, self.diff_tab_grid)
         self.addDifferencesTab()
-
-        #self.save_using_git()
-        #self.calculateGitStatistics()
-        #self.addGitStatistics()
 
         #self.save_using_paulas_version_of_a_version_control_system()
 
         self.tables["translation_table"].save_post_editing_changes_button.hide()
 
 
-    def _saveChangedFromPostEditing_event(self, button):
+    def _saveChangedFromPostEditing_event(self, button, saved_origin_filepath, saved_reference_filepath):
+        self.saved_origin_filepath = saved_origin_filepath
+        self.saved_reference_filepath = saved_reference_filepath
         self._saveChangedFromPostEditing()
