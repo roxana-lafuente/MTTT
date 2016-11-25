@@ -266,6 +266,7 @@ class Table:
 
                 original = self.tables_content[self.source_text_lines][index]
                 modified = self.tables_content[self.reference_text_lines][index]
+                #TODO USE PAULA'S LOG INSTEAD OF A WHOLE TEXT CALLED original_modified.txt
                 insertions,deletions = self.get_insertion_and_deletions(original,modified)
                 if color == "green": start = insertions[0][0]; end = insertions[0][1]
                 if color == "red": start = deletions[0][0]; end = deletions[0][1]
