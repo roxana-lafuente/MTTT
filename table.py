@@ -18,7 +18,7 @@ class Table:
 
         self.saved_origin_filepath = ""
         self.saved_reference_filepath = ""
-
+        self.last_segment_changed = -1
         self._table_initializing()
         self.make_table_interface()
         if self.table_type == "diff_table": self.update_table()
@@ -116,10 +116,10 @@ class Table:
         text_buffer.apply_tag(tag, match_start, match_end)
 
     def cell_in_translation_table_changed(self, text_buffer_object, segment_index):
-
         self.save_post_editing_changes_button.show()
-        if self.REC_button.get_active():
+        if self.REC_button.get_active() and segment_index != self.last_segment_changed:
             self.save_function()
+            self.last_segment_changed = segment_index
 
         def fix_text(text):
             #in case the user deleted the endline character at the end of the text segment
