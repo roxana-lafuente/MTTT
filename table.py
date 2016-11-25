@@ -21,7 +21,7 @@ class Table:
         self.last_segment_changed = -1
         self._table_initializing()
         self.make_table_interface()
-        if self.table_type == "diff_table": self.update_table()
+        self.update_table()
 
         self.modified_references =  []
 
