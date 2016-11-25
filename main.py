@@ -112,6 +112,7 @@ class MyWindow(Gtk.Window):
 
         # Main title
         Gtk.Window.__init__(self, title="Translators' Training Tool")
+        self.connect('destroy', self.save_post_edition_changes)
         self.set_border_width(3)
 
         # Toolbar initialization
@@ -780,7 +781,9 @@ class MyWindow(Gtk.Window):
 
     def _set_post_editing(self):
         self.preparation = Gtk.VBox()
-        grid = Gtk.Grid()
+        self.postEdition_grid = Gtk.Grid()
+        self.postEdition_grid.set_row_spacing(1)
+        self.postEdition_grid.set_column_spacing(20)
 
         #  Post Editing Frame.
         self.postEditing_file_menu_grid = Gtk.Grid()
@@ -790,7 +793,6 @@ class MyWindow(Gtk.Window):
         self.postEditing_file_menu_grid.add(post_editing_source_label)
         self.post_editing_source = Gtk.Entry()
         self.post_editing_source.set_text("")
-        self.post_editing_source.set_editable(False)
         self.postEditing_file_menu_grid.add(self.post_editing_source)
         self.post_editing_source_button = Gtk.Button("Choose File")
         self.post_editing_source_button.connect("clicked", self._on_file_clicked, self.post_editing_source)
@@ -801,34 +803,26 @@ class MyWindow(Gtk.Window):
         self.postEditing_file_menu_grid.attach_next_to(post_editing_reference_label, post_editing_source_label, Gtk.PositionType.BOTTOM, 1, 10)
         self.post_editing_reference = Gtk.Entry()
         self.post_editing_reference.set_text("")
-        self.post_editing_reference.set_editable(False)
         self.postEditing_file_menu_grid.attach_next_to(self.post_editing_reference, self.post_editing_source, Gtk.PositionType.BOTTOM, 1, 10)
         self.post_editing_reference_button = Gtk.Button("Choose File")
         self.post_editing_reference_button.connect("clicked", self._on_file_clicked, self.post_editing_reference)
         self.postEditing_file_menu_grid.attach_next_to(self.post_editing_reference_button, self.post_editing_source_button, Gtk.PositionType.BOTTOM, 1, 10)
+        self.post_editing_source.connect("changed", self._check_if_both_files_are_choosen_post_edition)
+        self.post_editing_reference.connect("changed", self._check_if_both_files_are_choosen_post_edition)
 
-
-
-        grid.add(self.postEditing_file_menu_grid)
-        grid.set_row_spacing(1)
-        grid.set_column_spacing(20)
-
-
-
-        #binding of the buttons events to the PostEditing methods
-        self.PostEditing = PostEditing(
-            self.post_editing_source,#so that it can read the source file
-            self.post_editing_reference,#so that it can read the reference file
-            self.notebook,#so that it can add the diff tab when needed
-            grid)#so that it can add search entry and table
-
-
-
-
-
-        self.preparation.pack_start(grid, expand =True, fill =True, padding =0)
+        self.postEdition_grid.add(self.postEditing_file_menu_grid)
+        self.preparation.pack_start(self.postEdition_grid, expand =True, fill =True, padding =0)
         self.notebook.insert_page(self.preparation, Gtk.Label('Post Editing'),4)
 
+    def _check_if_both_files_are_choosen_post_edition(self,object):
+        if self.post_editing_source.get_text() != "" and self.post_editing_reference.get_text() != "":
+            #binding of the buttons events to the PostEditing methods
+            self.PostEditing = PostEditing(
+                self.post_editing_source.get_text(),#so that it can read the source file
+                self.post_editing_reference.get_text(),#so that it can read the reference file
+                self.notebook,#so that it can add the diff tab when needed
+                self.postEdition_grid)#so that it can add search entry and table
+            self.postEdition_grid.show_all()
 
     def gtk_change_visuals(self, light_option = "unchanged", theme = "unchanged"):
         if Gtk.MAJOR_VERSION>=3 and  Gtk.MINOR_VERSION >=14:
@@ -884,6 +878,9 @@ class MyWindow(Gtk.Window):
         else:
             self.gtk_change_visuals(light_option = "gtk",theme = "unchanged")
 
+    def save_post_edition_changes(self,  widget=None):
+        if self.PostEditing:
+            self.PostEditing._saveChangedFromPostEditing()
 
 win = MyWindow()
 win.gtk_change_visuals(light_option = "gtk", theme = "paper")

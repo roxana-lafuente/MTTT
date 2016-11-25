@@ -8,12 +8,12 @@ import sys
 import difflib
 
 class Table:
-    def __init__(self, table_type, source_label, reference_label, save_callback_function,save_function, tab_grid):
+    def __init__(self, table_type, source, reference, save_callback_function,save_function, tab_grid):
         self.save_callback_function = save_callback_function
         self.save_function = save_function
         self.table_type = table_type
-        self.source_label = source_label
-        self.reference_label = reference_label
+        self.source = source
+        self.reference = reference
         self.tab_grid = tab_grid
 
         self.saved_origin_filepath = ""
@@ -58,13 +58,22 @@ class Table:
           self.tables_content[self.get_menu_grid].attach_next_to(self.increase_rows_translation_table, self.next_button, Gtk.PositionType.TOP, 1, 10)
           self.tables_content[self.get_menu_grid].set_column_spacing(10)
 
-          self.source_label.connect("changed", self._check_if_both_files_are_choosen_post_edition)
-          self.reference_label.connect("changed", self._check_if_both_files_are_choosen_post_edition)
           self.increase_rows_translation_table.connect("clicked", self._increase_table_rows)
           self.reduce_rows_translation_table.connect("clicked", self._reduce_table_rows)
           self.back_button.connect("clicked", self._back_in_table)
           self.next_button.connect("clicked", self._next_in_table)
 
+          if self.table_type == "translation_table":
+            #Add save buttons
+            self.REC_button = Gtk.CheckButton.new_with_label("Autosave")
+            self.tables_content[self.get_menu_grid].attach_next_to(self.REC_button, self.next_button, Gtk.PositionType.RIGHT, 1, 10)
+
+            self.save_post_editing_changes_button = Gtk.Button()
+            self.save_post_editing_changes_button.set_image(Gtk.Image(stock=Gtk.STOCK_SAVE))
+            self.save_post_editing_changes_button.set_label("Save changes")
+            self.save_post_editing_changes_button.connect("clicked", self.save_callback_function)
+            self.tables_content[self.get_menu_grid].attach(self.save_post_editing_changes_button, 3, 0, 1 ,1)
+            self.save_post_editing_changes_button.hide()
 
 
     def create_search_button (self, text, line_index):
@@ -130,8 +139,8 @@ class Table:
         self.tables_content[self.reference_text_views][segment_index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
 
     def _fill_table(self):
-        origin = self.source_label.get_text()
-        reference = self.reference_label.get_text()
+        origin = self.source
+        reference = self.reference
 
         saved_absolute_path = os.path.abspath("saved")
         filename = origin[origin.rfind('/'):]
@@ -141,23 +150,12 @@ class Table:
         self.saved_origin_filepath = os.path.abspath("saved") + filename
         self.saved_reference_filepath = os.path.abspath("saved") + filename_without_extension + "_modified" + filename_extension
 
-        if self.table_type == "translation_table":
-            #Add save buttons
-            self.REC_button = Gtk.CheckButton.new_with_label("Autosave")
-            self.tables_content[self.get_menu_grid].attach_next_to(self.REC_button, self.next_button, Gtk.PositionType.RIGHT, 1, 10)
-
-            self.save_post_editing_changes_button = Gtk.Button()
-            self.save_post_editing_changes_button.set_image(Gtk.Image(stock=Gtk.STOCK_SAVE))
-            self.save_post_editing_changes_button.set_label("Save changes")
-            self.save_post_editing_changes_button.connect("clicked", self.save_callback_function, self.saved_origin_filepath, self.saved_reference_filepath)
-            self.tables_content[self.get_menu_grid].attach(self.save_post_editing_changes_button, 3, 0, 1 ,1)
-            self.save_post_editing_changes_button.hide()
-        elif self.table_type == "diff_table":
+        if self.table_type == "diff_table":
             #then read the saved files
             origin = self.saved_origin_filepath
             reference = self.saved_reference_filepath
 
-        if self.source_label.get_text() != "" and self.reference_label.get_text() != "":
+        if self.source != "" and self.reference != "":
             with open(origin) as fp:
                 for line in fp:
                     line = unicode(line, 'iso8859-15')
@@ -306,9 +304,6 @@ class Table:
         self._move_in_table(+1, to_change_the_buttons_or_not)
         self._move_in_table(-1, to_change_the_buttons_or_not)
 
-    def _check_if_both_files_are_choosen_post_edition(self,object):
-        if self.source_label.get_text() != "" and self.reference_label.get_text() != "":
-            self.update_table()
 
     def _search_button_action(self, button, line_index):
         self._move_in_table(line_index - self.tables_content[self.table_index] - 1)
