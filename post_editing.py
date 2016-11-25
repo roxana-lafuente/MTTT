@@ -32,6 +32,7 @@ import os
 import sys
 import urlparse
 import time
+import itertools
 from table import Table
 
 class PostEditing:
@@ -58,29 +59,30 @@ class PostEditing:
 
         self.paulas_log_filepath = self.saved_absolute_path + '/paulaslog.json'
         #TODO remove the following line, it destroys the last session saved logs
-        if os.path.exists(self.paulas_log_filepath):
-           os.remove(self.paulas_log_filepath)
-        #self.calculateStatistics()
+        #suggestion: load the last session saved logs, save it as old, and then do delete it.
 
-
-
-
+        self.calculateStatistics()
+        #if os.path.exists(self.paulas_log_filepath):
+         #  os.remove(self.paulas_log_filepath)
 
     def calculateStatistics(self):
         paulaslog = self.load_paulas_log()
         self.seconds_spent_by_segment = {}
-        #the following loop provides a time ordered secuence of timestamps
-        for i in reversed(range(len(paulaslog.keys())-1)):
-            current_timestamp = paulaslog.keys()[i]
-            next_timestamp = paulaslog.keys()[i-1]
+        #again with the closure, lets see how it plays out.
+        def pairwise(iterable):
+            a, b = itertools.tee(iterable)
+            next(b, None)
+            return itertools.izip(a, b)
+
+        for current_timestamp,next_timestamp in pairwise(sorted(paulaslog.keys())):
+            #for current_timestamp,next_timestamp in sorted(paulaslog.keys()):
             delta = (int(next_timestamp) - int(current_timestamp))/1000
-            print current_timestamp
-            print next_timestamp
+
             for segment_index in paulaslog[current_timestamp]:
                 if segment_index in self.seconds_spent_by_segment:
                     self.seconds_spent_by_segment[segment_index] += delta
                 else:
-                        self.seconds_spent_by_segment[segment_index] = delta
+                    self.seconds_spent_by_segment[segment_index] = delta
         for a in self.seconds_spent_by_segment:
             print str(a) + "....." + str(self.seconds_spent_by_segment[a])
 
