@@ -248,8 +248,13 @@ class Table:
     def create_cells(self):
         for row_index in range (0,self.tables_content[self.rows_ammount]):
             try:
-                self.create_cell(self.source_text_lines, self.source_text_views, row_index, False)
-                self.create_cell(self.reference_text_lines, self.reference_text_views, row_index, True)
+                if self.table_type == "translation_table":
+                    self.create_cell(self.source_text_lines, self.source_text_views, row_index, False)
+                    self.create_cell(self.reference_text_lines, self.reference_text_views, row_index, True)
+                elif self.table_type == "diff_table":
+                    self.create_cell(self.source_text_lines, self.source_text_views, row_index, False)
+                    self.create_cell(self.reference_text_lines, self.reference_text_views, row_index, False)
+
             except IndexError:
                 self.next_button.set_visible(False)
 
