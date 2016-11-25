@@ -5,9 +5,6 @@ from gi.repository import Gtk
 from gi.repository import Gdk
 import os
 import sys
-import urlparse
-import time
-from git_tools import *
 import difflib
 
 class Table:
