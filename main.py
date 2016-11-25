@@ -102,11 +102,10 @@ class MyWindow(Gtk.Window):
                 f.close()
 
         self.saved_absolute_path = os.path.abspath("saved")
-        self.user_local_repository_path = self.saved_absolute_path + "/" + self.repository_name
         self.saved_relative_filepath = "./saved"
-        if not os.path.exists(self.user_local_repository_path):
-            os.makedirs(self.user_local_repository_path)
-        
+        if not os.path.exists(self.saved_absolute_path):
+            os.makedirs(self.saved_absolute_path)
+
         # Main title
         Gtk.Window.__init__(self, title="Translators' Training Tool")
         self.connect('destroy', self.save_post_edition_changes)
