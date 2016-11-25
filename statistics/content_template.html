@@ -6,23 +6,16 @@
       <table id="changes" class="git">
         <thead>
           <tr>
-            <th>Author</th>
+            <th>Segment</th>
             <th>Insertions</th>
             <th>Deletions</th>
             <th>% of time spent</th>
           </tr>
+          <tr>
+          </tr>
         </thead>
         <tbody>
-          <tr >
-            <td>2</td>
-            <td>0</td>
-            <td>50.66</td>
-          </tr>
-          <tr class="odd">
-            <td>25</td>
-            <td>875</td>
-            <td>49.34</td>
-          </tr>
+          <!--table data input ends here. Do not delete this comment.-->
         <tfoot>
           <tr> <td colspan="5">&nbsp;</td> </tr>
         </tfoot>
@@ -30,15 +23,14 @@
     </table>
     <div class="chart" id="changes_chart"></div>
   </div>
-
-  <script type="text/javascript"> <!--pie script starts here. Do not delete this comment.-->
+  <script type="text/javascript">
     changes_plot = $.plot
     (
       $("#changes_chart"),
-      [{label: "Roxana Lafuente", data: 50.66}, {label: "miguelemosreverte", data: 49.34}],
+      [],
        {
          series: {
-           pie: {innerRadius: 0.4, show: true,combine: {threshold: 0.01,label: "Minor Authors"
+           pie: {innerRadius: 0.4, show: true,combine: {threshold: 0.01,label: ""
            }
          }
        },
@@ -46,5 +38,7 @@
      }
    );
   </script>
+
+<!--pie script ends here. Do not delete this comment.-->
 </div></div>
 </div></div>

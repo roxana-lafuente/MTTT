@@ -22,7 +22,6 @@
 #
 ##############################################################################
 
-from git import Repo
 try:
     import gi
     gi.require_version('Gtk', '3.0')
@@ -102,14 +101,12 @@ class MyWindow(Gtk.Window):
                 f.write(self.moses_dir)
                 f.close()
 
-        self.repository_name = "git_repository"
         self.saved_absolute_path = os.path.abspath("saved")
         self.user_local_repository_path = self.saved_absolute_path + "/" + self.repository_name
         self.saved_relative_filepath = "./saved"
         if not os.path.exists(self.user_local_repository_path):
             os.makedirs(self.user_local_repository_path)
-        self.user_local_repository = Repo.init(os.path.join(self.saved_relative_filepath, self.repository_name))
-
+        
         # Main title
         Gtk.Window.__init__(self, title="Translators' Training Tool")
         self.connect('destroy', self.save_post_edition_changes)

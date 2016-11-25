@@ -38,24 +38,26 @@ def delete_from_html(x, contentHTML,b, erase_completly = True):
     else:
         x = x[:start + len(contentHTML)] + x[end:]
     return x
-def add_pie_script_to_content(script, pie_script):
-    starts_at = pie_script.rfind("<script")
-    pie_script = pie_script[:starts_at] + script + pie_script[starts_at:]
-    return pie_script
+def add_data_to_content(pie_script, table_data, contentHTML):
+    starts_at = contentHTML.rfind("<!--pie script starts here. Do not delete this comment.-->")
+    contentHTML = contentHTML[:starts_at] + pie_script + contentHTML[starts_at:]
+    starts_at = contentHTML.rfind("<!--table data input ends here. Do not delete this comment.-->")
+    contentHTML = contentHTML[:starts_at] + table_data + contentHTML[starts_at:]
+    return contentHTML
 def save_contentHTML(text):
     text_file = open("statistics/content.html", "w")
     text_file.write(text)
     text_file.close()
 
-def inject_into_html(pie_as_json_string):
+def inject_into_html(pie_as_json_string, table_data):
     #read content.html as an array of lines
     contentHTML = get_template("statistics/content_template.html")
     #remove the old pie script
     contentHTML = delete_from_html(contentHTML, "<script", "</script>", True)
     #create new pie script
     pie_script = add_json_string_to_pie_script(pie_as_json_string)
-    #add new pie script
-    contentHTML = add_pie_script_to_content(pie_script,contentHTML)
+    #add to content
+    contentHTML = add_data_to_content(pie_script,table_data,contentHTML)
     #save_contentHTML
     save_contentHTML(contentHTML)
     combine_and_save_to_index_html()

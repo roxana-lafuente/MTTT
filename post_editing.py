@@ -34,7 +34,7 @@ import urlparse
 import time
 import itertools
 from table import Table
-from statistics import statistics
+from statistics import html_injector
 
 class PostEditing:
 
@@ -64,7 +64,7 @@ class PostEditing:
 
         self.calculateStatistics()
         #if os.path.exists(self.paulas_log_filepath):
-         #  os.remove(self.paulas_log_filepath)
+        #  os.remove(self.paulas_log_filepath)
 
     def calculateStatistics(self):
         paulaslog = self.load_paulas_log()
@@ -77,6 +77,7 @@ class PostEditing:
             next(b, None)
             return itertools.izip(a, b)
 
+        #calculate time spent by segment
         for current_timestamp,next_timestamp in pairwise(sorted(paulaslog.keys())):
             #for current_timestamp,next_timestamp in sorted(paulaslog.keys()):
             delta = (int(next_timestamp) - int(current_timestamp))/1000
@@ -86,17 +87,26 @@ class PostEditing:
                     self.seconds_spent_by_segment[segment_index] += delta
                 else:
                     self.seconds_spent_by_segment[segment_index] = delta
+        #calculate total time spent
         for a in self.seconds_spent_by_segment:
             self.total_time_spent += self.seconds_spent_by_segment[a]
+        #calculate percentajes
         for a in self.seconds_spent_by_segment:
             self.percentaje_spent_by_segment[a] = float(self.seconds_spent_by_segment[a]) *100 / float(self.total_time_spent)
-            
+
         self.pie_as_json_string_list = []
+        self.table_data_list = []
         for a in self.percentaje_spent_by_segment:
             string = '{label: "' + str(a) + '", data: ' + str(self.percentaje_spent_by_segment[a]) + '}'
             self.pie_as_json_string_list.append(string)
+            string = "<tr><td>"+str(a)+"</td>"
+            string += "<td>"+str(0)+"</td>"
+            string += "<td>"+str(0)+"</td>"
+            string += "<td>"+str(self.percentaje_spent_by_segment[a])+"</td></tr>"
+            self.table_data_list.append(string)
         pie_as_json_string = ','.join(self.pie_as_json_string_list)
-        statistics.inject_into_html(pie_as_json_string)
+        table_data = ''.join(self.table_data_list)
+        html_injector.inject_into_html(pie_as_json_string, table_data)
 
     def addStatistics(self):
         self.notebook.remove_page(6)
@@ -104,7 +114,7 @@ class PostEditing:
         win = Gtk.Window()
         view = WebKit.WebView()
         view.open(html)
-        uri = self.user_local_repository_path + '/index.html'
+        uri = "statistics" + '/index.html'
         uri = os.path.realpath(uri)
         uri = urlparse.ParseResult('file', '', uri, '', '', '')
         uri = urlparse.urlunparse(uri)
@@ -136,11 +146,10 @@ class PostEditing:
 
     def load_paulas_log(self):
         paulaslog = {}
-        if not os.path.exists(self.paulas_log_filepath):
-            open(self.paulas_log_filepath, 'w').close()
-        else:
+        try:
             with open(self.paulas_log_filepath) as json_data:
                 paulaslog= json.load(json_data)
+        except: open(self.paulas_log_filepath, 'w').close()
         return paulaslog
 
     def save_using_paulas_version_of_a_version_control_system(self):
@@ -176,6 +185,7 @@ class PostEditing:
         self.diff_tab_grid.set_column_spacing(20)
         self.tables["diff_table"] =  Table("diff_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing, self.diff_tab_grid)
         self.addDifferencesTab()
+        self.addStatistics()
 
         self.save_using_paulas_version_of_a_version_control_system()
 
