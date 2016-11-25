@@ -34,6 +34,7 @@ import urlparse
 import time
 import itertools
 from table import Table
+from statistics import statistics
 
 class PostEditing:
 
@@ -68,6 +69,8 @@ class PostEditing:
     def calculateStatistics(self):
         paulaslog = self.load_paulas_log()
         self.seconds_spent_by_segment = {}
+        self.percentaje_spent_by_segment = {}
+        self.total_time_spent = 0
         #again with the closure, lets see how it plays out.
         def pairwise(iterable):
             a, b = itertools.tee(iterable)
@@ -84,7 +87,16 @@ class PostEditing:
                 else:
                     self.seconds_spent_by_segment[segment_index] = delta
         for a in self.seconds_spent_by_segment:
-            print str(a) + "....." + str(self.seconds_spent_by_segment[a])
+            self.total_time_spent += self.seconds_spent_by_segment[a]
+        for a in self.seconds_spent_by_segment:
+            self.percentaje_spent_by_segment[a] = float(self.seconds_spent_by_segment[a]) *100 / float(self.total_time_spent)
+            
+        self.pie_as_json_string_list = []
+        for a in self.percentaje_spent_by_segment:
+            string = '{label: "' + str(a) + '", data: ' + str(self.percentaje_spent_by_segment[a]) + '}'
+            self.pie_as_json_string_list.append(string)
+        pie_as_json_string = ','.join(self.pie_as_json_string_list)
+        statistics.inject_into_html(pie_as_json_string)
 
     def addStatistics(self):
         self.notebook.remove_page(6)
