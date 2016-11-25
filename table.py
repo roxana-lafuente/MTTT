@@ -242,8 +242,8 @@ class Table:
         insertions = []
         deletions = []
         for tag, i1, i2, j1, j2 in s.get_opcodes():
-            if tag == "insert":insertions.append((j1,j2))
-            if tag == "delete":deletions.append((i1,i2))
+            if tag == "insert" or tag == "replace":insertions.append((j1,j2))
+            if tag == "delete"or tag == "replace": deletions.append((i1,i2))
         return (insertions,deletions)
 
 
@@ -264,7 +264,6 @@ class Table:
                 original = self.tables_content[self.source_text_lines][index]
                 modified = self.tables_content[self.reference_text_lines][index]
                 insertions,deletions = self.get_insertion_and_deletions(original,modified)
-
                 if color == "green": start = insertions[0][0]; end = insertions[0][1]
                 if color == "red": start = deletions[0][0]; end = deletions[0][1]
                 self.apply_tag( start, end,text_buffer, color)
