@@ -225,7 +225,7 @@ class Table:
         cell.set_cursor_visible(False)
         cellTextBuffer = cell.get_buffer()
         index = row_index + self.tables_content[self.table_index]
-        cellTextBuffer.set_text(self.tables_content[text_line_type][index])
+        cellTextBuffer.set_text(self.tables_content[text_line_type][index].rstrip('\n'))
         self.tables_content[text_view_type][index] = cell
         if self.table_type == "translation_table":
             cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index)
