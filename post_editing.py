@@ -55,7 +55,7 @@ class PostEditing:
         filename_without_extension = os.path.splitext(filename)[0]
         filename_extension = os.path.splitext(filename)[1]
         self.saved_origin_filepath = os.path.abspath("saved") + filename
-        self.saved_reference_filepath = os.path.abspath("saved") + filename_without_extension + "_modified" + filename_extension
+        #self.saved_reference_filepath = os.path.abspath("saved") + filename_without_extension + "_modified" + filename_extension
 
 
         self.tables["translation_table"] =  Table("translation_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing,self.translation_tab_grid)
@@ -111,7 +111,7 @@ class PostEditing:
         if table_data and pie_as_json_string:
             html_injector.inject_into_html(pie_as_json_string, table_data)
             self.addStatistics()
-            
+
     def addStatistics(self):
         self.notebook.remove_page(6)
         html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
@@ -146,7 +146,7 @@ class PostEditing:
             text_file.write(text)
             text_file.close()
         savefile('\n'.join(self.tables["translation_table"].tables_content[self.tables["translation_table"].source_text_lines]), self.saved_origin_filepath)
-        savefile('\n'.join(self.tables["translation_table"].tables_content[self.tables["translation_table"].reference_text_lines]),self.saved_reference_filepath)
+        #savefile('\n'.join(self.tables["translation_table"].tables_content[self.tables["translation_table"].reference_text_lines]),self.saved_reference_filepath)
 
     def load_paulas_log(self):
         anonymousjsonlog = {}
@@ -157,8 +157,6 @@ class PostEditing:
         return anonymousjsonlog
 
     def save_using_paulas_version_of_a_version_control_system(self):
-        #self.paulaslog = self.load_paulas_log()
-
         for index in range(0, len(self.tables["translation_table"].tables_content[1])):
             if index in self.tables["translation_table"].translation_reference_text_TextViews_modified_flag:
                 modified_reference = self.tables["translation_table"].translation_reference_text_TextViews_modified_flag[index]
@@ -186,10 +184,11 @@ class PostEditing:
         self.diff_tab_grid = Gtk.Grid()
         self.diff_tab_grid.set_row_spacing(1)
         self.diff_tab_grid.set_column_spacing(20)
-        self.tables["diff_table"] =  Table("diff_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing, self.diff_tab_grid)
-        self.addDifferencesTab()
 
         self.save_using_paulas_version_of_a_version_control_system()
+        self.tables["diff_table"] = Table("diff_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing, self.diff_tab_grid)
+        self.addDifferencesTab()
+
         self.calculateStatistics()
 
 

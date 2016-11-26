@@ -5,6 +5,7 @@ from gi.repository import Gtk
 from gi.repository import Gdk
 import os
 import sys
+import json
 import difflib
 
 class Table:
@@ -129,16 +130,11 @@ class Table:
             return text
         text = fix_text(text_buffer_object.get_text(text_buffer_object.get_start_iter(),text_buffer_object.get_end_iter(),True) )
         self.tables_content[self.reference_text_lines][segment_index] = text
-        '''
-        try:
-            self.tables_contents["diff_table"][self.reference_text_lines][segment_index] = text
-        except:pass
-        '''
-
         self.translation_reference_text_TextViews_modified_flag[segment_index] = text
         self.tables_content[self.reference_text_views][segment_index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
 
     def _fill_table(self):
+        last_modifications = self.get_lastest_modifications()
         origin = self.source
         reference = self.reference
 
@@ -148,12 +144,12 @@ class Table:
         filename_extension = os.path.splitext(filename)[1]
 
         self.saved_origin_filepath = os.path.abspath("saved") + filename
-        self.saved_reference_filepath = os.path.abspath("saved") + filename_without_extension + "_modified" + filename_extension
+        #self.saved_reference_filepath = os.path.abspath("saved") + filename_without_extension + "_modified" + filename_extension
 
         if self.table_type == "diff_table":
             #then read the saved files
             origin = self.saved_origin_filepath
-            reference = self.saved_reference_filepath
+            #reference = self.saved_reference_filepath
 
         if self.source != "" and self.reference != "":
             with open(origin) as fp:
@@ -161,12 +157,11 @@ class Table:
                     line = unicode(line, 'iso8859-15')
                     if line != '\n':
                        self.tables_content[self.source_text_lines].append(line)
-
-            with open(reference) as fp:
-                for line in fp:
-                    line = unicode(line, 'iso8859-15')
-                    if line != '\n':
-                        self.tables_content[self.reference_text_lines].append(line)
+            for index, line in enumerate(self.tables_content[self.source_text_lines]):
+                if str(index) in last_modifications:
+                    self.tables_content[self.reference_text_lines].append(last_modifications[str(index)])
+                else:
+                    self.tables_content[self.reference_text_lines].append(line)
 
 
     def _table_initializing(self):
@@ -257,20 +252,30 @@ class Table:
 
             except IndexError:
                 self.next_button.set_visible(False)
+    def get_lastest_modifications (self):
+        paulaslog = self.load_paulas_log()
+        last_modifications = {}
 
+        for a in sorted(paulaslog.keys()):
+            for b in paulaslog[a]:
+                last_modifications[b] = paulaslog[a][b]
+        return last_modifications
     def create_diff(self, text_buffers_array, color):
+        last_modifications = self.get_lastest_modifications()
         for row_index in range (0,self.tables_content[self.rows_ammount]):
             try:
                 index = row_index + self.tables_content[self.table_index]
-                text_buffer = text_buffers_array[index].get_buffer()
+                if str(index) in last_modifications:
+                    text_buffer = text_buffers_array[index].get_buffer()
 
-                original = self.tables_content[self.source_text_lines][index]
-                modified = self.tables_content[self.reference_text_lines][index]
-                #TODO USE PAULA'S LOG INSTEAD OF A WHOLE TEXT CALLED original_modified.txt
-                insertions,deletions = self.get_insertion_and_deletions(original,modified)
-                if color == "green": start = insertions[0][0]; end = insertions[0][1]
-                if color == "red": start = deletions[0][0]; end = deletions[0][1]
-                self.apply_tag( start, end,text_buffer, color)
+                    original = self.tables_content[self.source_text_lines][index]
+                    #modified = self.tables_content[self.reference_text_lines][index]
+                    modified = last_modifications[str(index)]
+                    #TODO USE PAULA'S LOG INSTEAD OF A WHOLE TEXT CALLED original_modified.txt
+                    insertions,deletions = self.get_insertion_and_deletions(original,modified)
+                    if color == "green": start = insertions[0][0]; end = insertions[0][1]
+                    if color == "red": start = deletions[0][0]; end = deletions[0][1]
+                    self.apply_tag( start, end,text_buffer, color)
             except IndexError: pass
 
     def create_diffs(self):
@@ -313,3 +318,12 @@ class Table:
 
     def _search_button_action(self, button, line_index):
         self._move_in_table(line_index - self.tables_content[self.table_index] - 1)
+
+    def load_paulas_log(self):
+        anonymousjsonlog = {}
+        paulas_log_filepath = os.path.abspath('saved/paulaslog.json')
+        try:
+            with open(paulas_log_filepath) as json_data:
+                anonymousjsonlog = json.load(json_data)
+        except:pass
+        return anonymousjsonlog
