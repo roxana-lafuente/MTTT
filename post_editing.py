@@ -47,8 +47,10 @@ class PostEditing:
         self.saved_modified_references = []
 
         self.tables = {}
+        self.paulaslog = {}
 
         self.saved_absolute_path = os.path.abspath("saved")
+        self.statistics_absolute_path = os.path.abspath("statistics")
         filename = post_editing_source[post_editing_source.rfind('/'):]
         filename_without_extension = os.path.splitext(filename)[0]
         filename_extension = os.path.splitext(filename)[1]
@@ -59,18 +61,19 @@ class PostEditing:
         self.tables["translation_table"] =  Table("translation_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing,self.translation_tab_grid)
 
         self.paulas_log_filepath = self.saved_absolute_path + '/paulaslog.json'
+        self.old_html_filepath = self.statistics_absolute_path + '/index.html'
         #TODO remove the following line, it destroys the last session saved logs
         #suggestion: load the last session saved logs, save it as old, and then do delete it.
 
-        self.calculateStatistics()
-        #if os.path.exists(self.paulas_log_filepath):
-        #  os.remove(self.paulas_log_filepath)
+        if os.path.exists(self.paulas_log_filepath):
+          os.remove(self.paulas_log_filepath)
+        if os.path.exists(self.old_html_filepath):
+          os.remove(self.old_html_filepath)
 
     def calculateStatistics(self):
-        paulaslog = self.load_paulas_log()
-        self.seconds_spent_by_segment = {}
-        self.percentaje_spent_by_segment = {}
-        self.total_time_spent = 0
+        seconds_spent_by_segment = {}
+        percentaje_spent_by_segment = {}
+        total_time_spent = 0
         #again with the closure, lets see how it plays out.
         def pairwise(iterable):
             a, b = itertools.tee(iterable)
@@ -78,36 +81,37 @@ class PostEditing:
             return itertools.izip(a, b)
 
         #calculate time spent by segment
-        for current_timestamp,next_timestamp in pairwise(sorted(paulaslog.keys())):
-            #for current_timestamp,next_timestamp in sorted(paulaslog.keys()):
+        for current_timestamp,next_timestamp in pairwise(sorted(self.paulaslog.keys())):
+            #for current_timestamp,next_timestamp in sorted(self.paulaslog.keys()):
             delta = (int(next_timestamp) - int(current_timestamp))/1000
-
-            for segment_index in paulaslog[current_timestamp]:
-                if segment_index in self.seconds_spent_by_segment:
-                    self.seconds_spent_by_segment[segment_index] += delta
+            for segment_index in self.paulaslog[current_timestamp]:
+                if segment_index in seconds_spent_by_segment:
+                    seconds_spent_by_segment[segment_index] += delta
                 else:
-                    self.seconds_spent_by_segment[segment_index] = delta
+                    seconds_spent_by_segment[segment_index] = delta
         #calculate total time spent
-        for a in self.seconds_spent_by_segment:
-            self.total_time_spent += self.seconds_spent_by_segment[a]
+        for a in seconds_spent_by_segment:
+            total_time_spent += seconds_spent_by_segment[a]
         #calculate percentajes
-        for a in self.seconds_spent_by_segment:
-            self.percentaje_spent_by_segment[a] = float(self.seconds_spent_by_segment[a]) *100 / float(self.total_time_spent)
+        for a in seconds_spent_by_segment:
+            percentaje_spent_by_segment[a] = float(seconds_spent_by_segment[a]) *100 / float(total_time_spent)
 
-        self.pie_as_json_string_list = []
-        self.table_data_list = []
-        for a in self.percentaje_spent_by_segment:
-            string = '{label: "' + str(a) + '", data: ' + str(self.percentaje_spent_by_segment[a]) + '}'
-            self.pie_as_json_string_list.append(string)
+        pie_as_json_string_list = []
+        table_data_list = []
+        for a in percentaje_spent_by_segment:
+            string = '{label: "' + str(a) + '", data: ' + str(percentaje_spent_by_segment[a]) + '}'
+            pie_as_json_string_list.append(string)
             string = "<tr><td>"+str(a)+"</td>"
             string += "<td>"+str(0)+"</td>"
             string += "<td>"+str(0)+"</td>"
-            string += "<td>"+str(self.percentaje_spent_by_segment[a])+"</td></tr>"
-            self.table_data_list.append(string)
-        pie_as_json_string = ','.join(self.pie_as_json_string_list)
-        table_data = ''.join(self.table_data_list)
-        html_injector.inject_into_html(pie_as_json_string, table_data)
-
+            string += "<td>"+str(percentaje_spent_by_segment[a])+"</td></tr>"
+            table_data_list.append(string)
+        pie_as_json_string = ','.join(pie_as_json_string_list)
+        table_data = ''.join(table_data_list)
+        if table_data and pie_as_json_string:
+            html_injector.inject_into_html(pie_as_json_string, table_data)
+            self.addStatistics()
+            
     def addStatistics(self):
         self.notebook.remove_page(6)
         html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
@@ -145,28 +149,27 @@ class PostEditing:
         savefile('\n'.join(self.tables["translation_table"].tables_content[self.tables["translation_table"].reference_text_lines]),self.saved_reference_filepath)
 
     def load_paulas_log(self):
-        paulaslog = {}
+        anonymousjsonlog = {}
         try:
             with open(self.paulas_log_filepath) as json_data:
-                paulaslog= json.load(json_data)
+                anonymousjsonlog= json.load(json_data)
         except: open(self.paulas_log_filepath, 'w').close()
-        return paulaslog
+        return anonymousjsonlog
 
     def save_using_paulas_version_of_a_version_control_system(self):
-        paulaslog = {}
-        paulaslog = self.load_paulas_log()
-
+        #self.paulaslog = self.load_paulas_log()
 
         for index in range(0, len(self.tables["translation_table"].tables_content[1])):
             if index in self.tables["translation_table"].translation_reference_text_TextViews_modified_flag:
                 modified_reference = self.tables["translation_table"].translation_reference_text_TextViews_modified_flag[index]
                 if modified_reference not in self.saved_modified_references:
                     self.saved_modified_references.append(modified_reference)
-                    if self.last_change_timestamp not in paulaslog:
-                        paulaslog[self.last_change_timestamp] = {}
-                    paulaslog[self.last_change_timestamp][index] = modified_reference
+                    if self.last_change_timestamp not in self.paulaslog:
+                        self.paulaslog[self.last_change_timestamp] = {}
+                    self.paulaslog[self.last_change_timestamp][index] = modified_reference
         with open(self.paulas_log_filepath, 'w') as outfile:
-            json.dump(paulaslog, outfile)
+            json.dump(self.paulaslog, outfile)
+
 
     def _saveChangedFromPostEditing(self):
         self.last_change_timestamp = int(time.time() * 1000)
@@ -185,9 +188,10 @@ class PostEditing:
         self.diff_tab_grid.set_column_spacing(20)
         self.tables["diff_table"] =  Table("diff_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing, self.diff_tab_grid)
         self.addDifferencesTab()
-        self.addStatistics()
 
         self.save_using_paulas_version_of_a_version_control_system()
+        self.calculateStatistics()
+
 
         self.tables["translation_table"].save_post_editing_changes_button.hide()
 
