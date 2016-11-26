@@ -35,6 +35,7 @@ import time
 import itertools
 from table import Table
 from statistics import html_injector
+import difflib
 
 class PostEditing:
 
@@ -62,7 +63,6 @@ class PostEditing:
 
         self.paulas_log_filepath = self.saved_absolute_path + '/paulaslog.json'
         self.old_html_filepath = self.statistics_absolute_path + '/index.html'
-        #TODO remove the following line, it destroys the last session saved logs
         #suggestion: load the last session saved logs, save it as old, and then do delete it.
 
         if os.path.exists(self.paulas_log_filepath):
@@ -96,25 +96,42 @@ class PostEditing:
         for a in seconds_spent_by_segment:
             percentaje_spent_by_segment[a] = float(seconds_spent_by_segment[a]) *100 / float(total_time_spent)
 
-        pie_as_json_string_list = []
+
+        title = "<th>Segment </th><th>" + '%'+ " of the time spent </th>"
+        return self.build_pie_as_json_string(percentaje_spent_by_segment),self.build_table(percentaje_spent_by_segment),title
+
+    def calculate_deletions_per_segment(self):
+        percentaje_spent_by_segment=self.tables["translation_table"].calculate_insertions_or_deletions_percentajes(True)
+        title = "<th>Segment </th><th>" + '%'+ " of deletions made</th>"
+        return self.build_pie_as_json_string(percentaje_spent_by_segment),self.build_table(percentaje_spent_by_segment),title
+    def calculate_insertions_per_segment(self):
+        percentaje_spent_by_segment=self.tables["translation_table"].calculate_insertions_or_deletions_percentajes(False)
+        title = "<th>Segment </th><th>" + '%'+ " of insertions made</th>"
+        return self.build_pie_as_json_string(percentaje_spent_by_segment),self.build_table(percentaje_spent_by_segment),title
+
+    def build_table(self, percentaje_spent_by_segment):
         table_data_list = []
         for a in percentaje_spent_by_segment:
-            string = '{label: "' + str(a) + '", data: ' + str(percentaje_spent_by_segment[a]) + '}'
-            pie_as_json_string_list.append(string)
             string = "<tr><td>"+str(a)+"</td>"
             string += "<td>"+str(percentaje_spent_by_segment[a])+"</td></tr>"
             table_data_list.append(string)
+        return ''.join(table_data_list)
+    def build_pie_as_json_string(self, percentaje_spent_by_segment):
+        pie_as_json_string_list = []
+        for a in percentaje_spent_by_segment:
+            string = '{label: "' + str(a) + '", data: ' + str(percentaje_spent_by_segment[a]) + '}'
+            pie_as_json_string_list.append(string)
+        return ','.join(pie_as_json_string_list)
 
-        pie_as_json_string = ','.join(pie_as_json_string_list)
-        table_data = ''.join(table_data_list)
-        title = "<th>Segment </th><th>" + '%'+ " of the time spent </th>"
-
-        return pie_as_json_string,table_data,title
-
-    def calculate_statistics(self, statistics_name = "time_per_segment"):
+    def calculate_statistics(self, statistics_name):
+        pie_as_json_string = ""
         if statistics_name == "time_per_segment":
             pie_as_json_string,table_data,title = self.calculate_time_per_segment()
-        if table_data and pie_as_json_string:
+        elif statistics_name == "insertions":
+            pie_as_json_string,table_data,title = self.calculate_insertions_per_segment()
+        elif statistics_name == "deletions":
+            pie_as_json_string,table_data,title = self.calculate_deletions_per_segment()
+        if pie_as_json_string:
             html_injector.inject_into_html(pie_as_json_string, table_data, title, statistics_name)
             self.add_statistics(statistics_name)
 
@@ -152,7 +169,6 @@ class PostEditing:
             text_file.write(text)
             text_file.close()
         savefile('\n'.join(self.tables["translation_table"].tables_content[self.tables["translation_table"].source_text_lines]), self.saved_origin_filepath)
-        #savefile('\n'.join(self.tables["translation_table"].tables_content[self.tables["translation_table"].reference_text_lines]),self.saved_reference_filepath)
 
     def load_paulas_log(self):
         anonymousjsonlog = {}
@@ -195,7 +211,7 @@ class PostEditing:
         self.tables["diff_table"] = Table("diff_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing, self.diff_tab_grid)
         self.addDifferencesTab()
 
-        self.calculate_statistics()
+        self.calculate_statistics("insertions")
 
 
         self.tables["translation_table"].save_post_editing_changes_button.hide()

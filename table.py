@@ -240,6 +240,29 @@ class Table:
         return (insertions,deletions)
 
 
+    def calculate_insertions_or_deletions_percentajes(self, get_removals_percentaje = True):
+
+        total_insertions_or_deletions = 0
+        insertions_or_deletions_per_segment = {}
+        source_segments = self.tables_content[self.source_text_lines]
+        modified_segments = self.tables_content[self.reference_text_lines]
+
+        for index, (a,b) in enumerate(zip(source_segments, modified_segments)):
+            insertions_or_deletions = self.get_insertion_and_deletions(a,b)[get_removals_percentaje]
+            for c in insertions_or_deletions:
+                if index not in insertions_or_deletions_per_segment:
+                    insertions_or_deletions_per_segment[index] = c[1] - c[0]
+                else:
+                    insertions_or_deletions_per_segment[index] += c[1] - c[0]
+        #get total
+        for a in insertions_or_deletions_per_segment:
+            total_insertions_or_deletions += insertions_or_deletions_per_segment[a]
+        #get percentajes
+        for a in insertions_or_deletions_per_segment:
+            insertions_or_deletions_per_segment[a] =  insertions_or_deletions_per_segment[a] * 100 / float(total_insertions_or_deletions)
+
+        return insertions_or_deletions_per_segment
+
     def create_cells(self):
         for row_index in range (0,self.tables_content[self.rows_ammount]):
             try:
