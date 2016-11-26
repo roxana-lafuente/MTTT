@@ -776,6 +776,7 @@ class MyWindow(Gtk.Window):
         self.resultsTextBuffer.set_text(result)
 
     def _set_post_editing(self):
+        self.notebook.remove_page(4)
         self.preparation = Gtk.VBox()
         self.postEdition_grid = Gtk.Grid()
         self.postEdition_grid.set_row_spacing(1)
@@ -809,19 +810,24 @@ class MyWindow(Gtk.Window):
         self.postEdition_grid.add(self.postEditing_file_menu_grid)
         self.preparation.pack_start(self.postEdition_grid, expand =True, fill =True, padding =0)
         self.notebook.insert_page(self.preparation, Gtk.Label('Post Editing'),4)
+        self.notebook.show_all()
 
     def _check_if_both_files_are_choosen_post_edition(self,object):
         if self.post_editing_source.get_text() != "" and self.post_editing_reference.get_text() != "":
+            post_editing_source_text = self.post_editing_source.get_text()
+            post_editing_reference_text = self.post_editing_reference.get_text()
+            self._set_post_editing()
+            self.notebook.set_current_page(4)
             #binding of the buttons events to the PostEditing methods
             self.PostEditing = PostEditing(
-                self.post_editing_source.get_text(),#so that it can read the source file
-                self.post_editing_reference.get_text(),#so that it can read the reference file
+                post_editing_source_text,#so that it can read the source file
+                post_editing_reference_text,#so that it can read the reference file
                 self.notebook,#so that it can add the diff tab when needed
                 self.postEdition_grid)#so that it can add search entry and table
             self.postEdition_grid.show_all()
 
     def gtk_change_visuals(self, light_option = "unchanged", theme = "unchanged"):
-        if Gtk.MAJOR_VERSION>=3 and  Gtk.MINOR_VERSION >=14:
+        if Gtk.MAJOR_VERSION >=3 and  Gtk.MINOR_VERSION >=14:
             css_filename = "gtk"
             filename = ""
             if theme == "metro" or theme == "paper":
