@@ -35,7 +35,6 @@ import time
 import itertools
 from table import Table
 from statistics import html_injector
-import difflib
 
 class PostEditing:
 
