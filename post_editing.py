@@ -70,7 +70,7 @@ class PostEditing:
         if os.path.exists(self.old_html_filepath):
           os.remove(self.old_html_filepath)
 
-    def calculateStatistics(self):
+    def calculate_time_per_segment(self):
         seconds_spent_by_segment = {}
         percentaje_spent_by_segment = {}
         total_time_spent = 0
@@ -102,23 +102,29 @@ class PostEditing:
             string = '{label: "' + str(a) + '", data: ' + str(percentaje_spent_by_segment[a]) + '}'
             pie_as_json_string_list.append(string)
             string = "<tr><td>"+str(a)+"</td>"
-            string += "<td>"+str(0)+"</td>"
-            string += "<td>"+str(0)+"</td>"
             string += "<td>"+str(percentaje_spent_by_segment[a])+"</td></tr>"
             table_data_list.append(string)
+
         pie_as_json_string = ','.join(pie_as_json_string_list)
         table_data = ''.join(table_data_list)
-        if table_data and pie_as_json_string:
-            html_injector.inject_into_html(pie_as_json_string, table_data)
-            self.addStatistics()
+        title = "<th>Segment </th><th>" + '%'+ " of the time spent </th>"
 
-    def addStatistics(self):
+        return pie_as_json_string,table_data,title
+
+    def calculate_statistics(self, statistics_name = "time_per_segment"):
+        if statistics_name == "time_per_segment":
+            pie_as_json_string,table_data,title = self.calculate_time_per_segment()
+        if table_data and pie_as_json_string:
+            html_injector.inject_into_html(pie_as_json_string, table_data, title, statistics_name)
+            self.add_statistics(statistics_name)
+
+    def add_statistics(self, statistic_to_show):
         self.notebook.remove_page(6)
         html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
         win = Gtk.Window()
         view = WebKit.WebView()
         view.open(html)
-        uri = "statistics" + '/index.html'
+        uri = "statistics/" + statistic_to_show + '.html'
         uri = os.path.realpath(uri)
         uri = urlparse.ParseResult('file', '', uri, '', '', '')
         uri = urlparse.urlunparse(uri)
@@ -128,7 +134,7 @@ class PostEditing:
         win.remove(childWidget)
         win.destroy()
 
-        self.notebook.insert_page(childWidget, Gtk.Label('Git Statistics'), 6)
+        self.notebook.insert_page(childWidget, Gtk.Label('Statistics'), 6)
         self.notebook.show_all()
 
     def addDifferencesTab(self):
@@ -189,7 +195,7 @@ class PostEditing:
         self.tables["diff_table"] = Table("diff_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing, self.diff_tab_grid)
         self.addDifferencesTab()
 
-        self.calculateStatistics()
+        self.calculate_statistics()
 
 
         self.tables["translation_table"].save_post_editing_changes_button.hide()

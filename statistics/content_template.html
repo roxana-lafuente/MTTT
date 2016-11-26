@@ -6,10 +6,7 @@
       <table id="changes" class="git">
         <thead>
           <tr>
-            <th>Segment</th>
-            <th>Insertions</th>
-            <th>Deletions</th>
-            <th>% of time spent</th>
+            <!--table title ends here. Do not delete this comment.-->
           </tr>
           <tr>
           </tr>
@@ -23,22 +20,5 @@
     </table>
     <div class="chart" id="changes_chart"></div>
   </div>
-  <script type="text/javascript">
-    changes_plot = $.plot
-    (
-      $("#changes_chart"),
-      [],
-       {
-         series: {
-           pie: {innerRadius: 0.4, show: true,combine: {threshold: 0.01,label: ""
-           }
-         }
-       },
-       grid: {hoverable: true}
-     }
-   );
-  </script>
-
 <!--pie script ends here. Do not delete this comment.-->
-</div></div>
 </div></div>
