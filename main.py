@@ -124,7 +124,7 @@ class MyWindow(Gtk.Window):
 
         # Set notebook for tabs
         self.notebook = Gtk.Notebook()
-        box.pack_start(self.notebook, False, False, 0)
+        box.pack_start(self.notebook, True, True, 0)
         self.add(box)
 
         # Add tabs to the notebook
