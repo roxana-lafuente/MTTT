@@ -115,20 +115,11 @@ class PostEditing:
         percentaje_spent_by_segment=self.tables["translation_table"].calculate_insertions_or_deletions_percentajes(False)
         title = "<th>Segment </th><th>" + '%'+ " of insertions made</th>"
         return self.build_pie_as_json_string(percentaje_spent_by_segment),self.build_table(percentaje_spent_by_segment),title
-    '''
-    def build_table(self, percentaje_spent_by_segment):
-        table_data_list = []
-        for a in percentaje_spent_by_segment:
-            string = "<tr><td>"+str(a)+"</td>"
-            string += "<td>"+str(percentaje_spent_by_segment[a])+"</td></tr>"
-            table_data_list.append(string)
-        return ''.join(table_data_list)
-    '''
     def format_table_data(self, segment_index, table_contents):
         segment_source = table_contents[0][segment_index]
         segment_modified = table_contents[1][segment_index]
         id_source = segment_index
-        id_target = id_source + 10000
+        id_target = id_source + 100000
         final_output = '<a href='+ '"' + "javascript:showhide('" +str(id_source)+ "')" + '"' + '><input type="button" value="Source"></a>'
         final_output += '<div id="%d" style="display: none;height:200px;width:400px;border:1px solid #ccc;font:16px/26px Georgia, Garamond, Serif;overflow:auto;">%s</div>' % (id_source,segment_source)
         final_output += '<a href='+ '"' + "javascript:showhide('" +str(id_target)+ "')" + '"' + '><input type="button" value="Target"></a>'
