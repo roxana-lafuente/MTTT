@@ -21,6 +21,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
+
 try:
     import gi
     gi.require_version('Gtk', '3.0')
@@ -100,8 +101,14 @@ class MyWindow(Gtk.Window):
                 f.write(self.moses_dir)
                 f.close()
 
+        self.saved_absolute_path = os.path.abspath("saved")
+        self.saved_relative_filepath = "./saved"
+        if not os.path.exists(self.saved_absolute_path):
+            os.makedirs(self.saved_absolute_path)
+
         # Main title
         Gtk.Window.__init__(self, title="Translators' Training Tool")
+        self.connect('destroy', self.final_responsabilities)
         self.set_border_width(3)
 
         # Toolbar initialization
@@ -117,7 +124,7 @@ class MyWindow(Gtk.Window):
 
         # Set notebook for tabs
         self.notebook = Gtk.Notebook()
-        box.pack_start(self.notebook, False, False, 0)
+        box.pack_start(self.notebook, True, True, 0)
         self.add(box)
 
         # Add tabs to the notebook
@@ -196,6 +203,9 @@ class MyWindow(Gtk.Window):
             response = dialog.run()
             directory = entry.get_text()
             dialog.destroy()
+        '''
+        #COMMENTED SO THAT THE PROGRAMS LETS ME WORK
+        #TODO RESTORE CHANGES
         # If it is not valid, keep asking until valid or user leaves.
         if response in [Gtk.ResponseType.REJECT,
                         Gtk.ResponseType.CLOSE,
@@ -203,6 +213,13 @@ class MyWindow(Gtk.Window):
             # TODO: Show error and exit
             exit(1)
         else: # Gtk.ResponseType.ACCEPT
+            self.moses_dir = directory
+        '''
+        #this is the non-program-breaking solution to the problem
+        #is a temporary solution
+        if response not in [Gtk.ResponseType.REJECT,
+                        Gtk.ResponseType.CLOSE,
+                        Gtk.ResponseType.DELETE_EVENT]:
             self.moses_dir = directory
         return directory
 
@@ -340,8 +357,8 @@ class MyWindow(Gtk.Window):
                                     expand=True,
                                     fill=True,
                                     padding=30)
-        self.notebook.append_page(self.preparation,
-                                  Gtk.Label('Corpus preparation'))
+        self.notebook.insert_page(self.preparation,
+                                  Gtk.Label('Corpus preparation'),0)
 
     def _prepare_corpus(self, button):
         output_directory = self.output_text.get_text()
@@ -499,7 +516,7 @@ class MyWindow(Gtk.Window):
                             1)
 
         self.training.add(grid)
-        self.notebook.append_page(self.training, Gtk.Label('Training'))
+        self.notebook.insert_page(self.training, Gtk.Label('Training'),1)
 
     def _train(self, button):
         output_directory = self.output_text.get_text()
@@ -628,8 +645,8 @@ class MyWindow(Gtk.Window):
                             10)
 
         self.translation.add(grid)
-        self.notebook.append_page(self.translation,
-                                  Gtk.Label('Machine Translation'))
+        self.notebook.insert_page(self.translation,
+                                  Gtk.Label('Machine Translation'),2)
 
     def _machine_translation(self, button):
         in_file = adapt_path_for_cygwin(self.is_windows, self.mt_in_text.get_text())
@@ -738,7 +755,6 @@ class MyWindow(Gtk.Window):
         grid.add(buttons_frame)
 
         # Evaluation: Results
-        gridBelow = Gtk.Grid()
         inside_grid = Gtk.Grid()
         evaluation_results_frame = Gtk.Frame(label="Results")
         scrolledwindow = Gtk.ScrolledWindow()
@@ -754,8 +770,7 @@ class MyWindow(Gtk.Window):
         grid.attach(evaluation_results_frame, 0, 1, 3, 1)
 
         self.preparation.pack_start(grid, expand =True, fill =True, padding =0)
-        #self.preparation.pack_start(gridBelow, expand =True, fill =True, padding =0)
-        self.notebook.append_page(self.preparation, Gtk.Label('Evaluation'))
+        self.notebook.insert_page(self.preparation, Gtk.Label('Evaluation'),3)
 
     def _evaluate(self, button):
         checkbox_indexes = [False] * 8 #checkbox_indexes["WER","PER","HTER", "GTM", "BLEU","BLEU2GRAM","BLEU3GRAM"]
@@ -771,18 +786,20 @@ class MyWindow(Gtk.Window):
         self.resultsTextBuffer.set_text(result)
 
     def _set_post_editing(self):
+        self.notebook.remove_page(4)
         self.preparation = Gtk.VBox()
-        grid = Gtk.Grid()
+        self.postEdition_grid = Gtk.Grid()
+        self.postEdition_grid.set_row_spacing(1)
+        self.postEdition_grid.set_column_spacing(20)
 
         #  Post Editing Frame.
         self.postEditing_file_menu_grid = Gtk.Grid()
-        texts_menu_frame = Gtk.Frame(label="Evaluation")
+        texts_menu_frame = Gtk.Frame(label="Post-Editing")
         # Post Editing : Source Text Picker
         post_editing_source_label = Gtk.Label("Select source file")
         self.postEditing_file_menu_grid.add(post_editing_source_label)
         self.post_editing_source = Gtk.Entry()
         self.post_editing_source.set_text("")
-        self.post_editing_source.set_editable(False)
         self.postEditing_file_menu_grid.add(self.post_editing_source)
         self.post_editing_source_button = Gtk.Button("Choose File")
         self.post_editing_source_button.connect("clicked", self._on_file_clicked, self.post_editing_source)
@@ -793,88 +810,33 @@ class MyWindow(Gtk.Window):
         self.postEditing_file_menu_grid.attach_next_to(post_editing_reference_label, post_editing_source_label, Gtk.PositionType.BOTTOM, 1, 10)
         self.post_editing_reference = Gtk.Entry()
         self.post_editing_reference.set_text("")
-        self.post_editing_reference.set_editable(False)
         self.postEditing_file_menu_grid.attach_next_to(self.post_editing_reference, self.post_editing_source, Gtk.PositionType.BOTTOM, 1, 10)
         self.post_editing_reference_button = Gtk.Button("Choose File")
         self.post_editing_reference_button.connect("clicked", self._on_file_clicked, self.post_editing_reference)
         self.postEditing_file_menu_grid.attach_next_to(self.post_editing_reference_button, self.post_editing_source_button, Gtk.PositionType.BOTTOM, 1, 10)
+        self.post_editing_source.connect("changed", self._check_if_both_files_are_choosen_post_edition)
+        self.post_editing_reference.connect("changed", self._check_if_both_files_are_choosen_post_edition)
 
-        # Post Editing : Fill the table button
-        self.translation_table_index = 0
-        self.back_button = Gtk.Button("Back")
-        self.postEditing_file_menu_grid.attach_next_to(self.back_button, self.post_editing_reference_button, Gtk.PositionType.BOTTOM, 1, 10)
-        self.next_button = Gtk.Button("Next")
-        self.postEditing_file_menu_grid.attach_next_to(self.next_button, self.back_button, Gtk.PositionType.RIGHT, 1, 10)
-        self.reduce_rows_translation_table = Gtk.Button("- rows")
-        self.postEditing_file_menu_grid.attach_next_to(self.reduce_rows_translation_table, self.back_button, Gtk.PositionType.BOTTOM, 1, 10)
-        self.increase_rows_translation_table = Gtk.Button("+ rows")
-        self.postEditing_file_menu_grid.attach_next_to(self.increase_rows_translation_table, self.next_button, Gtk.PositionType.BOTTOM, 1, 10)
-        self.REC_button = Gtk.CheckButton.new_with_label("REC")
-        self.postEditing_file_menu_grid.attach_next_to(self.REC_button, self.next_button, Gtk.PositionType.RIGHT, 1, 10)
-        self.postEditing_file_menu_grid.set_column_spacing(10)
+        self.postEdition_grid.add(self.postEditing_file_menu_grid)
+        self.preparation.pack_start(self.postEdition_grid, expand =True, fill =True, padding =0)
+        self.notebook.insert_page(self.preparation, Gtk.Label('Post Editing'),4)
+        self.notebook.show_all()
 
-
-        texts_menu_frame.add(self.postEditing_file_menu_grid)
-        grid.add(texts_menu_frame)
-        grid.set_row_spacing(1)
-        grid.set_column_spacing(20)
-
-
-        # Post Editing: Term Search
-        term_search_frame = Gtk.Frame(label="Term Search")
-        term_search_entry = Gtk.Entry()
-        term_search_frame.add(term_search_entry)
-        grid.add(term_search_frame)
-
-        #binding of the buttons events to the PostEditing methods
-        self.PostEditing = PostEditing(self.post_editing_source,self.post_editing_reference, self.back_button, self.next_button, self.REC_button,self.postEditing_file_menu_grid)
-        self.post_editing_source.connect("changed", self.PostEditing._check_if_both_files_are_choosen_post_edition)
-        self.post_editing_reference.connect("changed", self.PostEditing._check_if_both_files_are_choosen_post_edition)
-        self.increase_rows_translation_table.connect("clicked", self.PostEditing._increase_translation_table_rows)
-        self.reduce_rows_translation_table.connect("clicked", self.PostEditing._reduce_translation_table_rows)
-        self.back_button.connect("clicked", self.PostEditing._back_in_translation_table)
-        self.next_button.connect("clicked", self.PostEditing._next_in_translation_table)
-        term_search_entry.connect("changed", self.PostEditing.search_and_mark_wrapper)
-        self.PostEditing._translation_table_initializing()
-
-        self.translation_table = self.PostEditing.translation_table
-
-        # Post Editing: Results
-        gridBelow = Gtk.Grid()
-        inside_grid = Gtk.Grid()
-        evaluation_results_frame = Gtk.Frame(label="Results")
-        scrolledwindow = Gtk.ScrolledWindow()
-        scrolledwindow.set_hexpand(True)
-        scrolledwindow.set_vexpand(True)
-
-
-
-        scrolledwindow.add(self.PostEditing.search_buttons_table)
-        evaluation_results_frame.add(scrolledwindow)
-        grid.attach_next_to(evaluation_results_frame, term_search_frame, Gtk.PositionType.BOTTOM, 1, 1)
-
-        # Post Editing: Table
-        gridBelow = Gtk.Grid()
-        inside_grid = Gtk.Grid()
-        evaluation_results_frame = Gtk.Frame()
-
-
-        scrolledwindow = Gtk.ScrolledWindow()
-        scrolledwindow.set_hexpand(True)
-        scrolledwindow.set_vexpand(True)
-        scrolledwindow.add(self.translation_table)
-        evaluation_results_frame.add(scrolledwindow)
-
-
-        grid.attach_next_to(evaluation_results_frame, texts_menu_frame, Gtk.PositionType.BOTTOM, 1, 1)
-
-        self.preparation.pack_start(grid, expand =True, fill =True, padding =0)
-        #self.preparation.pack_start(gridBelow, expand =True, fill =True, padding =0)
-        self.notebook.append_page(self.preparation, Gtk.Label('Post Editing'))
-
+    def _check_if_both_files_are_choosen_post_edition(self,object):
+        if self.post_editing_source.get_text() != "" and self.post_editing_reference.get_text() != "":
+            post_editing_source_text = self.post_editing_source.get_text()
+            post_editing_reference_text = self.post_editing_reference.get_text()
+            self._set_post_editing()
+            self.notebook.set_current_page(4)
+            #binding of the buttons events to the PostEditing methods
+            self.PostEditing = PostEditing(
+                post_editing_source_text,#so that it can read the source file
+                post_editing_reference_text,#so that it can read the reference file
+                self.notebook,#so that it can add the diff tab when needed
+                self.postEdition_grid)#so that it can add search entry and table
 
     def gtk_change_visuals(self, light_option = "unchanged", theme = "unchanged"):
-        if Gtk.MAJOR_VERSION>=3 and  Gtk.MINOR_VERSION >=14:
+        if Gtk.MAJOR_VERSION >=3 and  Gtk.MINOR_VERSION >=14:
             css_filename = "gtk"
             filename = ""
             if theme == "metro" or theme == "paper":
@@ -926,7 +888,15 @@ class MyWindow(Gtk.Window):
             self.gtk_change_visuals(light_option = "gtk-dark",theme = "unchanged")
         else:
             self.gtk_change_visuals(light_option = "gtk",theme = "unchanged")
-
+    def final_responsabilities(self, widget=None):
+        self.save_post_edition_changes()
+        self.delete_generated_files()
+    def save_post_edition_changes(self):
+        if self.PostEditing:
+            self.PostEditing.saveChangedFromPostEditing()
+    def delete_generated_files(self):
+        if self.PostEditing:
+            self.PostEditing.delete_generated_files()
 
 win = MyWindow()
 win.gtk_change_visuals(light_option = "gtk", theme = "paper")

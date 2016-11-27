@@ -21,219 +21,299 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-import gi
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
-from gi.repository import Gdk
+try:
+    import gi
+    gi.require_version('Gtk', '3.0')
+    gi.require_version('WebKit', '3.0')
+    from gi.repository import Gtk
+    from gi.repository import Gdk
+    from gi.repository import WebKit
+except ImportError:
+    print "Dependency unfulfilled, please install gi library"
+    exit(1)
+
+try:
+    import os
+except ImportError:
+    print "Dependency unfulfilled, please install os library"
+    exit(1)
+
+try:
+    import json
+except ImportError:
+    print "Dependency unfulfilled, please install json library"
+    exit(1)
+
+try:
+    import sys
+except ImportError:
+    print "Dependency unfulfilled, please install sys library"
+    exit(1)
+
+try:
+    import time
+except ImportError:
+    print "Dependency unfulfilled, please install time library"
+    exit(1)
+
+try:
+    import shutil
+except ImportError:
+    print "Dependency unfulfilled, please install os library"
+    exit(1)
+
+try:
+    import urlparse
+except ImportError:
+    print "Dependency unfulfilled, please install os library"
+    exit(1)
+
+try:
+    import itertools
+except ImportError:
+    print "Dependency unfulfilled, please install os library"
+    exit(1)
+
+from table import Table
+import html_injector
 
 class PostEditing:
 
-    def __init__(self, post_editing_source_label, post_editing_reference_label, back_button, next_button, REC_button, postEditing_file_menu_grid):
-        self.post_editing_source = post_editing_source_label
-        self.post_editing_reference = post_editing_reference_label
-        self.back_button = back_button
-        self.next_button = next_button
-        self.REC_button = REC_button
-        self.postEditing_file_menu_grid = postEditing_file_menu_grid
+    def __init__(self, post_editing_source, post_editing_reference, notebook, grid):
+        self.post_editing_source = post_editing_source
+        self.post_editing_reference = post_editing_reference
+        self.translation_tab_grid = grid
+        self.notebook = notebook
+        self.modified_references =  []
+        self.saved_modified_references = []
 
-    def _saveChangedFromPostEditing(self):
+        self.tables = {}
+        self.paulaslog = {}
+
+        self.saved_absolute_path = os.path.abspath("saved")
+        filename = post_editing_source[post_editing_source.rfind('/'):]
+        filename_without_extension = os.path.splitext(filename)[0]
+        filename_extension = os.path.splitext(filename)[1]
+        self.saved_origin_filepath = os.path.abspath("saved") + filename
+
+
+        self.tables["translation_table"] =  Table("translation_table",self.post_editing_source,self.post_editing_reference, self.saveChangedFromPostEditing_event,self.saveChangedFromPostEditing, self.calculate_statistics_event, self.translation_tab_grid)
+
+        self.paulas_log_filepath = self.saved_absolute_path + '/paulaslog.json'
+
+
+        if os.path.exists(self.saved_absolute_path):
+            if os.path.exists(self.saved_absolute_path + "_but_to_be_deleted_soon"):
+                    shutil.rmtree(self.saved_absolute_path + "_but_to_be_deleted_soon", ignore_errors=True)
+            os.rename(self.saved_absolute_path,self.saved_absolute_path + "_but_to_be_deleted_soon")
+        os.makedirs(self.saved_absolute_path)
+        shutil.rmtree("./statistics/generated", ignore_errors=True)
+        os.makedirs(os.path.abspath("statistics/generated"))
+
+        self.translation_tab_grid.show_all()
+        self.tables["translation_table"].save_post_editing_changes_button.hide()
+        self.tables["translation_table"].statistics_button.hide()
+        self.tables["translation_table"].insertions_statistics_button.hide()
+        self.tables["translation_table"].deletions_statistics_button.hide()
+        self.tables["translation_table"].time_statistics_button.hide()
+
+    def calculate_time_per_segment(self):
+        seconds_spent_by_segment = {}
+        percentaje_spent_by_segment = {}
+        total_time_spent = 0
+        #again with the closure, lets see how it plays out.
+        def pairwise(iterable):
+            a, b = itertools.tee(iterable)
+            next(b, None)
+            return itertools.izip(a, b)
+
+        #calculate time spent by segment
+        for current_timestamp,next_timestamp in pairwise(sorted(self.paulaslog.keys())):
+            #for current_timestamp,next_timestamp in sorted(self.paulaslog.keys()):
+            delta = (int(next_timestamp) - int(current_timestamp))/1000
+            for segment_index in self.paulaslog[current_timestamp]:
+                if segment_index in seconds_spent_by_segment:
+                    seconds_spent_by_segment[segment_index] += delta
+                else:
+                    seconds_spent_by_segment[segment_index] = delta
+        #calculate total time spent
+        for a in seconds_spent_by_segment:
+            total_time_spent += seconds_spent_by_segment[a]
+        #calculate percentajes
+        for a in seconds_spent_by_segment:
+            percentaje_spent_by_segment[a] = float(seconds_spent_by_segment[a]) *100 / float(total_time_spent)
+
+
+        title = "<th>Segment </th><th>" + '%'+ " of the time spent </th>"
+        return self.build_pie_as_json_string(percentaje_spent_by_segment),self.build_table(percentaje_spent_by_segment),title
+
+    def calculate_deletions_per_segment(self):
+        percentaje_spent_by_segment=self.tables["translation_table"].calculate_insertions_or_deletions_percentajes(True)
+        title = "<th>Segment </th><th>" + '%'+ " of deletions made</th>"
+        return self.build_pie_as_json_string(percentaje_spent_by_segment),self.build_table(percentaje_spent_by_segment),title
+    def calculate_insertions_per_segment(self):
+        percentaje_spent_by_segment=self.tables["translation_table"].calculate_insertions_or_deletions_percentajes(False)
+        title = "<th>Segment </th><th>" + '%'+ " of insertions made</th>"
+        return self.build_pie_as_json_string(percentaje_spent_by_segment),self.build_table(percentaje_spent_by_segment),title
+    def format_table_data(self, segment_index, table_contents):
+        segment_source = table_contents[0][segment_index]
+        segment_modified = table_contents[1][segment_index]
+        id_source = segment_index
+        id_target = id_source + 100000
+        final_output = '<a href='+ '"' + "javascript:showhide('" +str(id_source)+ "')" + '"' + '><input type="button" value="Source"></a>'
+        final_output += '<a href='+ '"' + "javascript:showhide('" +str(id_target)+ "')" + '"' + '><input type="button" value="Target"></a>'
+        final_output += '<div id="%d" style="display: none;height:200px;width:400px;border:1px solid #ccc;font:16px/26px Georgia, Garamond, Serif;overflow:auto;">%s</div>' % (id_source,segment_source)
+        final_output += '<div id="%d" style="display: none;height:200px;width:400px;border:1px solid #ccc;font:16px/26px Georgia, Garamond, Serif;overflow:auto;">%s</div>' % (id_target,segment_modified)
+        return final_output
+    def build_table(self, percentaje_spent_by_segment):
+        table_data_list = []
+        for segment_index in percentaje_spent_by_segment:
+            string = "<tr><td>"+str(segment_index)
+            string += self.format_table_data(segment_index,self.tables["translation_table"].tables_content)+"</td>"
+            string += "<td>"+str(percentaje_spent_by_segment[segment_index])+"</td></tr>"
+            table_data_list.append(string)
+        return ''.join(table_data_list)
+    def build_pie_as_json_string(self, percentaje_spent_by_segment):
+        pie_as_json_string_list = []
+        for a in percentaje_spent_by_segment:
+            string = '{label: "' + str(a) + '", data: ' + str(percentaje_spent_by_segment[a]) + '}'
+            pie_as_json_string_list.append(string)
+        return ','.join(pie_as_json_string_list)
+
+    def calculate_statistics_event(self, button, statistics_name):
+        self.tables["translation_table"].statistics_button.hide()
+        if statistics_name == "statistics_in_general":
+            self.show_the_available_stats(False)
+        else:
+            self.calculate_statistics(statistics_name)
+            self.notebook.set_current_page(6)
+    def calculate_statistics(self, statistics_name):
+        pie_as_json_string = ""
+        if statistics_name == "time_per_segment":
+            pie_as_json_string,table_data,title = self.calculate_time_per_segment()
+        elif statistics_name == "insertions":
+            pie_as_json_string,table_data,title = self.calculate_insertions_per_segment()
+        elif statistics_name == "deletions":
+            pie_as_json_string,table_data,title = self.calculate_deletions_per_segment()
+        if pie_as_json_string:
+            html_injector.inject_into_html(pie_as_json_string, table_data, title, statistics_name)
+            self.add_statistics(statistics_name)
+
+    def add_statistics(self, statistic_to_show):
+        self.notebook.remove_page(6)
+        html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
+        view = WebKit.WebView()
+        view.open(html)
+        uri = "statistics/generated/" + statistic_to_show + '.html'
+        uri = os.path.realpath(uri)
+        uri = urlparse.ParseResult('file', '', uri, '', '', '')
+        uri = urlparse.urlunparse(uri)
+        view.load_uri(uri)
+        childWidget = view
+        self.notebook.insert_page(childWidget, Gtk.Label('Statistics'), 6)
+        self.update_notebook()
+
+    def addDifferencesTab(self):
+        self.preparation = Gtk.VBox()
+        self.notebook.remove_page(5)
+        self.preparation.pack_start(self.diff_tab_grid, expand =True, fill =True, padding =0)
+        self.notebook.insert_page(self.preparation, Gtk.Label('Differences'), 5)
+        self.update_notebook()
+
+    def update_notebook(self, maybe_show_buttons = False):
+        self.notebook.show_all()
+        if maybe_show_buttons:
+            self.show_the_available_stats()
+        else:
+            self.tables["translation_table"].insertions_statistics_button.hide()
+            self.tables["translation_table"].deletions_statistics_button.hide()
+            self.tables["translation_table"].time_statistics_button.hide()
+            self.tables["translation_table"].statistics_button.hide()
+    def show_the_available_stats(self, do_show_the_general_statistics_button_and_not_the_others = True):
+        #if the json string is empty, then no calculations have been made
+        #and so the buttons should not be shown
+        insertions =  self.calculate_insertions_per_segment()[0]
+        deletions = self.calculate_deletions_per_segment()[0]
+        time = self.calculate_time_per_segment()[0]
+        if do_show_the_general_statistics_button_and_not_the_others:
+            self.tables["translation_table"].insertions_statistics_button.hide()
+            self.tables["translation_table"].deletions_statistics_button.hide()
+            self.tables["translation_table"].time_statistics_button.hide()
+            if insertions or deletions or time:
+                self.tables["translation_table"].statistics_button.show()
+
+        if not do_show_the_general_statistics_button_and_not_the_others:
+            if insertions:self.tables["translation_table"].insertions_statistics_button.show()
+            else: self.tables["translation_table"].insertions_statistics_button.hide()
+            if deletions:self.tables["translation_table"].deletions_statistics_button.show()
+            else:self.tables["translation_table"].deletions_statistics_button.hide()
+            if time:self.tables["translation_table"].time_statistics_button.show()
+            else:self.tables["translation_table"].time_statistics_button.hide()
+
+
+        if self.tables["translation_table"].REC_button.get_active():
+            self.tables["translation_table"].save_post_editing_changes_button.hide()
+
+    def save_not_using_git(self):
+        #lets see how using closure is seen by the team... here's hope it plays out!
+        def savefile(text, filename):
+            text_file = open(filename, "w")
+            text_file.write(text)
+            text_file.close()
+        savefile('\n'.join(self.tables["translation_table"].tables_content[self.tables["translation_table"].source_text_lines]), self.saved_origin_filepath)
+
+    def load_paulas_log(self):
+        anonymousjsonlog = {}
+        try:
+            with open(self.paulas_log_filepath) as json_data:
+                anonymousjsonlog= json.load(json_data)
+        except: open(self.paulas_log_filepath, 'w').close()
+        return anonymousjsonlog
+
+    def save_using_paulas_version_of_a_version_control_system(self):
+        for index in range(0, len(self.tables["translation_table"].tables_content[1])):
+            if index in self.tables["translation_table"].translation_reference_text_TextViews_modified_flag:
+                modified_reference = self.tables["translation_table"].translation_reference_text_TextViews_modified_flag[index]
+                if modified_reference not in self.saved_modified_references:
+                    self.saved_modified_references.append(modified_reference)
+                    if self.last_change_timestamp not in self.paulaslog:
+                        self.paulaslog[self.last_change_timestamp] = {}
+                    self.paulaslog[self.last_change_timestamp][index] = modified_reference
+        with open(self.paulas_log_filepath, 'w') as outfile:
+            json.dump(self.paulaslog, outfile)
+
+
+    def saveChangedFromPostEditing(self):
+        self.last_change_timestamp = int(time.time() * 1000)
         #reconstruct all cells from the table of the target column
-        modified_reference = ""
-        for index in range(0, len(self.translation_reference_text_lines)):
-            if index in self.translation_reference_text_TextViews_modified_flag:
-                modified_reference += self.translation_reference_text_TextViews_modified_flag[index]
+        for index in range(0, len(self.tables["translation_table"].tables_content[1])):
+            if index in self.tables["translation_table"].translation_reference_text_TextViews_modified_flag:
+                self.modified_references.append(self.tables["translation_table"].translation_reference_text_TextViews_modified_flag[index])
             else:
-                modified_reference += self.translation_reference_text_lines[index]
-        #save to file
-        text_file = open(self.post_editing_reference.get_text(), "w")
-        text_file.write(modified_reference)
-        text_file.close()
+                self.modified_references.append(self.tables["translation_table"].tables_content[1][index])
 
-        self.changesMadeWorthSaving = 0
-        self.postEditing_file_menu_grid.remove(self.save_post_editing_changes_button)
-    def _saveChangedFromPostEditing_event(self, button):
-        self._saveChangedFromPostEditing()
+        self.save_not_using_git()
+        string = self.post_editing_reference
 
-    def _search_button_action(self, button, line_index):
-        self._move_in_translation_table(line_index - self.translation_table_index - 1)
+        self.diff_tab_grid = Gtk.Grid()
+        self.diff_tab_grid.set_row_spacing(1)
+        self.diff_tab_grid.set_column_spacing(20)
 
-    def create_search_button (self, text, line_index):
-        search_button = Gtk.Button()
-        self.search_buttons_array.append(search_button)
-        cell = Gtk.TextView()
-        cell.set_wrap_mode(True)
-        cellTextBuffer = cell.get_buffer()
-        cellTextBuffer.set_text(text)
-        cell.set_right_margin(20)
-        cell.set_wrap_mode(2)#2 == Gtk.WRAP_WORD
-        cell.show()
-        search_button.add(cell)
-        search_button.show()
-        search_button.connect("clicked", self._search_button_action, line_index)
-        button_y_coordinate = len(self.search_buttons_array) -1
-        self.search_buttons_table.attach(search_button, 0, 0+1, button_y_coordinate, button_y_coordinate+1)
+        self.save_using_paulas_version_of_a_version_control_system()
+        self.tables["diff_table"] = Table("diff_table",self.post_editing_source,self.post_editing_reference, self.saveChangedFromPostEditing_event,self.saveChangedFromPostEditing, self.calculate_statistics_event, self.diff_tab_grid)
+        self.addDifferencesTab()
 
-    def search_and_mark_wrapper(self, text_buffer_object):
-        text_to_search_for =  text_buffer_object.get_text()
-        line_index = 0
-        for a in self.search_buttons_array:
-            a.destroy()
-        self.search_buttons_array[:]=[]
-        if text_to_search_for != "":
-            for line in self.translation_reference_text_lines:
-                line_index += 1
-                if text_to_search_for in line:
-                    self.create_search_button(line, line_index)
-
-    def search_and_mark(self, text_to_search_for, start, text_buffer):
-        end = text_buffer.get_end_iter()
-        match = start.forward_search(text_to_search_for, 0, end)
-
-        if match != None:
-            match_start, match_end = match
-            tagtable = text_buffer.get_tag_table()
-            tag = tagtable.lookup("found")
-            if tag is None: text_buffer.create_tag("found",background="yellow"); tag = tagtable.lookup("found")
-            text_buffer.apply_tag(tag, match_start, match_end)
-            self.search_and_mark(text_to_search_for, match_end, text_buffer)
-
-    def cell_in_translation_table_changed(self, text_buffer_object, user_data, direction):
-        self.changesMadeWorthSaving += 1
-        if self.changesMadeWorthSaving == 1:
-            #add save button
-            self.save_post_editing_changes_button = Gtk.Button()
-            self.save_post_editing_changes_button.set_image(Gtk.Image(stock=Gtk.STOCK_SAVE))
-            self.save_post_editing_changes_button.set_label("Save changes")
-            self.save_post_editing_changes_button.show()
-            self.save_post_editing_changes_button.connect("clicked", self._saveChangedFromPostEditing_event)
-            self.postEditing_file_menu_grid.attach(self.save_post_editing_changes_button, 3, 0, 1 ,1)
-            if self.REC_button.get_active():
-                self._saveChangedFromPostEditing()
-
-        if direction == "source":
-            self.translation_source_text_TextViews_modified_flag[user_data] = text_buffer_object.get_text(text_buffer_object.get_start_iter(),text_buffer_object.get_end_iter(),True);
-            self.translation_source_text_TextViews[user_data].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
-        if direction == "reference":
-            self.translation_reference_text_TextViews_modified_flag[user_data] = text_buffer_object.get_text(text_buffer_object.get_start_iter(),text_buffer_object.get_end_iter(),True);
-            self.translation_reference_text_TextViews[user_data].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
-
-    def _fill_translation_table(self):
-        if self.post_editing_source.get_text() != "" and self.post_editing_reference.get_text() != "":
-            with open(self.post_editing_source.get_text()) as fp:
-                for line in fp:
-                    line = unicode(line, 'iso8859-15')
-                    if line != '\n':
-                        self.translation_source_text_lines.append(line)
-
-            with open(self.post_editing_reference.get_text()) as fp:
-                for line in fp:
-                    line = unicode(line, 'iso8859-15')
-                    if line != '\n':
-                        self.translation_reference_text_lines.append(line)
+        self.tables["translation_table"].save_post_editing_changes_button.hide()
+        self.show_the_available_stats()
 
 
-    def _translation_table_initializing(self):
+    def saveChangedFromPostEditing_event(self, button):
+        self.saveChangedFromPostEditing()
 
-        self.translation_source_text_TextViews = {}
-        self.translation_reference_text_TextViews = {}
-        self.translation_source_text_TextViews_modified_flag = {}
-        self.translation_reference_text_TextViews_modified_flag = {}
-        self.translation_source_text_lines = []
-        self.translation_reference_text_lines = []
-        self.search_buttons_array = []
-        self.ammount_of_rows_in_translation_table = 5
-        self.translation_table_index = 0
+    def delete_generated_files(self):
+        shutil.rmtree("./statistics/generated", ignore_errors=True)
 
-        self.translation_table = Gtk.Table(1,1, True)
-        self.search_buttons_table = Gtk.Table(1,1, True)
-        source_label = Gtk.Label("Source")
-        self.translation_table.attach(source_label, 1, 1+1, 0, 1+0)
-        target_label = Gtk.Label("Target")
-        self.translation_table.attach(target_label, 2, 2+1, 0, 1+0)
-        self.translation_table.set_col_spacings(5)
-        self.translation_table.set_row_spacings(5)
-        self.translation_table.set_homogeneous(False)
-
-        return self.translation_table
-
-    def _clean_translation_table(self):
-        children = self.translation_table.get_children();
-        for element in children:
-            #remove all Gtk.Label and Gtk.TextView objects
-            if isinstance(element,Gtk.TextView) or isinstance(element,Gtk.Label):
-                self.translation_table.remove(element)
-        #re-attach the source and target labels
-        source_label = Gtk.Label("Source")
-        source_label.show()
-        self.translation_table.attach(source_label, 1, 1+1, 0, 1+0)
-        target_label = Gtk.Label("Target")
-        target_label.show()
-        self.translation_table.attach(target_label, 2, 2+1, 0, 1+0)
-
-    def _move_in_translation_table(self, ammount_of_lines_to_move, feel_free_to_change_the_buttons = True):
-        #TODO move the following statement elsewhere
-        if len(self.translation_source_text_lines) == 0:
-            self._fill_translation_table()
-        #clean the translation_table
-        self._clean_translation_table()
-        if ammount_of_lines_to_move > 0 or self.translation_table_index > 0:
-             self.translation_table_index += ammount_of_lines_to_move
-        if self.translation_table_index == 0:
-            self.back_button.set_visible(False)
-        self.changesMadeWorthSaving = 0
-        for y in range (0,self.ammount_of_rows_in_translation_table):
-            try:
-                cell = Gtk.TextView()
-                cell.set_wrap_mode(True)
-                cell.set_editable(False)
-                cell.set_cursor_visible(False)
-                cellTextBuffer = cell.get_buffer()
-                index = y + self.translation_table_index
-                cellTextBuffer.set_text(self.translation_source_text_lines[index])
-                self.translation_source_text_TextViews[index] = cell
-                if index in self.translation_source_text_TextViews_modified_flag:
-                    self.translation_source_text_TextViews[index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
-                cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index, "source")
-                cell.set_right_margin(20)
-                cell.set_wrap_mode(2)#2 == Gtk.WRAP_WORD
-                cell.show()
-                self.translation_table.attach(cell, 1, 1+1, 1+y, 1+1+y)
-
-                cell = Gtk.TextView()
-                cell.set_wrap_mode(True)
-                cellTextBuffer = cell.get_buffer()
-                index = y + self.translation_table_index
-                cellTextBuffer.set_text(self.translation_reference_text_lines[index])
-                self.translation_reference_text_TextViews[index] = cell
-                if index in self.translation_reference_text_TextViews_modified_flag:
-                    self.translation_reference_text_TextViews[index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
-                cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index, "reference")
-                cell.set_right_margin(20)
-                cell.set_wrap_mode(2)#2 == Gtk.WRAP_WORD
-                cell.show()
-                self.translation_table.attach(cell, 2, 2+1, 1+y, 1+1+y)
-            except IndexError:
-                self.next_button.set_visible(False)
-        if feel_free_to_change_the_buttons:
-            if ammount_of_lines_to_move == -1:
-                self.next_button.set_visible(True)
-            else:
-                self.back_button.set_visible(True)
-
-    def _back_in_translation_table(self, button):
-        self._move_in_translation_table(-1)
-    def _next_in_translation_table(self, button):
-        self._move_in_translation_table(+1)
-    def _increase_translation_table_rows(self, button):
-        self.ammount_of_rows_in_translation_table += 1
-        self.update_translation_table(False)
-    def _reduce_translation_table_rows(self, button):
-        if self.ammount_of_rows_in_translation_table > 1:
-            self.ammount_of_rows_in_translation_table -= 1
-            self.update_translation_table(False)
-    def update_translation_table(self, to_change_the_buttons_or_not = True):
-        self._move_in_translation_table(+1, to_change_the_buttons_or_not)
-        self._move_in_translation_table(-1, to_change_the_buttons_or_not)
-    def _check_if_both_files_are_choosen_post_edition(self,object):
-        if self.post_editing_source.get_text() != "" and self.post_editing_reference.get_text() != "":
-            self.update_translation_table()
+        if os.path.exists(self.saved_absolute_path):
+            if os.path.exists(self.saved_absolute_path + "_but_to_be_deleted_soon"):
+                    shutil.rmtree(self.saved_absolute_path + "_but_to_be_deleted_soon", ignore_errors=True)
+            os.rename(self.saved_absolute_path,self.saved_absolute_path + "_but_to_be_deleted_soon")
