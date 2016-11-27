@@ -75,7 +75,7 @@ except ImportError:
     exit(1)
 
 from table import Table
-from statistics import html_injector
+import html_injector
 
 class PostEditing:
 
