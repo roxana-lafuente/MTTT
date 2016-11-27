@@ -21,21 +21,61 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-import gi
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
-from gi.repository import Gdk
-gi.require_version('WebKit', '3.0')
-from gi.repository import WebKit
-import json
-import os
-import sys
-import shutil
-import urlparse
-import time
-import itertools
+try:
+    import gi
+    gi.require_version('Gtk', '3.0')
+    gi.require_version('WebKit', '3.0')
+    from gi.repository import Gtk
+    from gi.repository import Gdk
+    from gi.repository import WebKit
+except ImportError:
+    print "Dependency unfulfilled, please install gi library"
+    exit(1)
+
+try:
+    import os
+except ImportError:
+    print "Dependency unfulfilled, please install os library"
+    exit(1)
+
+try:
+    import json
+except ImportError:
+    print "Dependency unfulfilled, please install json library"
+    exit(1)
+
+try:
+    import sys
+except ImportError:
+    print "Dependency unfulfilled, please install sys library"
+    exit(1)
+
+try:
+    import time
+except ImportError:
+    print "Dependency unfulfilled, please install time library"
+    exit(1)
+
+try:
+    import shutil
+except ImportError:
+    print "Dependency unfulfilled, please install os library"
+    exit(1)
+
+try:
+    import urlparse
+except ImportError:
+    print "Dependency unfulfilled, please install os library"
+    exit(1)
+
+try:
+    import itertools
+except ImportError:
+    print "Dependency unfulfilled, please install os library"
+    exit(1)
+
 from table import Table
-import html_injector
+from statistics import html_injector
 
 class PostEditing:
 

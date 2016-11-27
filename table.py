@@ -1,12 +1,40 @@
 
-import gi
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
-from gi.repository import Gdk
-import os
-import sys
-import json
-import difflib
+try:
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk
+    from gi.repository import Gdk
+except ImportError:
+    print "Dependency unfulfilled, please install gi library"
+    exit(1)
+
+try:
+    import difflib
+except ImportError:
+    print "Dependency unfulfilled, please install difflib library"
+    exit(1)
+
+try:
+    import os
+except ImportError:
+    print "Dependency unfulfilled, please install os library"
+    exit(1)
+
+try:
+    import json
+except ImportError:
+    print "Dependency unfulfilled, please install json library"
+    exit(1)
+
+
+try:
+    import time
+except ImportError:
+    print "Dependency unfulfilled, please install time library"
+    exit(1)
+
+
+
 
 class Table:
     def __init__(self, table_type, source, reference, save_callback_function, save_function,  stats_callback_function, tab_grid):
