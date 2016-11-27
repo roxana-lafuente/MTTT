@@ -35,7 +35,7 @@ import urlparse
 import time
 import itertools
 from table import Table
-from statistics import html_injector
+import html_injector
 
 class PostEditing:
 
@@ -270,12 +270,13 @@ class PostEditing:
         self.tables["translation_table"].save_post_editing_changes_button.hide()
         self.show_the_available_stats()
 
+
     def saveChangedFromPostEditing_event(self, button):
         self.saveChangedFromPostEditing()
 
     def delete_generated_files(self):
         shutil.rmtree("./statistics/generated", ignore_errors=True)
-        
+
         if os.path.exists(self.saved_absolute_path):
             if os.path.exists(self.saved_absolute_path + "_but_to_be_deleted_soon"):
                     shutil.rmtree(self.saved_absolute_path + "_but_to_be_deleted_soon", ignore_errors=True)
