@@ -29,24 +29,24 @@ class Table:
 
         # Post Editing: Table
         search_frame = Gtk.Frame()
-        search_results_scroll_window = Gtk.ScrolledWindow()
-        search_results_scroll_window.set_hexpand(True)
-        search_results_scroll_window.set_vexpand(True)
-        search_results_scroll_window.add(self.table)
-        search_frame.add(search_results_scroll_window)
+        self.table_scroll_window = Gtk.ScrolledWindow()
+        self.table_scroll_window.set_hexpand(True)
+        self.table_scroll_window.set_vexpand(True)
+        self.table_scroll_window.add(self.table)
+        search_frame.add(self.table_scroll_window)
         self.tab_grid.attach(search_frame, 0, 1, 2, 1)
 
         # Post Editing: Term Search
         table_frame = Gtk.Frame()
-        table_scroll_window = Gtk.ScrolledWindow()
-        table_scroll_window.show()
+        self.search_results_scroll_window = Gtk.ScrolledWindow()
+        self.search_results_scroll_window.show()
         term_search_frame = Gtk.Frame(label="Term Search")
         term_search_entry = Gtk.Entry()
         term_search_frame.add(term_search_entry)
         self.tab_grid.add(term_search_frame)
         term_search_entry.connect("changed", self.search_and_mark_wrapper)
-        table_scroll_window.add(self.search_buttons_table)
-        table_frame.add(table_scroll_window)
+        self.search_results_scroll_window.add(self.search_buttons_table)
+        table_frame.add(self.search_results_scroll_window)
         self.tab_grid.attach_next_to(table_frame, term_search_frame, Gtk.PositionType.BOTTOM, 2, 1)
 
     def make_table_interface(self):
@@ -122,6 +122,7 @@ class Table:
         self.search_buttons_table.attach(search_button, 0, 0+1, button_y_coordinate, button_y_coordinate+1)
 
     def search_and_mark_wrapper(self, text_buffer_object):
+        self.search_results_scroll_window.get_vadjustment().set_value(0)
         text_to_search_for =  text_buffer_object.get_text()
         line_index = 0
         for a in self.search_buttons_array:
