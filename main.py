@@ -824,7 +824,6 @@ class MyWindow(Gtk.Window):
                 post_editing_reference_text,#so that it can read the reference file
                 self.notebook,#so that it can add the diff tab when needed
                 self.postEdition_grid)#so that it can add search entry and table
-            self.postEdition_grid.show_all()
 
     def gtk_change_visuals(self, light_option = "unchanged", theme = "unchanged"):
         if Gtk.MAJOR_VERSION >=3 and  Gtk.MINOR_VERSION >=14:

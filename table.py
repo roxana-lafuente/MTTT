@@ -9,8 +9,9 @@ import json
 import difflib
 
 class Table:
-    def __init__(self, table_type, source, reference, save_callback_function,save_function, tab_grid):
+    def __init__(self, table_type, source, reference, save_callback_function, save_function,  stats_callback_function, tab_grid):
         self.save_callback_function = save_callback_function
+        self.stats_callback_function = stats_callback_function
         self.save_function = save_function
         self.table_type = table_type
         self.source = source
@@ -77,6 +78,27 @@ class Table:
             self.save_post_editing_changes_button.hide()
 
 
+
+            self.deletions_statistics_button = Gtk.Button()
+            self.deletions_statistics_button.set_label("deletions stats")
+            self.deletions_statistics_button.connect("clicked", self.stats_callback_function, "deletions")
+            self.tables_content[self.get_menu_grid].attach_next_to(self.deletions_statistics_button, self.save_post_editing_changes_button, Gtk.PositionType.TOP, 1, 1)
+            self.deletions_statistics_button.hide()
+
+            self.insertions_statistics_button = Gtk.Button()
+            self.insertions_statistics_button.set_label("insertions stats")
+            self.insertions_statistics_button.connect("clicked", self.stats_callback_function, "insertions")
+            self.tables_content[self.get_menu_grid].attach_next_to(self.insertions_statistics_button, self.deletions_statistics_button, Gtk.PositionType.TOP, 1, 1)
+            self.insertions_statistics_button.hide()
+
+            self.time_statistics_button = Gtk.Button()
+            self.time_statistics_button.set_label("time spent per segment")
+            self.time_statistics_button.connect("clicked", self.stats_callback_function, "time_per_segment")
+            self.tables_content[self.get_menu_grid].attach_next_to(self.time_statistics_button, self.insertions_statistics_button, Gtk.PositionType.TOP, 1, 1)
+            self.time_statistics_button.hide()
+
+
+
     def create_search_button (self, text, line_index):
         search_button = Gtk.Button()
         self.search_buttons_array.append(search_button)
@@ -117,8 +139,9 @@ class Table:
         text_buffer.apply_tag(tag, match_start, match_end)
 
     def cell_in_translation_table_changed(self, text_buffer_object, segment_index):
-        self.save_post_editing_changes_button.show()
-        if self.REC_button.get_active() and segment_index != self.last_segment_changed:
+        if not self.REC_button.get_active():
+            self.save_post_editing_changes_button.show()
+        elif segment_index != self.last_segment_changed:
             self.save_function()
             self.last_segment_changed = segment_index
 

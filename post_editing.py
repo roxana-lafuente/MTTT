@@ -30,6 +30,7 @@ from gi.repository import WebKit
 import json
 import os
 import sys
+import shutil
 import urlparse
 import time
 import itertools
@@ -55,19 +56,28 @@ class PostEditing:
         filename_without_extension = os.path.splitext(filename)[0]
         filename_extension = os.path.splitext(filename)[1]
         self.saved_origin_filepath = os.path.abspath("saved") + filename
-        #self.saved_reference_filepath = os.path.abspath("saved") + filename_without_extension + "_modified" + filename_extension
 
 
-        self.tables["translation_table"] =  Table("translation_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing,self.translation_tab_grid)
+        self.tables["translation_table"] =  Table("translation_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing, self.calculate_statistics_event, self.translation_tab_grid)
 
         self.paulas_log_filepath = self.saved_absolute_path + '/paulaslog.json'
         self.old_html_filepath = self.statistics_absolute_path + '/index.html'
         #suggestion: load the last session saved logs, save it as old, and then do delete it.
 
-        if os.path.exists(self.paulas_log_filepath):
-          os.remove(self.paulas_log_filepath)
+
+        if os.path.exists(self.saved_absolute_path):
+            if os.path.exists(self.saved_absolute_path + "_but_to_be_deleted_soon"):
+                    shutil.rmtree(self.saved_absolute_path + "_but_to_be_deleted_soon", ignore_errors=True)
+            os.rename(self.saved_absolute_path,self.saved_absolute_path + "_but_to_be_deleted_soon")
+        os.makedirs(self.saved_absolute_path)
         if os.path.exists(self.old_html_filepath):
           os.remove(self.old_html_filepath)
+
+        self.translation_tab_grid.show_all()
+        self.tables["translation_table"].save_post_editing_changes_button.hide()
+        self.tables["translation_table"].insertions_statistics_button.hide()
+        self.tables["translation_table"].deletions_statistics_button.hide()
+        self.tables["translation_table"].time_statistics_button.hide()
 
     def calculate_time_per_segment(self):
         seconds_spent_by_segment = {}
@@ -122,6 +132,9 @@ class PostEditing:
             pie_as_json_string_list.append(string)
         return ','.join(pie_as_json_string_list)
 
+    def calculate_statistics_event(self, button, statistics_name):
+        self.calculate_statistics(statistics_name)
+        self.notebook.set_current_page(6)
     def calculate_statistics(self, statistics_name):
         pie_as_json_string = ""
         if statistics_name == "time_per_segment":
@@ -149,16 +162,22 @@ class PostEditing:
         childWidget = win.get_child()
         win.remove(childWidget)
         win.destroy()
-
         self.notebook.insert_page(childWidget, Gtk.Label('Statistics'), 6)
-        self.notebook.show_all()
-
+        self.update_notebook()
+        
     def addDifferencesTab(self):
         self.preparation = Gtk.VBox()
         self.notebook.remove_page(5)
         self.preparation.pack_start(self.diff_tab_grid, expand =True, fill =True, padding =0)
         self.notebook.insert_page(self.preparation, Gtk.Label('Differences'), 5)
+        self.update_notebook()
+
+    def update_notebook(self):
         self.notebook.show_all()
+        self.tables["translation_table"].save_post_editing_changes_button.hide()
+        self.tables["translation_table"].insertions_statistics_button.hide()
+        self.tables["translation_table"].deletions_statistics_button.hide()
+        self.tables["translation_table"].time_statistics_button.hide()
 
 
     def save_not_using_git(self):
@@ -207,13 +226,15 @@ class PostEditing:
         self.diff_tab_grid.set_column_spacing(20)
 
         self.save_using_paulas_version_of_a_version_control_system()
-        self.tables["diff_table"] = Table("diff_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing, self.diff_tab_grid)
+        self.tables["diff_table"] = Table("diff_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing, self.calculate_statistics_event, self.diff_tab_grid)
         self.addDifferencesTab()
 
-        self.calculate_statistics("insertions")
-
-
         self.tables["translation_table"].save_post_editing_changes_button.hide()
+        self.tables["translation_table"].insertions_statistics_button.show()
+        self.tables["translation_table"].deletions_statistics_button.show()
+        if self.calculate_time_per_segment()[0]:
+            print self.calculate_time_per_segment()
+            self.tables["translation_table"].time_statistics_button.show()
 
 
     def _saveChangedFromPostEditing_event(self, button):
