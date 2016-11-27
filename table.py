@@ -160,7 +160,7 @@ class Table:
         text = fix_text(text_buffer_object.get_text(text_buffer_object.get_start_iter(),text_buffer_object.get_end_iter(),True) )
         self.tables_content[self.reference_text_lines][segment_index] = text
         self.translation_reference_text_TextViews_modified_flag[segment_index] = text
-        self.tables_content[self.reference_text_views][segment_index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
+        self.tables_content[self.reference_text_views][segment_index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0.7, 249, 249, 240))
 
     def _fill_table(self):
         last_modifications = self.get_lastest_modifications()
@@ -252,7 +252,7 @@ class Table:
         if self.table_type == "translation_table":
             cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index)
             if index in self.translation_reference_text_TextViews_modified_flag:
-                self.tables_content[self.reference_text_views][index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0, 113, 44, 0.5))
+                self.tables_content[self.reference_text_views][index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0.7, 249, 249, 240))
 
         cell.set_right_margin(20)
         cell.set_wrap_mode(2)#2 == Gtk.WRAP_WORD
