@@ -108,7 +108,7 @@ class MyWindow(Gtk.Window):
 
         # Main title
         Gtk.Window.__init__(self, title="Translators' Training Tool")
-        self.connect('destroy', self.save_post_edition_changes)
+        self.connect('destroy', self.final_responsabilities)
         self.set_border_width(3)
 
         # Toolbar initialization
@@ -878,10 +878,15 @@ class MyWindow(Gtk.Window):
             self.gtk_change_visuals(light_option = "gtk-dark",theme = "unchanged")
         else:
             self.gtk_change_visuals(light_option = "gtk",theme = "unchanged")
-
-    def save_post_edition_changes(self,  widget=None):
+    def final_responsabilities(self, widget=None):
+        self.save_post_edition_changes()
+        self.delete_generated_files()
+    def save_post_edition_changes(self):
         if self.PostEditing:
-            self.PostEditing._saveChangedFromPostEditing()
+            self.PostEditing.saveChangedFromPostEditing()
+    def delete_generated_files(self):
+        if self.PostEditing:
+            self.PostEditing.delete_generated_files()
 
 win = MyWindow()
 win.gtk_change_visuals(light_option = "gtk", theme = "paper")

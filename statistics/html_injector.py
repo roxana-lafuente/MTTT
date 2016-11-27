@@ -1,5 +1,5 @@
 
-def combine_and_save_to_index_html(filename):
+def combine_and_save_to_html(filename):
     header = ""
     footer = ""
     content = ""
@@ -9,9 +9,9 @@ def combine_and_save_to_index_html(filename):
     with open ("statistics/footer.html", 'r') as f:
         footer = f.read()
 
-    with open ("statistics/content.html", 'r') as f:
+    with open ("statistics/generated/content.html", 'r') as f:
         content = f.read()
-    filepath_complete = "statistics/" + filename + ".html"
+    filepath_complete = "statistics/generated/" + filename + ".html"
     text_file = open(filepath_complete, "w")
     text_file.write(header)
     text_file.write(content)
@@ -35,7 +35,7 @@ def add_at(at, to_add, contentHTML):
     contentHTML = contentHTML[:starts_at] + to_add + contentHTML[starts_at:]
     return contentHTML
 def save_contentHTML(text):
-    text_file = open("statistics/content.html", "w")
+    text_file = open("statistics/generated/content.html", "w")
     text_file.write(text)
     text_file.close()
 
@@ -51,4 +51,4 @@ def inject_into_html(pie_as_json_string, table_data, table_title, filename):
         table_data, contentHTML)
 
     save_contentHTML(contentHTML)
-    combine_and_save_to_index_html(filename)
+    combine_and_save_to_html(filename)

@@ -51,18 +51,15 @@ class PostEditing:
         self.paulaslog = {}
 
         self.saved_absolute_path = os.path.abspath("saved")
-        self.statistics_absolute_path = os.path.abspath("statistics")
         filename = post_editing_source[post_editing_source.rfind('/'):]
         filename_without_extension = os.path.splitext(filename)[0]
         filename_extension = os.path.splitext(filename)[1]
         self.saved_origin_filepath = os.path.abspath("saved") + filename
 
 
-        self.tables["translation_table"] =  Table("translation_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing, self.calculate_statistics_event, self.translation_tab_grid)
+        self.tables["translation_table"] =  Table("translation_table",self.post_editing_source,self.post_editing_reference, self.saveChangedFromPostEditing_event,self.saveChangedFromPostEditing, self.calculate_statistics_event, self.translation_tab_grid)
 
         self.paulas_log_filepath = self.saved_absolute_path + '/paulaslog.json'
-        self.old_html_filepath = self.statistics_absolute_path + '/index.html'
-        #suggestion: load the last session saved logs, save it as old, and then do delete it.
 
 
         if os.path.exists(self.saved_absolute_path):
@@ -70,8 +67,8 @@ class PostEditing:
                     shutil.rmtree(self.saved_absolute_path + "_but_to_be_deleted_soon", ignore_errors=True)
             os.rename(self.saved_absolute_path,self.saved_absolute_path + "_but_to_be_deleted_soon")
         os.makedirs(self.saved_absolute_path)
-        if os.path.exists(self.old_html_filepath):
-          os.remove(self.old_html_filepath)
+        shutil.rmtree("./statistics/generated", ignore_errors=True)
+        os.makedirs(os.path.abspath("statistics/generated"))
 
         self.translation_tab_grid.show_all()
         self.tables["translation_table"].save_post_editing_changes_button.hide()
@@ -158,7 +155,7 @@ class PostEditing:
         win = Gtk.Window()
         view = WebKit.WebView()
         view.open(html)
-        uri = "statistics/" + statistic_to_show + '.html'
+        uri = "statistics/generated/" + statistic_to_show + '.html'
         uri = os.path.realpath(uri)
         uri = urlparse.ParseResult('file', '', uri, '', '', '')
         uri = urlparse.urlunparse(uri)
@@ -240,7 +237,7 @@ class PostEditing:
             json.dump(self.paulaslog, outfile)
 
 
-    def _saveChangedFromPostEditing(self):
+    def saveChangedFromPostEditing(self):
         self.last_change_timestamp = int(time.time() * 1000)
         #reconstruct all cells from the table of the target column
         for index in range(0, len(self.tables["translation_table"].tables_content[1])):
@@ -257,12 +254,14 @@ class PostEditing:
         self.diff_tab_grid.set_column_spacing(20)
 
         self.save_using_paulas_version_of_a_version_control_system()
-        self.tables["diff_table"] = Table("diff_table",self.post_editing_source,self.post_editing_reference, self._saveChangedFromPostEditing_event,self._saveChangedFromPostEditing, self.calculate_statistics_event, self.diff_tab_grid)
+        self.tables["diff_table"] = Table("diff_table",self.post_editing_source,self.post_editing_reference, self.saveChangedFromPostEditing_event,self.saveChangedFromPostEditing, self.calculate_statistics_event, self.diff_tab_grid)
         self.addDifferencesTab()
 
         self.tables["translation_table"].save_post_editing_changes_button.hide()
         self.show_the_available_stats()
 
+    def saveChangedFromPostEditing_event(self, button):
+        self.saveChangedFromPostEditing()
 
-    def _saveChangedFromPostEditing_event(self, button):
-        self._saveChangedFromPostEditing()
+    def delete_generated_files(self):
+        shutil.rmtree("./statistics/generated", ignore_errors=True)   
