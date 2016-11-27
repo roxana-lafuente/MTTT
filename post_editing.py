@@ -164,7 +164,7 @@ class PostEditing:
         win.destroy()
         self.notebook.insert_page(childWidget, Gtk.Label('Statistics'), 6)
         self.update_notebook()
-        
+
     def addDifferencesTab(self):
         self.preparation = Gtk.VBox()
         self.notebook.remove_page(5)
@@ -174,11 +174,22 @@ class PostEditing:
 
     def update_notebook(self):
         self.notebook.show_all()
-        self.tables["translation_table"].save_post_editing_changes_button.hide()
-        self.tables["translation_table"].insertions_statistics_button.hide()
-        self.tables["translation_table"].deletions_statistics_button.hide()
-        self.tables["translation_table"].time_statistics_button.hide()
-
+        self.show_the_available_stats()
+    def show_the_available_stats(self):
+        if self.calculate_insertions_per_segment()[0]:
+            self.tables["translation_table"].insertions_statistics_button.show()
+        else:
+            self.tables["translation_table"].insertions_statistics_button.hide()
+        if self.calculate_deletions_per_segment()[0]:
+            self.tables["translation_table"].deletions_statistics_button.show()
+        else:
+            self.tables["translation_table"].deletions_statistics_button.hide()
+        if self.calculate_time_per_segment()[0]:
+            self.tables["translation_table"].time_statistics_button.show()
+        else:
+            self.tables["translation_table"].time_statistics_button.hide()
+        if self.tables["translation_table"].REC_button.get_active():
+            self.tables["translation_table"].save_post_editing_changes_button.hide()
 
     def save_not_using_git(self):
         #lets see how using closure is seen by the team... here's hope it plays out!
@@ -230,11 +241,7 @@ class PostEditing:
         self.addDifferencesTab()
 
         self.tables["translation_table"].save_post_editing_changes_button.hide()
-        self.tables["translation_table"].insertions_statistics_button.show()
-        self.tables["translation_table"].deletions_statistics_button.show()
-        if self.calculate_time_per_segment()[0]:
-            print self.calculate_time_per_segment()
-            self.tables["translation_table"].time_statistics_button.show()
+        self.show_the_available_stats()
 
 
     def _saveChangedFromPostEditing_event(self, button):
