@@ -8815,7 +8815,27 @@ can just fix the size of their placeholders.
 
 	<script type="text/javascript">
 	 function showhide(id) {
-	    var e = document.getElementById(id);
-	    e.style.display = (e.style.display == 'block') ? 'none' : 'block';
+		 var e = document.getElementById(id);
+
+		 e.style.display = (e.style.display == 'block') ? 'none' : 'block';
+		 if (e.style.display == 'block')
+		 {
+				if (document.getElementById((parseInt(id)+100000).toString()) !== null)
+				{
+					var f = document.getElementById((parseInt(id)+100000).toString());
+					if (f.style.display == 'block')
+					{
+						 f.style.display = 'none'
+					}
+				}
+				else
+				{
+					var f = document.getElementById((parseInt(id)-100000).toString());
+					if (f.style.display == 'block')
+					{
+						 f.style.display = 'none'
+					}
+				}
+	  	}
 	 }
 	</script>
