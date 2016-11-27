@@ -1,0 +1,40 @@
+
+<div>
+  <div class="box">
+    <p>The following historical commit information, by author, was found.</p>
+    <div>
+      <table id="changes" class="git">
+        <thead>
+          <tr>
+            <th>Segment </th><th>% of insertions made</th><!--table title ends here. Do not delete this comment.-->
+          </tr>
+          <tr>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>40.0</td></tr><tr><td>2</td><td>60.0</td></tr><!--table data input ends here. Do not delete this comment.-->
+        <tfoot>
+          <tr> <td colspan="5">&nbsp;</td> </tr>
+        </tfoot>
+      </tbody>
+    </table>
+    <div class="chart" id="changes_chart"></div>
+  </div>
+<!--pie script ends here. Do not delete this comment.-->
+</div></div>  <script type="text/javascript"> <!--pie script starts here. Do not delete this comment.-->
+    changes_plot = $.plot
+    (
+      $("#changes_chart"),
+      [{label: "1", data: 40.0},{label: "2", data: 60.0}],
+       {
+         series: {
+           pie: {innerRadius: 0.4, show: true,combine: {threshold: 0.01,label: "Minor Authors"
+           }
+         }
+       },
+       grid: {hoverable: true}
+     }
+   );
+  </script>
+
+
