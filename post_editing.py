@@ -275,3 +275,8 @@ class PostEditing:
 
     def delete_generated_files(self):
         shutil.rmtree("./statistics/generated", ignore_errors=True)
+        
+        if os.path.exists(self.saved_absolute_path):
+            if os.path.exists(self.saved_absolute_path + "_but_to_be_deleted_soon"):
+                    shutil.rmtree(self.saved_absolute_path + "_but_to_be_deleted_soon", ignore_errors=True)
+            os.rename(self.saved_absolute_path,self.saved_absolute_path + "_but_to_be_deleted_soon")
