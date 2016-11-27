@@ -162,7 +162,6 @@ class PostEditing:
     def add_statistics(self, statistic_to_show):
         self.notebook.remove_page(6)
         html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
-        win = Gtk.Window()
         view = WebKit.WebView()
         view.open(html)
         uri = "statistics/generated/" + statistic_to_show + '.html'
@@ -170,10 +169,7 @@ class PostEditing:
         uri = urlparse.ParseResult('file', '', uri, '', '', '')
         uri = urlparse.urlunparse(uri)
         view.load_uri(uri)
-        win.add(view)
-        childWidget = win.get_child()
-        win.remove(childWidget)
-        win.destroy()
+        childWidget = view
         self.notebook.insert_page(childWidget, Gtk.Label('Statistics'), 6)
         self.update_notebook()
 
