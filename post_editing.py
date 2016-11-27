@@ -115,11 +115,15 @@ class PostEditing:
         percentaje_spent_by_segment=self.tables["translation_table"].calculate_insertions_or_deletions_percentajes(False)
         title = "<th>Segment </th><th>" + '%'+ " of insertions made</th>"
         return self.build_pie_as_json_string(percentaje_spent_by_segment),self.build_table(percentaje_spent_by_segment),title
-
+    def format_table_data(self, id, text):
+        final_output = '<a href='+ '"' + "javascript:showhide('" +str(id)+ "')" + '"' + '><input type="button" value="' +str(id)+ '"></a>'
+        final_output += '<div id="%d" style="display: none;height:200px;width:400px;border:1px solid #ccc;font:16px/26px Georgia, Garamond, Serif;overflow:auto;">%s</div>' % (id,text)
+        return final_output
+        
     def build_table(self, percentaje_spent_by_segment):
         table_data_list = []
         for a in percentaje_spent_by_segment:
-            string = "<tr><td>"+str(a)+"</td>"
+            string = "<tr><td>"+self.format_table_data(a,self.tables["translation_table"].tables_content[0][a])+"</td>"
             string += "<td>"+str(percentaje_spent_by_segment[a])+"</td></tr>"
             table_data_list.append(string)
         return ''.join(table_data_list)
@@ -264,4 +268,4 @@ class PostEditing:
         self.saveChangedFromPostEditing()
 
     def delete_generated_files(self):
-        shutil.rmtree("./statistics/generated", ignore_errors=True)   
+        shutil.rmtree("./statistics/generated", ignore_errors=True)
