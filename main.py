@@ -166,6 +166,7 @@ class MyWindow(Gtk.Window):
         self.add(box)
 
         # Add tabs to the notebook
+        self.is_corpus_preparation_ready = False
         # Corpus Preparation tab
         self._set_corpus_preparation()
         # LM & MT Training tab
@@ -402,8 +403,10 @@ class MyWindow(Gtk.Window):
         output_directory = self.output_text.get_text()
         if output_directory is not None:
             try:
+                print "*************************************************************1"
                 os.chdir(output_directory)
             except OSError:
+                print "*************************************************************2"
                 # Output directory does not exist.
                 os.mkdir(output_directory)
                 os.chdir(output_directory)
@@ -472,13 +475,17 @@ class MyWindow(Gtk.Window):
                                             self.input_clean))
 
             # Start threads
+            all_ok = True
             for cmd in cmds:
                 print cmd
                 proc = subprocess.Popen([cmd],
                                         stdout=subprocess.PIPE,
                                         shell=True)
+                all_ok = all_ok and (proc.wait() == 0)
                 (out, err) = proc.communicate()
-                proc.wait()
+                # proc.wait()
+            if all_ok:
+                self.is_corpus_preparation_ready = True
         else:
             print "TODO: Pop up error message!!"
 
@@ -546,8 +553,18 @@ class MyWindow(Gtk.Window):
         self.start_training_button.connect("clicked", self._train)
         grid.add(self.start_training_button)
         # Output label.
-        self.training_output_label = Gtk.Label("")
-        grid.attach_next_to(self.training_output_label,
+        training_results_frame = Gtk.Frame(label="Results")
+        scrolledwindow = Gtk.ScrolledWindow()
+        scrolledwindow.set_hexpand(True)
+        scrolledwindow.set_vexpand(True)
+        resultsText = Gtk.TextView()
+        resultsText.set_editable(False)
+        resultsText.set_cursor_visible(False)
+        resultsText.set_wrap_mode(True)
+        self.trainingResultsTextBuffer = resultsText.get_buffer()
+        scrolledwindow.add(resultsText)
+        training_results_frame.add(scrolledwindow)
+        grid.attach_next_to(training_results_frame,
                             self.start_training_button,
                             Gtk.PositionType.BOTTOM,
                             1,
@@ -557,8 +574,9 @@ class MyWindow(Gtk.Window):
         self.notebook.insert_page(self.training, Gtk.Label('Training'),1)
 
     def _train(self, button):
+        # print "==============================>", self.is_corpus_preparation_ready
         output_directory = self.output_text.get_text()
-        if output_directory is not None:
+        if output_directory is not None and self.is_corpus_preparation_ready:
             cmds = []
             output = "Log:\n\n"
             # Train the language model.
@@ -578,7 +596,8 @@ class MyWindow(Gtk.Window):
                                              self.blm))
 
             # Set output / error to the output label.
-            self.training_output_label.set_text(output)
+            # self.training_output_label.set_text(output)
+            self.trainingResultsTextBuffer.set_text(output)
 
             # Train the translation model.
             out_file = generate_tm_fn(output_directory)
@@ -599,6 +618,7 @@ class MyWindow(Gtk.Window):
             for cmd in cmds:
                 # use Popen for non-blocking
                 print cmd
+                output += "==============> " + cmd
                 proc = subprocess.Popen([cmd],
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE,
@@ -609,14 +629,21 @@ class MyWindow(Gtk.Window):
                     output += out
                 elif err != "":
                     output += err
-                # TODO: Read training.out and add it to the program output
-                # with open("ROXANNE", "r") as f:
-	               #  out += f.read()
+
+            # Adding output from training.out
+            training = self.output_text.get_text() + "/training.out"
+            try:
+                with open(training, "r") as f:
+                   output += "\n" + f.read()
+            except IOError:
+                output += "Error. Unsuccessful when attempting to create moses.ini"
 
             # Set output to the output label.
-            self.training_output_label.set_text(output)
+            # self.training_output_label.set_text(output)
+            self.trainingResultsTextBuffer.set_text(output)
         else:
-            print "TODO: Error pop-up message!!"
+            output = "ERROR: Please go to the first tab and complete the process."
+            self.trainingResultsTextBuffer.set_text(output)
 
     def _set_translation(self):
         self.translation = Gtk.Box()
