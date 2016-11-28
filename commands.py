@@ -31,7 +31,7 @@ def get_background_command(background):
 # Tokenizer script
 def get_tokenize_command(mdir, language, in_file, out_file, background=False):
     amp = get_background_command(background)
-    return "%s -l %s \ < %s \ > %s %s\n" % (tokenizer % mdir, language, in_file, out_file, amp)
+    return "%s -l %s < %s > %s %s\n" % (tokenizer % mdir, language, in_file, out_file, amp)
 
 # Truecaser train script
 def get_truecaser_train_command(mdir, corpus, background=False):

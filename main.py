@@ -185,7 +185,6 @@ class MyWindow(Gtk.Window):
     def _check_moses_installation(self, directory):
         file_content = [f for f in os.listdir(directory)]
         moses_files = ["/scripts/tokenizer/tokenizer.perl",
-                       #"/truecase-model.en" # TODO: not sure yet...
                        "/scripts/recaser/truecase.perl",
                        "/scripts/training/clean-corpus-n.perl",
                        "/bin/lmplz",
@@ -319,7 +318,10 @@ class MyWindow(Gtk.Window):
         inside_grid.add(st_label)
         self.st_train = Gtk.Entry()
         # TODO: Default should be ""
-        self.st_train.set_text("~/corpus/source.en")
+        if self.is_windows:
+            self.st_train.set_text("C:\\Users\\Roxannitha\\Downloads\\training-parallel-nc-v8\\training\\small.en")
+        else:
+            self.st_train.set_text("~/corpus/source.en")
         inside_grid.add(self.st_train)
         self.st_button = Gtk.Button("Choose File")
         self.st_button.connect("clicked", self._on_file_clicked, self.st_train)
@@ -334,7 +336,11 @@ class MyWindow(Gtk.Window):
                                    10)
         self.tt_train = Gtk.Entry()
         # TODO: Default should be ""
-        self.tt_train.set_text("~/corpus/target.de")
+        if self.is_windows:
+            self.tt_train.set_text("C:\\Users\\Roxannitha\\Downloads\\training-parallel-nc-v8\\training\\small.de")
+        else:
+            self.tt_train.set_text("~/corpus/target.de")
+
         inside_grid.attach_next_to(self.tt_train,
                                    self.st_train,
                                    Gtk.PositionType.BOTTOM,
@@ -358,7 +364,10 @@ class MyWindow(Gtk.Window):
         inside_grid = Gtk.Grid()
         inside_grid.add(Gtk.Label("Source text"))
         self.lm_text = Gtk.Entry()
-        self.lm_text.set_text("~/corpus/target.de")
+        if self.is_windows:
+            self.lm_text.set_text("C:\\Users\\Roxannitha\\Downloads\\training-parallel-nc-v8\\training\\small.de")
+        else:
+            self.lm_text.set_text("~/corpus/target.de")
         inside_grid.add(self.lm_text)
         self.lm_button = Gtk.Button("Choose File")
         self.lm_button.connect("clicked", self._on_file_clicked, self.lm_text)
@@ -371,7 +380,10 @@ class MyWindow(Gtk.Window):
         inside_grid = Gtk.Grid()
         inside_grid.add(Gtk.Label("Output directory"))
         self.output_text = Gtk.Entry()
-        self.output_text.set_text("/home/zxysp/corpus/output")  # TODO
+        if self.is_windows:
+            self.output_text.set_text("C:\\Users\\Roxannitha\\Desktop\\TTT_Output_Dir")
+        else:
+            self.output_text.set_text("/home/zxysp/corpus/output")  # TODO
         inside_grid.add(self.output_text)
         self.s_button = Gtk.Button("Choose Directory")
         self.s_button.connect("clicked",
@@ -400,48 +412,48 @@ class MyWindow(Gtk.Window):
                                   Gtk.Label('Corpus preparation'),0)
 
     def _prepare_corpus(self, button):
-        output_directory = self.output_text.get_text()
+        win_output_directory = self.output_text.get_text()
+        output_directory = adapt_path_for_cygwin(self.is_windows, self.output_text.get_text())
         if output_directory is not None:
+            # Change directory to the output_directory.
             try:
-                print "*************************************************************1"
-                os.chdir(output_directory)
-            except OSError:
-                print "*************************************************************2"
+                os.chdir(win_output_directory)
+            except:
                 # Output directory does not exist.
-                os.mkdir(output_directory)
-                os.chdir(output_directory)
+                os.mkdir(win_output_directory)
+                os.chdir(win_output_directory)
             cmds = []
             # 1) Tokenization
             # a) Target text
             self.target_tok = generate_input_tok_fn(self.target_lang,
                                                     output_directory)
-            cmds.append(get_tokenize_command(self.moses_dir,
+            cmds.append(get_tokenize_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                              self.target_lang,
                                              adapt_path_for_cygwin(self.is_windows,self.tt_train.get_text()),
                                              self.target_tok))
             # b) Source text
             self.source_tok = generate_input_tok_fn(self.source_lang,
                                                     output_directory)
-            cmds.append(get_tokenize_command(self.moses_dir,
+            cmds.append(get_tokenize_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                              self.source_lang,
                                              adapt_path_for_cygwin(self.is_windows,self.st_train.get_text()),
                                              self.source_tok))
             # c) Language model
             self.lm_tok = generate_lm_tok_fn(output_directory)
-            cmds.append(get_tokenize_command(self.moses_dir,
+            cmds.append(get_tokenize_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                              self.source_lang,
                                              adapt_path_for_cygwin(self.is_windows,self.tt_train.get_text()),
                                              self.lm_tok))
 
             # 2) Truecaser training
             # a) Target text
-            cmds.append(get_truecaser_train_command(self.moses_dir,
+            cmds.append(get_truecaser_train_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                                     self.target_tok))
             # b) Source text
-            cmds.append(get_truecaser_train_command(self.moses_dir,
+            cmds.append(get_truecaser_train_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                                     self.source_tok))
             # c) Language model
-            cmds.append(get_truecaser_train_command(self.moses_dir,
+            cmds.append(get_truecaser_train_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                                     self.lm_tok))
 
             # 3) Truecaser
@@ -449,18 +461,18 @@ class MyWindow(Gtk.Window):
             # a) Target text
             self.target_true = generate_input_true_fn(self.target_lang,
                                                       output_directory)
-            cmds.append(get_truecaser_command(self.moses_dir,
+            cmds.append(get_truecaser_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                               self.target_tok,
                                               self.target_true))
             # b) Source text
             self.source_true = generate_input_true_fn(self.source_lang,
                                                       output_directory)
-            cmds.append(get_truecaser_command(self.moses_dir,
+            cmds.append(get_truecaser_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                               self.source_tok,
                                               self.source_true))
             # c) Language model
             self.lm_true = generate_lm_true_fn(output_directory)
-            cmds.append(get_truecaser_command(self.moses_dir,
+            cmds.append(get_truecaser_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                               self.target_tok, self.lm_true))
 
             # 4) Cleaner
@@ -468,7 +480,7 @@ class MyWindow(Gtk.Window):
             self.input_clean = generate_input_clean_fn(output_directory)
             self.source_clean = self.input_true + "." + self.source_lang
             self.target_clean = self.input_true + "." + self.target_lang
-            cmds.append(get_cleaner_command(self.moses_dir,
+            cmds.append(get_cleaner_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                              self.source_lang,
                                             self.target_lang,
                                             self.input_true,
@@ -478,12 +490,13 @@ class MyWindow(Gtk.Window):
             all_ok = True
             for cmd in cmds:
                 print cmd
+                # print all_ok = all_ok and (os.system(cmd) == 0)
                 proc = subprocess.Popen([cmd],
                                         stdout=subprocess.PIPE,
                                         shell=True)
                 all_ok = all_ok and (proc.wait() == 0)
-                (out, err) = proc.communicate()
-                # proc.wait()
+                # print "returncode:", proc.returncode, "\n\n\n"
+                out, err = proc.communicate()
             if all_ok:
                 self.is_corpus_preparation_ready = True
         else:
@@ -575,7 +588,7 @@ class MyWindow(Gtk.Window):
 
     def _train(self, button):
         # print "==============================>", self.is_corpus_preparation_ready
-        output_directory = self.output_text.get_text()
+        output_directory = adapt_path_for_cygwin(self.is_windows, self.output_text.get_text())
         if output_directory is not None and self.is_corpus_preparation_ready:
             cmds = []
             output = "Log:\n\n"
@@ -618,7 +631,7 @@ class MyWindow(Gtk.Window):
             for cmd in cmds:
                 # use Popen for non-blocking
                 print cmd
-                output += "==============> " + cmd
+                output += cmd
                 proc = subprocess.Popen([cmd],
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE,
@@ -631,7 +644,7 @@ class MyWindow(Gtk.Window):
                     output += err
 
             # Adding output from training.out
-            training = self.output_text.get_text() + "/training.out"
+            training = adapt_path_for_cygwin(self.is_windows, self.output_text.get_text()) + "/training.out"
             try:
                 with open(training, "r") as f:
                    output += "\n" + f.read()
@@ -720,7 +733,7 @@ class MyWindow(Gtk.Window):
             output = "Running decoder....\n\n"
             # Run the decoder.
             cmd = get_test_command(self.moses_dir,
-                                             self.output_text.get_text() + "/train/model/moses.ini",
+                                             adapt_path_for_cygwin(self.is_windows, self.output_text.get_text()) + "/train/model/moses.ini",
                                    in_file,
                                    out_file)
             # use Popen for non-blocking
