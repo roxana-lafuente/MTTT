@@ -365,8 +365,10 @@ class MyWindow(Gtk.Window):
         output_directory = self.output_text.get_text()
         if output_directory is not None:
             try:
+                print "*************************************************************1"
                 os.chdir(output_directory)
             except OSError:
+                print "*************************************************************2"
                 # Output directory does not exist.
                 os.mkdir(output_directory)
                 os.chdir(output_directory)
@@ -592,8 +594,11 @@ class MyWindow(Gtk.Window):
 
             # Adding output from training.out
             training = self.output_text.get_text() + "/training.out"
-            with open(training, "r") as f:
-               output += "\n" + f.read()
+            try:
+                with open(training, "r") as f:
+                   output += "\n" + f.read()
+            except IOError:
+                output += "Error. Unsuccessful when attempting to create moses.ini"
 
             # Set output to the output label.
             # self.training_output_label.set_text(output)
