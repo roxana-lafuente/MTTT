@@ -119,6 +119,7 @@ class MyWindow(Gtk.Window):
         else:
             print "Unknown OS"
             exit(1)
+        self.is_windows = True  # TODO: Erase!!
         # Check Moses Config file.
         self.moses_dir = ""
         try:
@@ -490,10 +491,8 @@ class MyWindow(Gtk.Window):
             all_ok = True
             for cmd in cmds:
                 print cmd
-                # print all_ok = all_ok and (os.system(cmd) == 0)
-                proc = subprocess.Popen([cmd],
-                                        stdout=subprocess.PIPE,
-                                        shell=True)
+                # all_ok = all_ok and (os.system(cmd) == 0)
+                proc = subprocess.Popen([cmd], stdout=subprocess.PIPE)
                 all_ok = all_ok and (proc.wait() == 0)
                 # print "returncode:", proc.returncode, "\n\n\n"
                 out, err = proc.communicate()
