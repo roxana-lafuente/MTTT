@@ -1,4 +1,4 @@
-
+# a very C reminicent style, lets see how it plays out! here's hope they dont tell me to rewrite it
 def combine_and_save_to_html(filename):
     header = ""
     footer = ""

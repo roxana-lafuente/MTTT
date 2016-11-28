@@ -911,13 +911,8 @@ class MyWindow(Gtk.Window):
         else:
             self.gtk_change_visuals(light_option = "gtk",theme = "unchanged")
     def final_responsabilities(self, widget=None):
-        self.save_post_edition_changes()
-        self.delete_generated_files()
-    def save_post_edition_changes(self):
-        if self.PostEditing:
+        if hasattr(self, 'PostEditing'):
             self.PostEditing.saveChangedFromPostEditing()
-    def delete_generated_files(self):
-        if self.PostEditing:
             self.PostEditing.delete_generated_files()
 
 win = MyWindow()
