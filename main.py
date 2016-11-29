@@ -652,7 +652,6 @@ class MyWindow(Gtk.Window):
                 output += "Error. Unsuccessful when attempting to create moses.ini"
 
             # Set output to the output label.
-            # self.training_output_label.set_text(output)
             self.trainingResultsTextBuffer.set_text(output)
         else:
             output = "ERROR: Please go to the first tab and complete the process."
@@ -715,12 +714,29 @@ class MyWindow(Gtk.Window):
         grid.add(mt_frame)
 
         # Output label.
-        self.mt_output_label = Gtk.Label("")
-        grid.attach_next_to(self.mt_output_label,
+        # self.mt_output_label = Gtk.Label("")
+        # grid.attach_next_to(self.mt_output_label,
+        #                     mt_frame,
+        #                     Gtk.PositionType.BOTTOM,
+        #                     1,
+        #                     10)
+        # Output label.
+        mt_training_results_frame = Gtk.Frame(label="Results")
+        mtscrolledwindow = Gtk.ScrolledWindow()
+        mtscrolledwindow.set_hexpand(True)
+        mtscrolledwindow.set_vexpand(True)
+        mtresultsText = Gtk.TextView()
+        mtresultsText.set_editable(False)
+        mtresultsText.set_cursor_visible(False)
+        mtresultsText.set_wrap_mode(True)
+        self.mttrainingResultsTextBuffer = mtresultsText.get_buffer()
+        mtscrolledwindow.add(mtresultsText)
+        mt_training_results_frame.add(mtscrolledwindow)
+        grid.attach_next_to(mt_training_results_frame,
                             mt_frame,
                             Gtk.PositionType.BOTTOM,
                             1,
-                            10)
+                            1)
 
         self.translation.add(grid)
         self.notebook.insert_page(self.translation,
@@ -755,7 +771,7 @@ class MyWindow(Gtk.Window):
 
             f.close()
             # Set output to the output label.
-            self.mt_output_label.set_text(output)
+            self.mttrainingResultsTextBuffer.set_text(output)
         else:
             print "TODO: Error pop-up message!!"
 

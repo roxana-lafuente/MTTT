@@ -27,7 +27,16 @@ TTT is an under development post-editing suite which aims to improve the transla
 - MOSES (Install with "--with-mm" and "--install-scripts" flags)
 - Cygwin (only on Windows)
 - GTK 3.0 (only on Linux)
-
+- On Linux you should link /bin/sh to /bin/bash and not to bin dash. To do that:
+	- Check the link:
+	```
+	ls -l /bin/sh
+	```
+	If /bin/sh is a link to /bin/dash, change it to /bin/bash.
+	```
+	sudo mv /bin/sh /bin/sh.orig
+	sudo ln -s /bin/bash /bin/sh
+	```
 
 
 ### Status
