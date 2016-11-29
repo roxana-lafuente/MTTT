@@ -76,7 +76,7 @@ cached_results = {}
 
 def evaluate(checkbox_indexes, test, reference):
     checkbox_indexes_constants = ["WER","PER","HTER", "GTM", "BLEU","BLEU2GRAM","BLEU3GRAM","BLEU4GRAM"]
-    DIRECTORY = "./evaluation_scripts/"
+    DIRECTORY = os.path.abspath("evaluation_scripts") + "/"
     TER_DIRECTORY = DIRECTORY + "tercom-0.7.25/src/"
     GTM_DIRECTORY = DIRECTORY + "gtm-1.4/"
     EXEC_PERL = "perl "
