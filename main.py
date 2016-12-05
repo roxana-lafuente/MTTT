@@ -535,10 +535,8 @@ class MyWindow(Gtk.Window):
         dialog.destroy()
 
     def _add_dir_filters(self, dialog):
+        # TODO: Allow to only choose folders
         filter_text = Gtk.FileFilter()
-        filter_text.set_name("Folders")
-        filter_text.add_mime_type("text/plain")
-        dialog.add_filter(filter_text)
 
         filter_any = Gtk.FileFilter()
         filter_any.set_name("Any files")
@@ -547,9 +545,6 @@ class MyWindow(Gtk.Window):
 
     def _add_file_filters(self, dialog):
         filter_text = Gtk.FileFilter()
-        filter_text.set_name("Text files")
-        filter_text.add_mime_type("text/plain")
-        dialog.add_filter(filter_text)
 
         filter_any = Gtk.FileFilter()
         filter_any.set_name("Any files")

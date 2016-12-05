@@ -32,11 +32,12 @@ TTT is an under development post-editing suite which aims to improve the transla
 	```
 	ls -l /bin/sh
 	```
-	If /bin/sh is a link to /bin/dash, change it to /bin/bash.
+	- If /bin/sh is a link to /bin/dash, change it to /bin/bash.
 	```
 	sudo mv /bin/sh /bin/sh.orig
 	sudo ln -s /bin/bash /bin/sh
 	```
+This is necessary to use the redirection commands used by MOSES commands.
 
 
 ### Status
