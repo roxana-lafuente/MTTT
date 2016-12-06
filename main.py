@@ -119,7 +119,6 @@ class MyWindow(Gtk.Window):
         else:
             print "Unknown OS"
             exit(1)
-        self.is_windows = True  # TODO: Erase!!
         # Check Moses Config file.
         self.moses_dir = ""
         try:
@@ -184,6 +183,7 @@ class MyWindow(Gtk.Window):
         self.cwd = os.getcwd()
 
     def _check_moses_installation(self, directory):
+        # TODO: TRY catch OSError when permission denied!!
         file_content = [f for f in os.listdir(directory)]
         moses_files = ["/scripts/tokenizer/tokenizer.perl",
                        "/scripts/recaser/truecase.perl",
@@ -414,6 +414,7 @@ class MyWindow(Gtk.Window):
 
     def _prepare_corpus(self, button):
         win_output_directory = self.output_text.get_text()
+        print "win_output_directory", win_output_directory
         output_directory = adapt_path_for_cygwin(self.is_windows, self.output_text.get_text())
         if output_directory is not None:
             # Change directory to the output_directory.
@@ -492,7 +493,7 @@ class MyWindow(Gtk.Window):
             for cmd in cmds:
                 print cmd
                 # all_ok = all_ok and (os.system(cmd) == 0)
-                proc = subprocess.Popen([cmd], stdout=subprocess.PIPE)
+                proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, shell=True)
                 all_ok = all_ok and (proc.wait() == 0)
                 # print "returncode:", proc.returncode, "\n\n\n"
                 out, err = proc.communicate()
