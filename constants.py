@@ -66,7 +66,7 @@ truecaser = adapt_path_for_cygwin(is_win, "%s/scripts/recaser/truecase.perl ")
 
 cleaner = adapt_path_for_cygwin(is_win, "%s/scripts/training/clean-corpus-n.perl ")
 
-lm_train = adapt_path_for_cygwin(is_win, "%s/bin/lmplz ") + "-o 3 " # TODO: Should be chosen by the user.
+lm_train = adapt_path_for_cygwin(is_win, "%s/bin/lmplz.exe ") + "-o 3 " # TODO: Should be chosen by the user.
 
 blm_train = adapt_path_for_cygwin(is_win, "%s/bin/build_binary ")
 

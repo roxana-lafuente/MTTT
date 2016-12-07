@@ -24,10 +24,13 @@ TTT is an under development post-editing suite which aims to improve the transla
 
 
 ### Dependencies
+
+#### Source code
+
+##### On Linux
 - MOSES (Install with "--with-mm" and "--install-scripts" flags)
-- Cygwin (only on Windows)
-- GTK 3.0 (only on Linux)
-- On Linux you should link /bin/sh to /bin/bash and not to bin dash. To do that:
+- GTK 3.0
+- Also, you should link /bin/sh to /bin/bash and not to bin dash. To do that:
 	- Check the link:
 	```
 	ls -l /bin/sh
@@ -39,6 +42,19 @@ TTT is an under development post-editing suite which aims to improve the transla
 	```
 This is necessary to use the redirection commands used by MOSES commands.
 
+##### On Windows
+- MOSES (Install with "--with-mm" and "--install-scripts" flags)
+- Cygwin (only on Windows)
+	- gi (python-gi)
+	- gobject (python-gobject)
+	- GTK 3.0 ()
+
+
+
+#### Binaries (portable)
+More details on this soon!
+
+
 
 ### Status
 - Under development
@@ -46,6 +62,22 @@ This is necessary to use the redirection commands used by MOSES commands.
 
 
 ### How to use
+
+#### Source code
+
+##### On Linux
+Simply install all dependencies and run:
 ```
 python main.py
 ```
+
+##### On Windows
+
+Run LXDE or any other X window environment from CygWin. From inside LXDE or your favorite one run:
+
+```
+python main.py
+```
+
+#### Binaries (portable)
+More details on this soon!

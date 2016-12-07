@@ -318,11 +318,7 @@ class MyWindow(Gtk.Window):
         st_label = Gtk.Label("Source text")
         inside_grid.add(st_label)
         self.st_train = Gtk.Entry()
-        # TODO: Default should be ""
-        if self.is_windows:
-            self.st_train.set_text("C:\\Users\\Roxannitha\\Downloads\\training-parallel-nc-v8\\training\\small.en")
-        else:
-            self.st_train.set_text("~/corpus/source.en")
+        self.st_train.set_text("")
         inside_grid.add(self.st_train)
         self.st_button = Gtk.Button("Choose File")
         self.st_button.connect("clicked", self._on_file_clicked, self.st_train)
@@ -336,11 +332,7 @@ class MyWindow(Gtk.Window):
                                    1,
                                    10)
         self.tt_train = Gtk.Entry()
-        # TODO: Default should be ""
-        if self.is_windows:
-            self.tt_train.set_text("C:\\Users\\Roxannitha\\Downloads\\training-parallel-nc-v8\\training\\small.de")
-        else:
-            self.tt_train.set_text("~/corpus/target.de")
+        self.tt_train.set_text("")
 
         inside_grid.attach_next_to(self.tt_train,
                                    self.st_train,
@@ -365,10 +357,7 @@ class MyWindow(Gtk.Window):
         inside_grid = Gtk.Grid()
         inside_grid.add(Gtk.Label("Source text"))
         self.lm_text = Gtk.Entry()
-        if self.is_windows:
-            self.lm_text.set_text("C:\\Users\\Roxannitha\\Downloads\\training-parallel-nc-v8\\training\\small.de")
-        else:
-            self.lm_text.set_text("~/corpus/target.de")
+        self.lm_text.set_text("")
         inside_grid.add(self.lm_text)
         self.lm_button = Gtk.Button("Choose File")
         self.lm_button.connect("clicked", self._on_file_clicked, self.lm_text)
@@ -381,10 +370,7 @@ class MyWindow(Gtk.Window):
         inside_grid = Gtk.Grid()
         inside_grid.add(Gtk.Label("Output directory"))
         self.output_text = Gtk.Entry()
-        if self.is_windows:
-            self.output_text.set_text("C:\\Users\\Roxannitha\\Desktop\\TTT_Output_Dir")
-        else:
-            self.output_text.set_text("/home/zxysp/corpus/output")  # TODO
+        self.output_text.set_text("")
         inside_grid.add(self.output_text)
         self.s_button = Gtk.Button("Choose Directory")
         self.s_button.connect("clicked",
@@ -589,7 +575,7 @@ class MyWindow(Gtk.Window):
             output = "Log:\n\n"
             # Train the language model.
             self.lm_arpa = generate_lm_fn(output_directory)
-            print "out:", self.lm_arpa
+            print "out:", self.lm_arpa, "\n"
             cmds.append(get_lmtrain_command(self.moses_dir,
                                              self.target_lang,
                                             self.lm_true,
@@ -597,7 +583,7 @@ class MyWindow(Gtk.Window):
 
             # Binarize arpa
             self.blm = generate_blm_fn(output_directory)
-            print "binarized out:", self.blm
+            print "binarized out:", self.blm, "\n"
             cmds.append(get_blmtrain_command(self.moses_dir,
                                              self.target_lang,
                                              self.lm_arpa,
@@ -662,8 +648,7 @@ class MyWindow(Gtk.Window):
         mt_in_label = Gtk.Label("Source text file")
         inside_grid.add(mt_in_label)
         self.mt_in_text = Gtk.Entry()
-        # TODO: Default should be ""
-        self.mt_in_text.set_text("~/corpus/translate.en")
+        self.mt_in_text.set_text("")
         inside_grid.add(self.mt_in_text)
         self.mt_in_button = Gtk.Button("Choose File")
         self.mt_in_button.connect("clicked",
@@ -679,8 +664,7 @@ class MyWindow(Gtk.Window):
                                    1,
                                    10)
         self.mt_out_text = Gtk.Entry()
-        # TODO: Default should be ""
-        self.mt_out_text.set_text("/home/zxysp/corpus/result.de")
+        self.mt_out_text.set_text("")
         inside_grid.attach_next_to(self.mt_out_text,
                                    self.mt_in_text,
                                    Gtk.PositionType.BOTTOM,

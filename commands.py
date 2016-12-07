@@ -62,7 +62,6 @@ def get_blmtrain_command(mdir, language, in_file, out_file, background=False):
 def get_tmtrain_command(mdir, in_lang, out_lang, lm_file, corpus, output_dir, background=False):
     # print "output dir:", output_dir
     # print "current path:", os.getcwd()
-    print "-external-bin-dir", mdir + "/scripts"
     amp = get_background_command(background)
     cmd = tm_train % mdir
     # cmd += " -cores 6 -corpus " + corpus + " -f " + in_lang + " -e " + out_lang
