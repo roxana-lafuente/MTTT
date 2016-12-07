@@ -24,10 +24,8 @@
 try:
     import gi
     gi.require_version('Gtk', '3.0')
-    gi.require_version('WebKit', '3.0')
     from gi.repository import Gtk
     from gi.repository import Gdk
-    from gi.repository import WebKit
 except ImportError:
     print "Dependency unfulfilled, please install gi library"
     exit(1)
@@ -200,6 +198,7 @@ class PostEditing:
             self.add_statistics(statistics_name)
 
     def add_statistics(self, statistic_to_show):
+        '''
         self.notebook.remove_page(6)
         html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
         view = WebKit.WebView()
@@ -212,6 +211,7 @@ class PostEditing:
         childWidget = view
         self.notebook.insert_page(childWidget, Gtk.Label('Statistics'), 6)
         self.update_notebook()
+        '''
 
     def addDifferencesTab(self):
         self.preparation = Gtk.VBox()

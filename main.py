@@ -25,10 +25,8 @@
 try:
     import gi
     gi.require_version('Gtk', '3.0')
-    gi.require_version('WebKit', '3.0')
     from gi.repository import Gtk
     from gi.repository import Gdk
-    from gi.repository import WebKit
 except ImportError:
     print "Dependency unfulfilled, please install gi library"
     exit(1)
