@@ -31,59 +31,33 @@ except ImportError:
     print "Dependency unfulfilled, please install gi library"
     exit(1)
 
-try:
-    import requests
-except ImportError:
-    print "Dependency unfulfilled, please install requests library"
-    exit(1)
+def install_and_import(package):
+    import importlib
+    try:
+        importlib.import_module(package)
+    except ImportError:
+	try:
+	        import pip		
+    	except ImportError:
+		print "no pip"
+		os.system('python get_pip.py')
+	finally:
+		import pip
+        pip.main(['install', package])
+    finally:
+        globals()[package] = importlib.import_module(package)
 
-try:
-    import subprocess
-except ImportError:
-    print "Dependency unfulfilled, please install subprocess library"
-    exit(1)
-
-try:
-    import os
-except ImportError:
-    print "Dependency unfulfilled, please install os library"
-    exit(1)
-
-try:
-    import json
-except ImportError:
-    print "Dependency unfulfilled, please install json library"
-    exit(1)
-
-try:
-    import sys
-except ImportError:
-    print "Dependency unfulfilled, please install sys library"
-    exit(1)
-
-try:
-    import time
-except ImportError:
-    print "Dependency unfulfilled, please install time library"
-    exit(1)
-
-try:
-    import shutil
-except ImportError:
-    print "Dependency unfulfilled, please install os library"
-    exit(1)
-
-try:
-    import urlparse
-except ImportError:
-    print "Dependency unfulfilled, please install os library"
-    exit(1)
-
-try:
-    import itertools
-except ImportError:
-    print "Dependency unfulfilled, please install os library"
-    exit(1)
+#os is one of the modules that I know comes with 2.7, no questions asked.
+import os
+#these other ones I a am not so sure of. Thus the install function.
+install_and_import("requests")
+install_and_import("subprocess")
+install_and_import("json")
+install_and_import("sys")
+install_and_import("time")
+install_and_import("shutil")
+install_and_import("urlparse")
+install_and_import("itertools")
 
 from commands import *
 from files_processing import *
