@@ -37,7 +37,7 @@ def install_and_import(package):
         importlib.import_module(package)
     except ImportError:
 	try:
-	        import pip		
+	        import pip
     	except ImportError:
 		print "no pip"
 		os.system('python get_pip.py')
@@ -214,9 +214,7 @@ class MyWindow(Gtk.Window):
             response = dialog.run()
             directory = entry.get_text()
             dialog.destroy()
-        '''
-        #COMMENTED SO THAT THE PROGRAMS LETS ME WORK
-        #TODO RESTORE CHANGES
+
         # If it is not valid, keep asking until valid or user leaves.
         if response in [Gtk.ResponseType.REJECT,
                         Gtk.ResponseType.CLOSE,
@@ -225,13 +223,7 @@ class MyWindow(Gtk.Window):
             exit(1)
         else: # Gtk.ResponseType.ACCEPT
             self.moses_dir = directory
-        '''
-        #this is the non-program-breaking solution to the problem
-        #is a temporary solution
-        if response not in [Gtk.ResponseType.REJECT,
-                        Gtk.ResponseType.CLOSE,
-                        Gtk.ResponseType.DELETE_EVENT]:
-            self.moses_dir = directory
+
         return directory
 
     def _on_languages_combo_changed(self, combo, attribute):
