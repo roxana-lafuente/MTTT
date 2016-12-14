@@ -25,14 +25,17 @@
 #os is one of the modules that I know comes with 2.7, no questions asked.
 import os
 
+SHOW_STATISTICS = True
 try:
     import gi
     gi.require_version('Gtk', '3.0')
     from gi.repository import Gtk
     from gi.repository import Gdk
     if not os.name == 'nt':  # Windows
-        gi.require_version('WebKit', '3.0')
-        from gi.repository import WebKit
+        try:
+            gi.require_version('WebKit', '3.0')
+            from gi.repository import WebKit
+        except: SHOW_STATISTICS= False
 except ImportError:
     print "Dependency unfulfilled, please install gi library"
     exit(1)

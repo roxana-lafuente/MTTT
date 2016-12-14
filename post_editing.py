@@ -25,14 +25,19 @@
 #os is one of the modules that I know comes with 2.7, no questions asked.
 import os
 
+SHOW_STATISTICS = True
 try:
     import gi
     gi.require_version('Gtk', '3.0')
     from gi.repository import Gtk
     from gi.repository import Gdk
     if not os.name == 'nt':  # Windows
-        gi.require_version('WebKit', '3.0')
-        from gi.repository import WebKit
+        try:
+            gi.require_version('WebKit', '3.0')
+            from gi.repository import WebKit
+        except:
+            SHOW_STATISTICS = False
+            print SHOW_STATISTICS
 except ImportError:
     print "Dependency unfulfilled, please install gi library"
     exit(1)
@@ -249,7 +254,9 @@ class PostEditing:
             self.tables["translation_table"].insertions_statistics_button.hide()
             self.tables["translation_table"].deletions_statistics_button.hide()
             self.tables["translation_table"].time_statistics_button.hide()
-            if insertions or deletions or time:
+            if (insertions or deletions or time) and SHOW_STATISTICS:
+
+                print SHOW_STATISTICS
                 self.tables["translation_table"].statistics_button.show()
 
         if not do_show_the_general_statistics_button_and_not_the_others:
