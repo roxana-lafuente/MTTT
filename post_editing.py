@@ -37,7 +37,6 @@ try:
             from gi.repository import WebKit
         except:
             SHOW_STATISTICS = False
-            print SHOW_STATISTICS
 except ImportError:
     print "Dependency unfulfilled, please install gi library"
     exit(1)
@@ -255,8 +254,6 @@ class PostEditing:
             self.tables["translation_table"].deletions_statistics_button.hide()
             self.tables["translation_table"].time_statistics_button.hide()
             if (insertions or deletions or time) and SHOW_STATISTICS:
-
-                print SHOW_STATISTICS
                 self.tables["translation_table"].statistics_button.show()
 
         if not do_show_the_general_statistics_button_and_not_the_others:
