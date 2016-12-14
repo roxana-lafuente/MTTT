@@ -21,11 +21,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
+
 try:
     import gi
     gi.require_version('Gtk', '3.0')
+    gi.require_version('WebKit', '3.0')
     from gi.repository import Gtk
     from gi.repository import Gdk
+    from gi.repository import WebKit
 except ImportError:
     print "Dependency unfulfilled, please install gi library"
     exit(1)
@@ -34,6 +37,12 @@ try:
     import os
 except ImportError:
     print "Dependency unfulfilled, please install os library"
+    exit(1)
+
+try:
+    import webbrowser
+except ImportError:
+    print "Dependency unfulfilled, please install webbrowser library"
     exit(1)
 
 try:
@@ -198,20 +207,23 @@ class PostEditing:
             self.add_statistics(statistics_name)
 
     def add_statistics(self, statistic_to_show):
-        '''
-        self.notebook.remove_page(6)
-        html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
-        view = WebKit.WebView()
-        view.open(html)
         uri = "statistics/generated/" + statistic_to_show + '.html'
         uri = os.path.realpath(uri)
         uri = urlparse.ParseResult('file', '', uri, '', '', '')
         uri = urlparse.urlunparse(uri)
-        view.load_uri(uri)
-        childWidget = view
-        self.notebook.insert_page(childWidget, Gtk.Label('Statistics'), 6)
-        self.update_notebook()
-        '''
+        is_linux = os.name == 'posix'
+        is_windows = os.name == 'nt'
+        if is_linux:
+            self.notebook.remove_page(6)
+            html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
+            view = WebKit.WebView()
+            view.open(html)
+            view.load_uri(uri)
+            childWidget = view
+            self.notebook.insert_page(childWidget, Gtk.Label('Statistics'), 6)
+            self.update_notebook()
+        if is_windows:
+            webbrowser.open(uri,new=2)
 
     def addDifferencesTab(self):
         self.preparation = Gtk.VBox()

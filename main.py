@@ -25,8 +25,10 @@
 try:
     import gi
     gi.require_version('Gtk', '3.0')
+    gi.require_version('WebKit', '3.0')
     from gi.repository import Gtk
     from gi.repository import Gdk
+    from gi.repository import WebKit
 except ImportError:
     print "Dependency unfulfilled, please install gi library"
     exit(1)
@@ -58,6 +60,7 @@ install_and_import("time")
 install_and_import("shutil")
 install_and_import("urlparse")
 install_and_import("itertools")
+install_and_import("webbrowser")
 
 from commands import *
 from files_processing import *
@@ -217,7 +220,6 @@ class MyWindow(Gtk.Window):
 
         # If it is not valid, keep asking until valid or user leaves.
         if response in [Gtk.ResponseType.REJECT,
-                        Gtk.ResponseType.CLOSE,
                         Gtk.ResponseType.DELETE_EVENT]:
             # TODO: Show error and exit
             exit(1)
