@@ -664,13 +664,6 @@ class MyWindow(Gtk.Window):
         grid.add(mt_frame)
 
         # Output label.
-        # self.mt_output_label = Gtk.Label("")
-        # grid.attach_next_to(self.mt_output_label,
-        #                     mt_frame,
-        #                     Gtk.PositionType.BOTTOM,
-        #                     1,
-        #                     10)
-        # Output label.
         mt_training_results_frame = Gtk.Frame(label="Results")
         mtscrolledwindow = Gtk.ScrolledWindow()
         mtscrolledwindow.set_hexpand(True)
@@ -692,11 +685,30 @@ class MyWindow(Gtk.Window):
         self.notebook.insert_page(self.translation,
                                   Gtk.Label('Machine Translation'),2)
 
+    def _is_file_not_empty(self, fn):
+        """
+        @brief  Determines if the given file is empty.
+        """
+        return fn is not None and fn != ""
+
+    def _has_empty_last_line(self, fn):
+        last_line_is_empty = False
+        with open(fn, 'r') as f:
+            # print "I am watching....", f.read()
+            last_line_is_empty = "\n" in (f.readlines()[-1])
+        return last_line_is_empty
+
     def _machine_translation(self, button):
-        in_file = adapt_path_for_cygwin(self.is_windows, self.mt_in_text.get_text())
-        out_file = adapt_path_for_cygwin(self.is_windows, self.mt_out_text.get_text())
-        if in_file is not None and out_file is not None:
-            output = "Running decoder....\n\n"
+        output = ""
+        in_file = self.mt_in_text.get_text()
+        out_file = self.mt_out_text.get_text()
+
+        if self._is_file_not_empty(in_file) and \
+           self._is_file_not_empty(out_file) and \
+           self._has_empty_last_line(in_file):
+            in_file = adapt_path_for_cygwin(self.is_windows, in_file)
+            out_file = adapt_path_for_cygwin(self.is_windows, out_file)
+            output += "Running decoder....\n\n"
             # Run the decoder.
             cmd = get_test_command(self.moses_dir,
                                              adapt_path_for_cygwin(self.is_windows, self.output_text.get_text()) + "/train/model/moses.ini",
@@ -720,10 +732,16 @@ class MyWindow(Gtk.Window):
                 output += "Best translation: " + mt_result
 
             f.close()
-            # Set output to the output label.
-            self.mttrainingResultsTextBuffer.set_text(output)
         else:
-            print "TODO: Error pop-up message!!"
+            if not self._is_file_not_empty(in_file):
+                output += "ERROR. You need to specify the source text path.\n"
+            elif not self._has_empty_last_line(in_file):
+                output += "ERROR. You need to add an empty line at the end of %s\n" % in_file
+            if not self._is_file_not_empty(out_file):
+                output += "ERROR. You need to specify the empty target text path.\n"
+
+        # Set output to the output label.
+        self.mttrainingResultsTextBuffer.set_text(output)
 
     def _set_evaluation(self):
         self.preparation = Gtk.VBox()
