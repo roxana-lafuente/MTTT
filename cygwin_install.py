@@ -1,2 +1,3 @@
 import os
-os.system('installation/TTT-CygwinInstaller/installer/install.cmd')
+filepath = os.path.abspath("installation/TTT-CygwinInstaller/installer/install.cmd")
+os.startfile(filepath)
