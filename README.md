@@ -52,7 +52,6 @@ This is necessary to use the redirection commands used by MOSES commands.
 
 ##### On Windows
 - MOSES (Install with "--with-mm" and "--install-scripts" flags)
-- Cygwin (only on Windows)
 	- the following installer is recommended:
 [https://sourceforge.net/projects/pygobjectwin32/files/pygi-aio-3.18.2_rev10-setup_84c21bc2679ff32e73de38cbaa6ef6d30c628ae5.exe/download](https://sourceforge.net/projects/pygobjectwin32/files/pygi-aio-3.18.2_rev10-setup_84c21bc2679ff32e73de38cbaa6ef6d30c628ae5.exe/download)
 	- visual installation guide:
@@ -60,10 +59,14 @@ This is necessary to use the redirection commands used by MOSES commands.
 	![Screenshot](./installation/windows_guide/GTK.png)
 
 	![Screenshot](./installation/windows_guide/Webkit.png)
-	
-	- gi (python-gi)
-	- gobject (python-gobject)
-	- GTK 3.0 ()
+
+	##### On Windows using Cygwin
+	- MOSES (Install with "--with-mm" and "--install-scripts" flags)
+	- To install Cygwin and its dependencies run
+	```
+	python cygwin_install.py
+	```
+
 
 
 
