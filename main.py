@@ -257,6 +257,7 @@ class MyWindow(Gtk.Window):
         for language in languages:
             self.stlang_box.append_text(language)
         inside_grid.add(self.stlang_box)
+
         # Target language picker
         ttlang_label = Gtk.Label("Target text")
         inside_grid.attach_next_to(ttlang_label,
@@ -281,6 +282,25 @@ class MyWindow(Gtk.Window):
         grid.attach(filler, 0, 0, 1, 1)
         lang_frame.add(inside_grid)
         grid.add(lang_frame)
+
+        # Output frame.
+        preprocess_results_frame = Gtk.Frame(label="Results")
+        scrolledwindow = Gtk.ScrolledWindow()
+        scrolledwindow.set_min_content_height(200)
+        scrolledwindow.set_hexpand(True)
+        scrolledwindow.set_vexpand(True)
+        preprocessResultsText = Gtk.TextView()
+        preprocessResultsText.set_editable(False)
+        preprocessResultsText.set_cursor_visible(False)
+        preprocessResultsText.set_wrap_mode(True)
+        self.preprocessResultsTextBuffer = preprocessResultsText.get_buffer()
+        scrolledwindow.add(preprocessResultsText)
+        preprocess_results_frame.add(scrolledwindow)
+        grid.attach_next_to(preprocess_results_frame,
+                            lang_frame,
+                            Gtk.PositionType.BOTTOM,
+                            4, # number of columns the child will span
+                            7) # number of rows the child will span
 
         # Translation Model Frame.
         inside_grid = Gtk.Grid()
@@ -323,8 +343,6 @@ class MyWindow(Gtk.Window):
 
         # Language Model Frame.
         lm_frame = Gtk.Frame(label="Language Model")
-        # Align the label at the right of the frame.
-        # lm_frame.set_label_align(1.0, 1.0)
         inside_grid = Gtk.Grid()
         inside_grid.add(Gtk.Label("Source text"))
         self.lm_text = Gtk.Entry()
@@ -370,8 +388,8 @@ class MyWindow(Gtk.Window):
                                   Gtk.Label('Corpus preparation'),0)
 
     def _prepare_corpus(self, button):
+        output = ""
         win_output_directory = self.output_text.get_text()
-        print "win_output_directory", win_output_directory
         output_directory = adapt_path_for_cygwin(self.is_windows, self.output_text.get_text())
         if output_directory is not None:
             # Change directory to the output_directory.
@@ -448,16 +466,17 @@ class MyWindow(Gtk.Window):
             # Start threads
             all_ok = True
             for cmd in cmds:
-                print cmd
-                # all_ok = all_ok and (os.system(cmd) == 0)
+                output += "Running: %s\n" % cmd
                 proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, shell=True)
                 all_ok = all_ok and (proc.wait() == 0)
-                # print "returncode:", proc.returncode, "\n\n\n"
                 out, err = proc.communicate()
+                output += "Stdout: %s\n" % out
+                output += "Stderr: %s\n\n\n" % err
             if all_ok:
                 self.is_corpus_preparation_ready = True
         else:
             print "TODO: Pop up error message!!"
+        self.preprocessResultsTextBuffer.set_text(output)
 
     def _on_file_clicked(self, widget, labelToUpdate):
         dialog = Gtk.FileChooserDialog("Please choose a file", None,
@@ -517,7 +536,7 @@ class MyWindow(Gtk.Window):
         self.start_training_button = Gtk.Button("Start training")
         self.start_training_button.connect("clicked", self._train)
         grid.add(self.start_training_button)
-        # Output label.
+        # Output frame.
         training_results_frame = Gtk.Frame(label="Results")
         scrolledwindow = Gtk.ScrolledWindow()
         scrolledwindow.set_hexpand(True)
