@@ -54,7 +54,8 @@ This is necessary to use the redirection commands used by MOSES commands.
 - MOSES (Install with "--with-mm" and "--install-scripts" flags)
 - the following installer is recommended:
 	[https://sourceforge.net/projects/pygobjectwin32/files/pygi-aio-3.18.2_rev10-setup_84c21bc2679ff32e73de38cbaa6ef6d30c628ae5.exe/download](https://sourceforge.net/projects/pygobjectwin32/files/pygi-aio-3.18.2_rev10-setup_84c21bc2679ff32e73de38cbaa6ef6d30c628ae5.exe/download)
-	- ######visual installation guide:
+	
+	- ###### visual installation guide:
 
 	![Screenshot](./installation/windows_guide/GTK.png)
 
