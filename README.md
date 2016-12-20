@@ -70,6 +70,10 @@ Simply install all dependencies and run:
 ```
 python main.py
 ```
+How to install the dependencies on ubuntu:
+```sudo apt-get install python gobject```  to install GTK 3.0
+```sudo apt-get install gir1.2-webkit-3.0``` to instal WebKit 3.0
+```sudo python main.py``` to install pip, if needed to
 
 ##### On Windows
 
