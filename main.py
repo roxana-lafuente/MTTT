@@ -31,8 +31,10 @@ try:
     from gi.repository import Gtk
     from gi.repository import Gdk
     if not os.name == 'nt':  # Windows
+    try:
         gi.require_version('WebKit', '3.0')
         from gi.repository import WebKit
+    except:pass
 except ImportError:
     print "Dependency unfulfilled, please install gi library"
     exit(1)

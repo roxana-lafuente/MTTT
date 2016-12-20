@@ -31,8 +31,10 @@ try:
     from gi.repository import Gtk
     from gi.repository import Gdk
     if not os.name == 'nt':  # Windows
-        gi.require_version('WebKit', '3.0')
-        from gi.repository import WebKit
+        try:
+            gi.require_version('WebKit', '3.0')
+            from gi.repository import WebKit
+        except:pass
 except ImportError:
     print "Dependency unfulfilled, please install gi library"
     exit(1)
@@ -212,14 +214,17 @@ class PostEditing:
         is_linux = os.name == 'posix'
         is_windows = os.name == 'nt'
         if is_linux:
-            self.notebook.remove_page(6)
-            html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
-            view = WebKit.WebView()
-            view.open(html)
-            view.load_uri(uri)
-            childWidget = view
-            self.notebook.insert_page(childWidget, Gtk.Label('Statistics'), 6)
-            self.update_notebook()
+            try:
+                self.notebook.remove_page(6)
+                html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
+                view = WebKit.WebView()
+                view.open(html)
+                view.load_uri(uri)
+                childWidget = view
+                self.notebook.insert_page(childWidget, Gtk.Label('Statistics'), 6)
+                self.update_notebook()
+            except:
+                webbrowser.open(uri,new=2)
         if is_windows:
             webbrowser.open(uri,new=2)
 
