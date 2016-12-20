@@ -70,7 +70,7 @@ Simply install all dependencies and run:
 ```
 python main.py
 ```
-How to install the dependencies on ubuntu:
+######How to install the dependencies on ubuntu:
 
 ```sudo apt-get install python gobject```  to install GTK 3.0
 
