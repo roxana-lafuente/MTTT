@@ -44,16 +44,18 @@ This is necessary to use the redirection commands used by MOSES commands.
 ##### On Ubuntu
 	- MOSES (Install with "--with-mm" and "--install-scripts" flags)
 	- To install its dependencies run
-	```
-	python ubuntu_install.py
-	```
+
+		```
+		python ubuntu_install.py
+		```
 
 ##### On Windows using Cygwin
 	- MOSES (Install with "--with-mm" and "--install-scripts" flags)
 	- To install Cygwin and its dependencies run
-	```
-	python cygwin_install.py
-	```
+		
+		```
+		python cygwin_install.py
+		```
 ##### On Windows
 - MOSES (Install with "--with-mm" and "--install-scripts" flags)
 - the following installer is recommended:
