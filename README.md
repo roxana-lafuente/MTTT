@@ -61,7 +61,7 @@ This is necessary to use the redirection commands used by MOSES commands.
 
 	![Screenshot](./installation/windows_guide/Webkit.png)
 
-	##### On Windows using Cygwin
+- ##### On Windows using Cygwin
 	- MOSES (Install with "--with-mm" and "--install-scripts" flags)
 	- To install Cygwin and its dependencies run
 	```
