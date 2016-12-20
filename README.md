@@ -27,18 +27,8 @@ TTT is an under development post-editing suite which aims to improve the transla
 
 #### Source code
 
-##### On Linux
-- MOSES (Install with "--with-mm" and "--install-scripts" flags)
-
-- ######How to install the dependencies on ubuntu:
-
-	- ```sudo apt-get install python gobject```  to install GTK 3.0
-
-	- ```sudo apt-get install gir1.2-webkit-3.0``` to instal WebKit 3.0
-
-	- ```sudo python main.py``` to install pip, if needed to
-
-- Also, you should link /bin/sh to /bin/bash and not to bin dash. To do that:
+##### About Linux
+- You should link /bin/sh to /bin/bash and not to bin dash. To do that:
 	- Check the link:
 	```
 	ls -l /bin/sh
@@ -50,6 +40,20 @@ TTT is an under development post-editing suite which aims to improve the transla
 	```
 This is necessary to use the redirection commands used by MOSES commands.
 
+
+##### On Ubuntu
+	- MOSES (Install with "--with-mm" and "--install-scripts" flags)
+	- To install its dependencies run
+	```
+	python ubuntu_install.py
+	```
+
+##### On Windows using Cygwin
+	- MOSES (Install with "--with-mm" and "--install-scripts" flags)
+	- To install Cygwin and its dependencies run
+	```
+	python cygwin_install.py
+	```
 ##### On Windows
 - MOSES (Install with "--with-mm" and "--install-scripts" flags)
 - the following installer is recommended:
@@ -61,12 +65,6 @@ This is necessary to use the redirection commands used by MOSES commands.
 
 	![Screenshot](./installation/windows_guide/Webkit.png)
 
-- ##### On Windows using Cygwin
-	- MOSES (Install with "--with-mm" and "--install-scripts" flags)
-	- To install Cygwin and its dependencies run
-	```
-	python cygwin_install.py
-	```
 
 
 
