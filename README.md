@@ -29,7 +29,15 @@ TTT is an under development post-editing suite which aims to improve the transla
 
 ##### On Linux
 - MOSES (Install with "--with-mm" and "--install-scripts" flags)
-- GTK 3.0
+
+- ######How to install the dependencies on ubuntu:
+
+	- ```sudo apt-get install python gobject```  to install GTK 3.0
+
+	- ```sudo apt-get install gir1.2-webkit-3.0``` to instal WebKit 3.0
+
+	- ```sudo python main.py``` to install pip, if needed to
+
 - Also, you should link /bin/sh to /bin/bash and not to bin dash. To do that:
 	- Check the link:
 	```
@@ -45,6 +53,11 @@ This is necessary to use the redirection commands used by MOSES commands.
 ##### On Windows
 - MOSES (Install with "--with-mm" and "--install-scripts" flags)
 - Cygwin (only on Windows)
+	- the following installer is recommended:
+[https://sourceforge.net/projects/pygobjectwin32/files/pygi-aio-3.18.2_rev10-setup_84c21bc2679ff32e73de38cbaa6ef6d30c628ae5.exe/download](https://sourceforge.net/projects/pygobjectwin32/files/pygi-aio-3.18.2_rev10-setup_84c21bc2679ff32e73de38cbaa6ef6d30c628ae5.exe/download)
+	- visual installation guide:
+	![Screenshot](./installation/windows_guide/GTK.png)
+	![Screenshot](./installation/windows_guide/Webkit.png)
 	- gi (python-gi)
 	- gobject (python-gobject)
 	- GTK 3.0 ()
@@ -70,14 +83,6 @@ Simply install all dependencies and run:
 ```
 python main.py
 ```
-######How to install the dependencies on ubuntu:
-
-```sudo apt-get install python gobject```  to install GTK 3.0
-
-```sudo apt-get install gir1.2-webkit-3.0``` to instal WebKit 3.0
-
-```sudo python main.py``` to install pip, if needed to
-
 ##### On Windows
 
 Run LXDE or any other X window environment from CygWin. From inside LXDE or your favorite one run:
