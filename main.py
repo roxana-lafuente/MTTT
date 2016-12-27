@@ -1,3 +1,5 @@
+"""@brief     Main module of TTT."""
+
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -35,12 +37,15 @@ try:
         try:
             gi.require_version('WebKit', '3.0')
             from gi.repository import WebKit
-        except: SHOW_STATISTICS= False
+        except:
+            SHOW_STATISTICS = False
 except ImportError:
     print "Dependency unfulfilled, please install gi library"
     exit(1)
 
+
 def install_and_import(package):
+    """@brief     Imports modules and installs them if they are not."""
     import importlib
     try:
         importlib.import_module(package)
@@ -55,6 +60,7 @@ def install_and_import(package):
         pip.main(['install', package])
     finally:
         globals()[package] = importlib.import_module(package)
+
 
 # these other ones I a am not so sure of. Thus the install function.
 install_and_import("requests")
@@ -88,9 +94,12 @@ UI_INFO = """
 </ui>
 """
 
+
 class MyWindow(Gtk.Window):
+    """@brief     Main window class."""
 
     def __init__(self):
+        """@brief     Initializes the main window of TTT."""
         # Recognize OS
         if os.name == 'posix':  # Linux
             self.is_linux, self.is_windows = True, False
@@ -163,16 +172,18 @@ class MyWindow(Gtk.Window):
         self.original_directory = os.getcwd()
 
     def _check_moses_installation(self, directory):
+        """@brief     Determines if directory contains moses."""
         # TODO: TRY catch OSError when permission denied!!
         file_content = [f for f in os.listdir(directory)]
-        moses_files = ["/scripts/tokenizer/tokenizer.perl",
-                       "/scripts/recaser/truecase.perl",
-                       "/scripts/training/clean-corpus-n.perl",
-                       "/bin/lmplz",
-                       "/bin/build_binary",
-                       "/scripts/training/train-model.perl",
-                       "/bin/moses"
-                      ]
+        moses_files = [
+            "/scripts/tokenizer/tokenizer.perl",
+            "/scripts/recaser/truecase.perl",
+            "/scripts/training/clean-corpus-n.perl",
+            "/bin/lmplz",
+            "/bin/build_binary",
+            "/scripts/training/train-model.perl",
+            "/bin/moses"
+        ]
         if self.is_windows:
             moses_files = [f.replace("/", "\\")
                            for f in moses_files]
@@ -185,6 +196,7 @@ class MyWindow(Gtk.Window):
         return is_valid
 
     def is_moses_dir_valid(self, directory):
+        """@brief     Determines if it contains a valid moses installation."""
         is_valid = True
         if directory == "":
             is_valid = False   # Empty string
@@ -197,13 +209,11 @@ class MyWindow(Gtk.Window):
         return is_valid
 
     def get_moses_dir(self):
-        """
-            Gets Moses directory.
-        """
+        """@brief     Gets Moses directory."""
         directory = self.moses_dir
         response = Gtk.ResponseType.ACCEPT
         while response == Gtk.ResponseType.ACCEPT and not self.is_moses_dir_valid(directory):
-            label = Gtk.Label("Enter moses installation directory")
+            label = Gtk.Label("Enter MOSES installation directory")
             entry = Gtk.Entry()
             button = Gtk.Button("Choose File")
             button.connect("clicked", self._on_dir_clicked, entry)
@@ -228,7 +238,7 @@ class MyWindow(Gtk.Window):
                         Gtk.ResponseType.DELETE_EVENT]:
             # TODO: Show error and exit
             exit(1)
-        else: # Gtk.ResponseType.ACCEPT
+        else:  # Gtk.ResponseType.ACCEPT
             self.moses_dir = directory
 
         return directory
@@ -379,15 +389,16 @@ class MyWindow(Gtk.Window):
         grid.set_row_spacing(20)
         grid.set_column_spacing(20)
 
-        #self.preparation.add(grid)
+        # self.preparation.add(grid)
         self.preparation.pack_start(grid,
                                     expand=True,
                                     fill=True,
                                     padding=30)
         self.notebook.insert_page(self.preparation,
-                                  Gtk.Label('Corpus preparation'),0)
+                                  Gtk.Label('Corpus preparation'), 0)
 
     def _prepare_corpus(self, button):
+        """@brief     Runs moses truecaser, tokenizer and cleaner"""
         output = ""
         win_output_directory = self.output_text.get_text()
         output_directory = adapt_path_for_cygwin(self.is_windows, self.output_text.get_text())
