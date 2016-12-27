@@ -22,7 +22,7 @@
 #
 ##############################################################################
 
-#os is one of the modules that I know comes with 2.7, no questions asked.
+# os is one of the modules that I know comes with 2.7, no questions asked.
 import os
 
 SHOW_STATISTICS = True
@@ -45,18 +45,18 @@ def install_and_import(package):
     try:
         importlib.import_module(package)
     except ImportError:
-	try:
-	        import pip
-    	except ImportError:
-		print "no pip"
-		os.system('python get_pip.py')
-	finally:
-		import pip
+        try:
+            import pip
+        except ImportError:
+            print "no pip"
+            os.system('python get_pip.py')
+        finally:
+            import pip
         pip.main(['install', package])
     finally:
         globals()[package] = importlib.import_module(package)
 
-#these other ones I a am not so sure of. Thus the install function.
+# these other ones I a am not so sure of. Thus the install function.
 install_and_import("requests")
 install_and_import("subprocess")
 install_and_import("json")
