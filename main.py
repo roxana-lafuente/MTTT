@@ -160,7 +160,7 @@ class MyWindow(Gtk.Window):
         # Init
         self.source_lang = None
         self.target_lang = None
-        self.cwd = os.getcwd()
+        self.original_directory = os.getcwd()
 
     def _check_moses_installation(self, directory):
         # TODO: TRY catch OSError when permission denied!!
@@ -466,17 +466,20 @@ class MyWindow(Gtk.Window):
             # Start threads
             all_ok = True
             for cmd in cmds:
-                output += "Running: %s\n" % cmd
-                proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, shell=True)
+                output += "Running command: %s" % cmd
+                proc = subprocess.Popen([cmd],
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE,
+                                        shell=True)
                 all_ok = all_ok and (proc.wait() == 0)
                 out, err = proc.communicate()
-                output += "Stdout: %s\n" % out
-                output += "Stderr: %s\n\n\n" % err
+                output += "Output: %s\n%s\n\n\n" % (out, err)
             if all_ok:
                 self.is_corpus_preparation_ready = True
         else:
             print "TODO: Pop up error message!!"
         self.preprocessResultsTextBuffer.set_text(output)
+        os.chdir(self.original_directory)
 
     def _on_file_clicked(self, widget, labelToUpdate):
         dialog = Gtk.FileChooserDialog("Please choose a file", None,
