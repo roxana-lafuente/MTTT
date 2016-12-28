@@ -244,12 +244,17 @@ class MyWindow(Gtk.Window):
         return directory
 
     def _on_languages_combo_changed(self, combo, attribute):
+        """@brief     Gets the SL and TL from combo box."""
         if attribute == "ST":
             self.source_lang = combo.get_active_text()
         elif attribute == "TT":
             self.target_lang = combo.get_active_text()
 
     def _set_corpus_preparation(self):
+        """
+        @brief     GUI elements to get necessary data to run truecaser,
+                   tokenizer and cleaner.
+        """
         self.preparation = Gtk.VBox()
         grid = Gtk.Grid()
         inside_grid = Gtk.Grid()
@@ -309,8 +314,8 @@ class MyWindow(Gtk.Window):
         grid.attach_next_to(preprocess_results_frame,
                             lang_frame,
                             Gtk.PositionType.BOTTOM,
-                            4, # number of columns the child will span
-                            7) # number of rows the child will span
+                            4,  # number of columns the child will span
+                            7)  # number of rows the child will span
 
         # Translation Model Frame.
         inside_grid = Gtk.Grid()
@@ -469,7 +474,7 @@ class MyWindow(Gtk.Window):
             self.source_clean = self.input_true + "." + self.source_lang
             self.target_clean = self.input_true + "." + self.target_lang
             cmds.append(get_cleaner_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
-                                             self.source_lang,
+                                            self.source_lang,
                                             self.target_lang,
                                             self.input_true,
                                             self.input_clean))
@@ -493,6 +498,7 @@ class MyWindow(Gtk.Window):
         os.chdir(self.original_directory)
 
     def _on_file_clicked(self, widget, labelToUpdate):
+        """@brief     Get file path from dialog."""
         dialog = Gtk.FileChooserDialog("Please choose a file", None,
             Gtk.FileChooserAction.OPEN,
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
@@ -509,6 +515,7 @@ class MyWindow(Gtk.Window):
         dialog.destroy()
 
     def _on_dir_clicked(self, widget, labelToUpdate):
+        """@brief     Get folder path from dialog."""
         dialog = Gtk.FileChooserDialog("Please choose a directory", None,
             Gtk.FileChooserAction.OPEN,
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
@@ -526,6 +533,7 @@ class MyWindow(Gtk.Window):
         dialog.destroy()
 
     def _add_dir_filters(self, dialog):
+        """@brief     Add folder filters for folder choosing."""
         # TODO: Allow to only choose folders
         filter_text = Gtk.FileFilter()
 
@@ -535,6 +543,7 @@ class MyWindow(Gtk.Window):
         dialog.add_filter(filter_any)
 
     def _add_file_filters(self, dialog):
+        """@brief     Add file filters for file choosing."""
         filter_text = Gtk.FileFilter()
 
         filter_any = Gtk.FileFilter()
@@ -543,6 +552,7 @@ class MyWindow(Gtk.Window):
         dialog.add_filter(filter_any)
 
     def _set_training(self):
+        """@brief     Prepares GUI to run MT and LM training."""
         self.training = Gtk.Box()
         grid = Gtk.Grid()
 
@@ -572,7 +582,7 @@ class MyWindow(Gtk.Window):
         self.notebook.insert_page(self.training, Gtk.Label('Training'),1)
 
     def _train(self, button):
-        # print "==============================>", self.is_corpus_preparation_ready
+        """@brief     Runs MT and LM training."""
         output_directory = adapt_path_for_cygwin(self.is_windows, self.output_text.get_text())
         if output_directory is not None and self.is_corpus_preparation_ready:
             cmds = []
@@ -581,7 +591,7 @@ class MyWindow(Gtk.Window):
             self.lm_arpa = generate_lm_fn(output_directory)
             print "out:", self.lm_arpa, "\n"
             cmds.append(get_lmtrain_command(self.moses_dir,
-                                             self.target_lang,
+                                            self.target_lang,
                                             self.lm_true,
                                             self.lm_arpa))
 
@@ -600,7 +610,7 @@ class MyWindow(Gtk.Window):
             # Train the translation model.
             out_file = generate_tm_fn(output_directory)
             cmds.append(get_tmtrain_command(self.moses_dir,
-                                             self.source_lang,
+                                            self.source_lang,
                                             self.target_lang,
                                             self.blm,
                                             self.input_clean,
@@ -643,6 +653,7 @@ class MyWindow(Gtk.Window):
             self.trainingResultsTextBuffer.set_text(output)
 
     def _set_translation(self):
+        """@brief     Prepares GUI for running the decoder."""
         self.translation = Gtk.Box()
         # Machine Translation Frame.
         grid = Gtk.Grid()
@@ -719,12 +730,11 @@ class MyWindow(Gtk.Window):
                                   Gtk.Label('Machine Translation'),2)
 
     def _is_file_not_empty(self, fn):
-        """
-        @brief  Determines if the given file is empty.
-        """
+        """@brief     Determines if the given file is empty."""
         return fn is not None and fn != ""
 
     def _has_empty_last_line(self, fn):
+        """@brief     Determines if last line of file is empty."""
         last_line_is_empty = False
         with open(fn, 'r') as f:
             # print "I am watching....", f.read()
@@ -732,6 +742,7 @@ class MyWindow(Gtk.Window):
         return last_line_is_empty
 
     def _machine_translation(self, button):
+        """@brief     Runs the decoder."""
         output = ""
         in_file = self.mt_in_text.get_text()
         out_file = self.mt_out_text.get_text()
@@ -744,7 +755,7 @@ class MyWindow(Gtk.Window):
             output += "Running decoder....\n\n"
             # Run the decoder.
             cmd = get_test_command(self.moses_dir,
-                                             adapt_path_for_cygwin(self.is_windows, self.output_text.get_text()) + "/train/model/moses.ini",
+                                   adapt_path_for_cygwin(self.is_windows, self.output_text.get_text()) + "/train/model/moses.ini",
                                    in_file,
                                    out_file)
             # use Popen for non-blocking
@@ -864,7 +875,7 @@ class MyWindow(Gtk.Window):
         evaluation_results_frame.add(scrolledwindow)
         grid.attach(evaluation_results_frame, 0, 1, 3, 1)
 
-        self.preparation.pack_start(grid, expand =True, fill =True, padding =0)
+        self.preparation.pack_start(grid, expand=True, fill=True, padding=0)
         self.notebook.insert_page(self.preparation, Gtk.Label('Evaluation'),3)
 
     def _evaluate(self, button):
@@ -913,8 +924,8 @@ class MyWindow(Gtk.Window):
         self.post_editing_reference.connect("changed", self._check_if_both_files_are_choosen_post_edition)
 
         self.postEdition_grid.add(self.postEditing_file_menu_grid)
-        self.preparation.pack_start(self.postEdition_grid, expand =True, fill =True, padding =0)
-        self.notebook.insert_page(self.preparation, Gtk.Label('Post Editing'),4)
+        self.preparation.pack_start(self.postEdition_grid, expand=True, fill=True, padding =0)
+        self.notebook.insert_page(self.preparation, Gtk.Label('Post Editing'), 4)
         self.notebook.show_all()
 
     def _check_if_both_files_are_choosen_post_edition(self,object):
@@ -925,13 +936,13 @@ class MyWindow(Gtk.Window):
             self.notebook.set_current_page(4)
             #binding of the buttons events to the PostEditing methods
             self.PostEditing = PostEditing(
-                post_editing_source_text,#so that it can read the source file
-                post_editing_reference_text,#so that it can read the reference file
-                self.notebook,#so that it can add the diff tab when needed
-                self.postEdition_grid)#so that it can add search entry and table
+                post_editing_source_text,  #so that it can read the source file
+                post_editing_reference_text,  #so that it can read the reference file
+                self.notebook,  #so that it can add the diff tab when needed
+                self.postEdition_grid)  #so that it can add search entry and table
 
-    def gtk_change_visuals(self, light_option = "unchanged", theme = "unchanged"):
-        if Gtk.MAJOR_VERSION >=3 and  Gtk.MINOR_VERSION >=14:
+    def gtk_change_visuals(self, light_option="unchanged", theme="unchanged"):
+        if Gtk.MAJOR_VERSION >= 3 and Gtk.MINOR_VERSION >= 14:
             css_filename = "gtk"
             filename = ""
             if theme == "metro" or theme == "paper":
@@ -976,20 +987,20 @@ class MyWindow(Gtk.Window):
         return uimanager
 
     def on_menu_choices_changed(self, widget, current):
-        self.gtk_change_visuals(light_option = "unchanged", theme = current.get_name())
+        self.gtk_change_visuals(light_option="unchanged", theme=current.get_name())
 
     def on_menu_choices_toggled(self, widget):
         if widget.get_active():
-            self.gtk_change_visuals(light_option = "gtk-dark",theme = "unchanged")
+            self.gtk_change_visuals(light_option="gtk-dark", theme="unchanged")
         else:
-            self.gtk_change_visuals(light_option = "gtk",theme = "unchanged")
+            self.gtk_change_visuals(light_option="gtk", theme="unchanged")
     def final_responsabilities(self, widget=None):
         if hasattr(self, 'PostEditing'):
             self.PostEditing.saveChangedFromPostEditing()
             self.PostEditing.delete_generated_files()
 
 win = MyWindow()
-win.gtk_change_visuals(light_option = "gtk", theme = "paper")
+win.gtk_change_visuals(light_option="gtk", theme="paper")
 win.connect("delete-event", Gtk.main_quit)
 win.show_all()
 Gtk.main()
