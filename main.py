@@ -111,19 +111,16 @@ class MyWindow(Gtk.Window):
         # Check Moses Config file.
         self.moses_dir = ""
         try:
-            print "A"
             f = open(moses_dir_fn, 'r')
             self.moses_dir = f.read()
             f.close()
         except (IOError, OSError):
-            print "B"
             # File does not exist. We create it.
             self.moses_dir = self.get_moses_dir()
             f = open(moses_dir_fn, 'w')
             f.write(self.moses_dir)
             f.close()
         else:
-            print "C"
             if not self.is_moses_dir_valid(self.moses_dir):
                 # File content is wrong
                 moses_dir = self.get_moses_dir()
