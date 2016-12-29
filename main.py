@@ -111,18 +111,21 @@ class MyWindow(Gtk.Window):
         # Check Moses Config file.
         self.moses_dir = ""
         try:
+            print "A"
             f = open(moses_dir_fn, 'r')
             self.moses_dir = f.read()
             f.close()
-        except IOError, OSError:
-            # File does not exist.
+        except (IOError, OSError):
+            print "B"
+            # File does not exist. We create it.
             self.moses_dir = self.get_moses_dir()
             f = open(moses_dir_fn, 'w')
             f.write(self.moses_dir)
             f.close()
-        finally:
-            # File content is wrong
+        else:
+            print "C"
             if not self.is_moses_dir_valid(self.moses_dir):
+                # File content is wrong
                 moses_dir = self.get_moses_dir()
                 f = open(moses_dir_fn, 'w')
                 f.write(self.moses_dir)
@@ -217,10 +220,10 @@ class MyWindow(Gtk.Window):
             entry = Gtk.Entry()
             button = Gtk.Button("Choose File")
             button.connect("clicked", self._on_dir_clicked, entry)
-            dialog = Gtk.Dialog("My dialog",
+            dialog = Gtk.Dialog("Moses configuration",
                                 None,
                                 Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                                (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
+                                (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
                                  Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
             box = dialog.get_content_area()
             box.add(label)
@@ -234,12 +237,9 @@ class MyWindow(Gtk.Window):
             dialog.destroy()
 
         # If it is not valid, keep asking until valid or user leaves.
-        if response in [Gtk.ResponseType.REJECT,
-                        Gtk.ResponseType.DELETE_EVENT]:
-            # TODO: Show error and exit
+        if response != Gtk.ResponseType.ACCEPT:
             exit(1)
-        else:  # Gtk.ResponseType.ACCEPT
-            self.moses_dir = directory
+        self.moses_dir = directory
 
         return directory
 
@@ -251,10 +251,7 @@ class MyWindow(Gtk.Window):
             self.target_lang = combo.get_active_text()
 
     def _set_corpus_preparation(self):
-        """
-        @brief     GUI elements to get necessary data to run truecaser,
-                   tokenizer and cleaner.
-        """
+        """@brief     GUI elements to run truecaser, tokenizer and cleaner."""
         self.preparation = Gtk.VBox()
         grid = Gtk.Grid()
         inside_grid = Gtk.Grid()
@@ -403,10 +400,11 @@ class MyWindow(Gtk.Window):
                                   Gtk.Label('Corpus preparation'), 0)
 
     def _prepare_corpus(self, button):
-        """@brief     Runs moses truecaser, tokenizer and cleaner"""
+        """@brief     Runs moses truecaser, tokenizer and cleaner."""
         output = ""
         win_output_directory = self.output_text.get_text()
-        output_directory = adapt_path_for_cygwin(self.is_windows, self.output_text.get_text())
+        output_directory = adapt_path_for_cygwin(self.is_windows,
+                                                 self.output_text.get_text())
         if output_directory is not None:
             # Change directory to the output_directory.
             try:
@@ -500,9 +498,10 @@ class MyWindow(Gtk.Window):
     def _on_file_clicked(self, widget, labelToUpdate):
         """@brief     Get file path from dialog."""
         dialog = Gtk.FileChooserDialog("Please choose a file", None,
-            Gtk.FileChooserAction.OPEN,
-            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-             Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+                                       Gtk.FileChooserAction.OPEN,
+                                       (Gtk.STOCK_CANCEL,
+                                        Gtk.ResponseType.CANCEL,
+                                        Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
 
         self._add_file_filters(dialog)
 
@@ -517,9 +516,10 @@ class MyWindow(Gtk.Window):
     def _on_dir_clicked(self, widget, labelToUpdate):
         """@brief     Get folder path from dialog."""
         dialog = Gtk.FileChooserDialog("Please choose a directory", None,
-            Gtk.FileChooserAction.OPEN,
-            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-             Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+                                       Gtk.FileChooserAction.OPEN,
+                                       (Gtk.STOCK_CANCEL,
+                                        Gtk.ResponseType.CANCEL,
+                                        Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
 
         self._add_dir_filters(dialog)
         dialog.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
@@ -579,11 +579,12 @@ class MyWindow(Gtk.Window):
                             1)
 
         self.training.add(grid)
-        self.notebook.insert_page(self.training, Gtk.Label('Training'),1)
+        self.notebook.insert_page(self.training, Gtk.Label('Training'), 1)
 
     def _train(self, button):
         """@brief     Runs MT and LM training."""
-        output_directory = adapt_path_for_cygwin(self.is_windows, self.output_text.get_text())
+        output_directory = adapt_path_for_cygwin(self.is_windows,
+                                                 self.output_text.get_text())
         if output_directory is not None and self.is_corpus_preparation_ready:
             cmds = []
             output = "Log:\n\n"
@@ -620,12 +621,13 @@ class MyWindow(Gtk.Window):
             # Binarize phase-table.gz
             # Binarize reordering-table.wbe-msd-bidirectional-fe.gz
             # Change PhraseDictionaryMemory to PhraseDictionaryCompact
-            # Set the path of the PhraseDictionary feature to point to $HOME/working/binarised-model/phrase-table.minphr
-            # Set the path of the LexicalReordering feature to point to $HOME/working/binarised-model/reordering-table
+            # Set the path of the PhraseDictionary feature to point to:
+            # $HOME/working/binarised-model/phrase-table.minphr
+            # Set the path of the LexicalReordering feature to point to:
+            # $HOME/working/binarised-model/reordering-table
 
             for cmd in cmds:
                 # use Popen for non-blocking
-                print cmd
                 output += cmd
                 proc = subprocess.Popen([cmd],
                                         stdout=subprocess.PIPE,
@@ -642,14 +644,15 @@ class MyWindow(Gtk.Window):
             training = adapt_path_for_cygwin(self.is_windows, self.output_text.get_text()) + "/training.out"
             try:
                 with open(training, "r") as f:
-                   output += "\n" + f.read()
+                    output += "\n" + f.read()
             except IOError:
-                output += "Error. Unsuccessful when attempting to create moses.ini"
+                output += "Error. Unable to create moses.ini"
 
             # Set output to the output label.
             self.trainingResultsTextBuffer.set_text(output)
         else:
-            output = "ERROR: Please go to the first tab and complete the process."
+            output = "ERROR: Uncompleted preprocessing. "
+            output += "Please go to the first tab and complete the process."
             self.trainingResultsTextBuffer.set_text(output)
 
     def _set_translation(self):
@@ -695,7 +698,7 @@ class MyWindow(Gtk.Window):
                                    1,
                                    10)
 
-         # Start machine translation button.
+        # Start machine translation button.
         sbutton = Gtk.Button(label="Start machine translation")
         sbutton.connect("clicked", self._machine_translation)
         inside_grid.attach_next_to(sbutton,
@@ -737,7 +740,6 @@ class MyWindow(Gtk.Window):
         """@brief     Determines if last line of file is empty."""
         last_line_is_empty = False
         with open(fn, 'r') as f:
-            # print "I am watching....", f.read()
             last_line_is_empty = "\n" in (f.readlines()[-1])
         return last_line_is_empty
 
@@ -778,11 +780,11 @@ class MyWindow(Gtk.Window):
             f.close()
         else:
             if not self._is_file_not_empty(in_file):
-                output += "ERROR. You need to specify the source text path.\n"
+                output += "ERROR. Missing source text path.\n"
             elif not self._has_empty_last_line(in_file):
-                output += "ERROR. You need to add an empty line at the end of %s\n" % in_file
+                output += "ERROR. Last line of %s is not empty.\n" % in_file
             if not self._is_file_not_empty(out_file):
-                output += "ERROR. You need to specify the empty target text path.\n"
+                output += "ERROR. Missing target text path.\n"
 
         # Set output to the output label.
         self.mttrainingResultsTextBuffer.set_text(output)
@@ -801,29 +803,47 @@ class MyWindow(Gtk.Window):
         self.evaluation_source.set_text("")
         inside_grid.add(self.evaluation_source)
         self.st_button = Gtk.Button("Choose File")
-        self.st_button.connect("clicked", self._on_file_clicked, self.evaluation_source)
+        self.st_button.connect("clicked",
+                               self._on_file_clicked,
+                               self.evaluation_source)
         inside_grid.add(self.st_button)
 
         #  Evaluation Metrics: Reference Text Picker
         tt_label = Gtk.Label("Reference text")
-        inside_grid.attach_next_to(tt_label, st_label, Gtk.PositionType.BOTTOM, 1, 10)
+        inside_grid.attach_next_to(tt_label,
+                                   st_label,
+                                   Gtk.PositionType.BOTTOM, 1, 10)
         self.evaluation_reference = Gtk.Entry()
         self.evaluation_reference.set_text("")
-        inside_grid.attach_next_to(self.evaluation_reference, self.evaluation_source, Gtk.PositionType.BOTTOM, 1, 10)
+        inside_grid.attach_next_to(self.evaluation_reference,
+                                   self.evaluation_source,
+                                   Gtk.PositionType.BOTTOM, 1, 10)
         self.tt_button = Gtk.Button("Choose File")
-        self.tt_button.connect("clicked", self._on_file_clicked, self.evaluation_reference)
-        inside_grid.attach_next_to(self.tt_button, self.st_button, Gtk.PositionType.BOTTOM, 1, 10)
+        self.tt_button.connect("clicked",
+                               self._on_file_clicked,
+                               self.evaluation_reference)
+        inside_grid.attach_next_to(self.tt_button,
+                                   self.st_button,
+                                   Gtk.PositionType.BOTTOM, 1, 10)
         inside_grid.set_column_spacing(10)
 
         #  Evaluation Metrics: Output Text Picker
         ot_label = Gtk.Label("Output directory")
-        inside_grid.attach_next_to(ot_label, tt_label, Gtk.PositionType.BOTTOM, 1, 10)
+        inside_grid.attach_next_to(ot_label,
+                                   tt_label,
+                                   Gtk.PositionType.BOTTOM, 1, 10)
         self.evaluation_output = Gtk.Entry()
         self.evaluation_output.set_text("")
-        inside_grid.attach_next_to(self.evaluation_output, self.evaluation_reference, Gtk.PositionType.BOTTOM, 1, 10)
+        inside_grid.attach_next_to(self.evaluation_output,
+                                   self.evaluation_reference,
+                                   Gtk.PositionType.BOTTOM, 1, 10)
         self.ot_button = Gtk.Button("Choose File")
-        self.ot_button.connect("clicked", self._on_file_clicked, self.evaluation_reference)
-        inside_grid.attach_next_to(self.ot_button, self.tt_button, Gtk.PositionType.BOTTOM, 1, 10)
+        self.ot_button.connect("clicked",
+                               self._on_file_clicked,
+                               self.evaluation_reference)
+        inside_grid.attach_next_to(self.ot_button,
+                                   self.tt_button,
+                                   Gtk.PositionType.BOTTOM, 1, 10)
         inside_grid.set_column_spacing(10)
 
         texts_menu_frame.add(inside_grid)
@@ -832,7 +852,6 @@ class MyWindow(Gtk.Window):
         # lm_frame.set_label_align(1.0, 1.0)
         grid.set_row_spacing(1)
         grid.set_column_spacing(20)
-
 
         # Evaluation Metrics Frame.
         inside_grid = Gtk.Grid()
@@ -850,10 +869,18 @@ class MyWindow(Gtk.Window):
         inside_grid.add(self.check_PER)
         inside_grid.add(self.check_HTER)
         inside_grid.add(self.check_GTM)
-        inside_grid.attach_next_to(self.check_BLEU, self.check_WER, Gtk.PositionType.BOTTOM, 1, 1)
-        inside_grid.attach_next_to(self.check_BLEU2GRAM, self.check_PER, Gtk.PositionType.BOTTOM, 1, 1)
-        inside_grid.attach_next_to(self.check_BLEU3GRAM, self.check_HTER, Gtk.PositionType.BOTTOM, 1, 1)
-        inside_grid.attach_next_to(self.check_BLEU4GRAM, self.check_GTM, Gtk.PositionType.BOTTOM, 1, 1)
+        inside_grid.attach_next_to(self.check_BLEU,
+                                   self.check_WER,
+                                   Gtk.PositionType.BOTTOM, 1, 1)
+        inside_grid.attach_next_to(self.check_BLEU2GRAM,
+                                   self.check_PER,
+                                   Gtk.PositionType.BOTTOM, 1, 1)
+        inside_grid.attach_next_to(self.check_BLEU3GRAM,
+                                   self.check_HTER,
+                                   Gtk.PositionType.BOTTOM, 1, 1)
+        inside_grid.attach_next_to(self.check_BLEU4GRAM,
+                                   self.check_GTM,
+                                   Gtk.PositionType.BOTTOM, 1, 1)
         self.evaluate_button = Gtk.Button("Start evaluation ")
         self.evaluate_button.connect("clicked", self._evaluate)
         inside_grid.attach(self.evaluate_button, 0, 2, 3, 1)
@@ -876,19 +903,31 @@ class MyWindow(Gtk.Window):
         grid.attach(evaluation_results_frame, 0, 1, 3, 1)
 
         self.preparation.pack_start(grid, expand=True, fill=True, padding=0)
-        self.notebook.insert_page(self.preparation, Gtk.Label('Evaluation'),3)
+        self.notebook.insert_page(self.preparation,
+                                  Gtk.Label('Evaluation'), 3)
 
     def _evaluate(self, button):
-        checkbox_indexes = [False] * 8 #checkbox_indexes["WER","PER","HTER", "GTM", "BLEU","BLEU2GRAM","BLEU3GRAM"]
-        if self.check_WER.get_active():     checkbox_indexes[0] = True
-        if self.check_PER.get_active():     checkbox_indexes[1] = True
-        if self.check_HTER.get_active():    checkbox_indexes[2] = True
-        if self.check_GTM.get_active():     checkbox_indexes[3] = True
-        if self.check_BLEU.get_active():    checkbox_indexes[4] = True
-        if self.check_BLEU2GRAM.get_active():   checkbox_indexes[5] = True
-        if self.check_BLEU3GRAM.get_active():   checkbox_indexes[6] = True
-        if self.check_BLEU4GRAM.get_active():   checkbox_indexes[7] = True
-        result = evaluate(checkbox_indexes, self.evaluation_source.get_text(), self.evaluation_reference.get_text())
+        # checkbox_indexes["WER","PER","HTER", "GTM", "BLEU","BLEU2GRAM","BLEU3GRAM"]
+        checkbox_indexes = [False] * 8
+        if self.check_WER.get_active():
+            checkbox_indexes[0] = True
+        if self.check_PER.get_active():
+            checkbox_indexes[1] = True
+        if self.check_HTER.get_active():
+            checkbox_indexes[2] = True
+        if self.check_GTM.get_active():
+            checkbox_indexes[3] = True
+        if self.check_BLEU.get_active():
+            checkbox_indexes[4] = True
+        if self.check_BLEU2GRAM.get_active():
+            checkbox_indexes[5] = True
+        if self.check_BLEU3GRAM.get_active():
+            checkbox_indexes[6] = True
+        if self.check_BLEU4GRAM.get_active():
+            checkbox_indexes[7] = True
+        result = evaluate(checkbox_indexes,
+                          self.evaluation_source.get_text(),
+                          self.evaluation_reference.get_text())
         self.resultsTextBuffer.set_text(result)
 
     def _set_post_editing(self):
@@ -908,7 +947,9 @@ class MyWindow(Gtk.Window):
         self.post_editing_source.set_text("")
         self.postEditing_file_menu_grid.add(self.post_editing_source)
         self.post_editing_source_button = Gtk.Button("Choose File")
-        self.post_editing_source_button.connect("clicked", self._on_file_clicked, self.post_editing_source)
+        self.post_editing_source_button.connect("clicked",
+                                                self._on_file_clicked,
+                                                self.post_editing_source)
         self.postEditing_file_menu_grid.add(self.post_editing_source_button)
 
         # Post Editing : Reference Text Picker
@@ -928,18 +969,18 @@ class MyWindow(Gtk.Window):
         self.notebook.insert_page(self.preparation, Gtk.Label('Post Editing'), 4)
         self.notebook.show_all()
 
-    def _check_if_both_files_are_choosen_post_edition(self,object):
+    def _check_if_both_files_are_choosen_post_edition(self, object):
         if self.post_editing_source.get_text() != "" and self.post_editing_reference.get_text() != "":
             post_editing_source_text = self.post_editing_source.get_text()
             post_editing_reference_text = self.post_editing_reference.get_text()
             self._set_post_editing()
             self.notebook.set_current_page(4)
-            #binding of the buttons events to the PostEditing methods
+            # binding of the buttons events to the PostEditing methods
             self.PostEditing = PostEditing(
-                post_editing_source_text,  #so that it can read the source file
-                post_editing_reference_text,  #so that it can read the reference file
-                self.notebook,  #so that it can add the diff tab when needed
-                self.postEdition_grid)  #so that it can add search entry and table
+                post_editing_source_text,  # so that it can read the source file
+                post_editing_reference_text,  # so that it can read the reference file
+                self.notebook,  # so that it can add the diff tab when needed
+                self.postEdition_grid)  # so that it can add search entry and table
 
     def gtk_change_visuals(self, light_option="unchanged", theme="unchanged"):
         if Gtk.MAJOR_VERSION >= 3 and Gtk.MINOR_VERSION >= 14:
@@ -974,7 +1015,9 @@ class MyWindow(Gtk.Window):
             ("paper", None, "paper", None, None, 2)
         ], 2, self.on_menu_choices_changed)
 
-        lights_on_widget = Gtk.ToggleAction("lights_on_option", "Turn lights off", None, None)
+        lights_on_widget = Gtk.ToggleAction("lights_on_option",
+                                            "Turn lights off",
+                                            None, None)
         lights_on_widget.connect("toggled", self.on_menu_choices_toggled)
         action_group.add_action(lights_on_widget)
 
@@ -987,13 +1030,15 @@ class MyWindow(Gtk.Window):
         return uimanager
 
     def on_menu_choices_changed(self, widget, current):
-        self.gtk_change_visuals(light_option="unchanged", theme=current.get_name())
+        self.gtk_change_visuals(light_option="unchanged",
+                                theme=current.get_name())
 
     def on_menu_choices_toggled(self, widget):
         if widget.get_active():
             self.gtk_change_visuals(light_option="gtk-dark", theme="unchanged")
         else:
             self.gtk_change_visuals(light_option="gtk", theme="unchanged")
+
     def final_responsabilities(self, widget=None):
         if hasattr(self, 'PostEditing'):
             self.PostEditing.saveChangedFromPostEditing()
