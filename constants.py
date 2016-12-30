@@ -1,3 +1,4 @@
+"""@brief     Contains constants common to all modules of TTT."""
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -32,7 +33,9 @@ ENG = "en"
 FR = "fr"
 DE = "de"
 
+
 def adapt_path_for_cygwin(is_windows, directory):
+    """@brief     Adapts a linux path to a windows one."""
     assert len(directory) > 0
     adapted_directory = "/cygdrive/"
     if is_windows:
@@ -66,7 +69,7 @@ truecaser = adapt_path_for_cygwin(is_win, "%s/scripts/recaser/truecase.perl ")
 
 cleaner = adapt_path_for_cygwin(is_win, "%s/scripts/training/clean-corpus-n.perl ")
 
-lm_train = adapt_path_for_cygwin(is_win, "%s/bin/lmplz ") + "-o 3 " # TODO: Should be chosen by the user.
+lm_train = adapt_path_for_cygwin(is_win, "%s/bin/lmplz ") + "-o 3 "  # TODO: Should be chosen by the user.
 
 blm_train = adapt_path_for_cygwin(is_win, "%s/bin/build_binary ")
 
