@@ -6,20 +6,15 @@
 TTT is an under development post-editing suite which aims to improve the translators experience with machine translation tools such as moses. It provides the user with a graphical user interface to:
 
 - Work with the moses machine translation pipeline.
-- Apply metrics such as BLEU.
+- Apply evaluation metrics such as BLEU.
 - Post-edit the obtained machine translation.
-
-
-
-### Authors
-- Paula Estrella
-- Roxana Lafuente
-- Miguel Lemos
 
 
 
 ### Features
 - Portable (Windows / Linux)
+- Friendly Graphical User Interface (GUI) for MOSES.
+- Use machine translation tool MOSES, post-edit the output and run evaluation metrics.
 
 
 
@@ -77,7 +72,7 @@ More details on this soon!
 
 
 ### Status
-- Under development
+- Under development. Currently everything is working but we need a better GUI design and add robustness (strict error handling).
 
 
 
@@ -100,3 +95,12 @@ python main.py
 
 #### Binaries (portable)
 More details on this soon!
+
+
+
+### Contributors
+- Paula Estrella <pestrella at famaf dot unc dot edu dot ar>
+- Roxana Lafuente <roxana.lafuente at gmail dot com>
+- Miguel Lemos <miguelemosreverte at gmail dot com>
+
+We welcome new contributions! If you would like to be part of the team, create a new pull request and contact Paula or Roxana to let us know. If it is merged into the project you will be added as a contributor.
