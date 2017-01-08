@@ -47,6 +47,26 @@ def adapt_path_for_cygwin(is_windows, directory):
         adapted_directory = directory
     return adapted_directory
 
+def is_valid_dir(directory):
+    """
+    @brief     Determines if a directory is valid.
+
+    @returnReturns True if directory is valid, False otherwise.
+    """
+    is_valid = directory is not None and directory != ""
+    is_valid = is_valid and os.path.exists(directory)
+    return is_valid
+
+def is_valid_file(filepath):
+    """
+    @brief     Determines if a file is valid.
+
+    @returnReturns True if directory is valid, False otherwise.
+    """
+    is_valid = filepath is not None and filepath != ""
+    is_valid = is_valid and os.path.exists(filepath)
+    return is_valid
+
 # Languages we show in the GUI to work with Moses.
 languages = [ENG, FR, DE]
 

@@ -77,7 +77,7 @@ from commands import *
 from files_processing import *
 from evaluation import *
 from post_editing import PostEditing
-from constants import moses_dir_fn
+from constants import moses_dir_fn, is_valid_dir, is_valid_file
 
 UI_INFO = """
 <ui>
@@ -396,13 +396,25 @@ class MyWindow(Gtk.Window):
         self.notebook.insert_page(self.preparation,
                                   Gtk.Label('Corpus preparation'), 0)
 
+    def _has_chosen_lang(self):
+        """@brief     Determines if source and target language have been chosen."""
+        return not self.source_lang is None and not self.target_lang is None
+
+    def _has_chosen_preprocess_params(self, output_directory):
+        """@brief     Determines if all data for preprocessing is ready"""
+        is_ready = is_valid_dir(output_directory) and self._has_chosen_lang()
+        is_ready = is_ready and is_valid_file(self.tt_train.get_text())
+        is_ready = is_ready and is_valid_file(self.st_train.get_text())
+        is_ready = is_ready and is_valid_file(self.lm_text.get_text())
+        return is_ready
+
     def _prepare_corpus(self, button):
         """@brief     Runs moses truecaser, tokenizer and cleaner."""
         output = ""
         win_output_directory = self.output_text.get_text()
-        output_directory = adapt_path_for_cygwin(self.is_windows,
-                                                 self.output_text.get_text())
-        if output_directory is not None:
+        if self._has_chosen_preprocess_params(win_output_directory):
+            output_directory = adapt_path_for_cygwin(self.is_windows,
+                                                     win_output_directory)
             # Change directory to the output_directory.
             try:
                 os.chdir(win_output_directory)
@@ -417,20 +429,20 @@ class MyWindow(Gtk.Window):
                                                     output_directory)
             cmds.append(get_tokenize_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                              self.target_lang,
-                                             adapt_path_for_cygwin(self.is_windows,self.tt_train.get_text()),
+                                             adapt_path_for_cygwin(self.is_windows, self.tt_train.get_text()),
                                              self.target_tok))
             # b) Source text
             self.source_tok = generate_input_tok_fn(self.source_lang,
                                                     output_directory)
             cmds.append(get_tokenize_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                              self.source_lang,
-                                             adapt_path_for_cygwin(self.is_windows,self.st_train.get_text()),
+                                             adapt_path_for_cygwin(self.is_windows, self.st_train.get_text()),
                                              self.source_tok))
             # c) Language model
             self.lm_tok = generate_lm_tok_fn(output_directory)
             cmds.append(get_tokenize_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                              self.source_lang,
-                                             adapt_path_for_cygwin(self.is_windows,self.tt_train.get_text()),
+                                             adapt_path_for_cygwin(self.is_windows,self.lm_text.get_text()),
                                              self.lm_tok))
 
             # 2) Truecaser training
@@ -488,7 +500,7 @@ class MyWindow(Gtk.Window):
             if all_ok:
                 self.is_corpus_preparation_ready = True
         else:
-            print "TODO: Pop up error message!!"
+            output += "ERROR. You need to complete all fields." 
         self.preprocessResultsTextBuffer.set_text(output)
         os.chdir(self.original_directory)
 
@@ -582,12 +594,12 @@ class MyWindow(Gtk.Window):
         """@brief     Runs MT and LM training."""
         output_directory = adapt_path_for_cygwin(self.is_windows,
                                                  self.output_text.get_text())
-        if output_directory is not None and self.is_corpus_preparation_ready:
+        if is_valid_dir(output_directory) and self.is_corpus_preparation_ready:
+            os.chdir(self.output_text.get_text())
             cmds = []
             output = "Log:\n\n"
             # Train the language model.
             self.lm_arpa = generate_lm_fn(output_directory)
-            print "out:", self.lm_arpa, "\n"
             cmds.append(get_lmtrain_command(self.moses_dir,
                                             self.target_lang,
                                             self.lm_true,
@@ -595,7 +607,6 @@ class MyWindow(Gtk.Window):
 
             # Binarize arpa
             self.blm = generate_blm_fn(output_directory)
-            print "binarized out:", self.blm, "\n"
             cmds.append(get_blmtrain_command(self.moses_dir,
                                              self.target_lang,
                                              self.lm_arpa,
@@ -651,6 +662,7 @@ class MyWindow(Gtk.Window):
             output = "ERROR: Uncompleted preprocessing. "
             output += "Please go to the first tab and complete the process."
             self.trainingResultsTextBuffer.set_text(output)
+        os.chdir(self.original_directory)
 
     def _set_translation(self):
         """@brief     Prepares GUI for running the decoder."""
@@ -1046,3 +1058,6 @@ win.gtk_change_visuals(light_option="gtk", theme="paper")
 win.connect("delete-event", Gtk.main_quit)
 win.show_all()
 Gtk.main()
+
+# TODOs
+# 1- Check that files source and target have at least 100 lines.
