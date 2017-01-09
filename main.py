@@ -1054,10 +1054,24 @@ class MyWindow(Gtk.Window):
             self.PostEditing.delete_generated_files()
 
 win = MyWindow()
+win.set_name('TTT')
 win.gtk_change_visuals(light_option="gtk", theme="paper")
 win.connect("delete-event", Gtk.main_quit)
+
+style_provider = Gtk.CssProvider()
+
+style_provider.load_from_path("css/style.css")
+
+Gtk.StyleContext.add_provider_for_screen(
+    Gdk.Screen.get_default(), 
+    style_provider,     
+    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+)
+
 win.show_all()
 Gtk.main()
 
+
 # TODOs
 # 1- Check that files source and target have at least 100 lines.
+# 2- Add buttons for choosing number of cores to use and other parameters.
