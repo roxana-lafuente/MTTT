@@ -1,9 +1,46 @@
 #TTT {
     background-color: #edf2f6;
+    font-size: 14px;
 }
 
-#GtkButton {
-    color: #41bbbe;
-    border-color: #7b8ba5;
-    border: 2px solid;
+GtkButton {
+    /*border: 2px solid #7b8ba5;*/
+    /*font-weight: bold;*/
+    color: green;
+    /*border: 0px solid;*/
 }
+
+GtkFrame {
+    border: 2px solid #d7dce0;
+    border-radius: 24px;
+    /*background-color: #F00;*/
+    color: green;
+}
+
+#GtkGrid {
+    border: #F00;
+    background-color: #F00;
+    color: #F00;
+}
+
+/*GtkNotebook tab {
+    border: 5px solid;
+}*/
+
+/*GtkButton GtkLabel {
+    color: #fff;  This changes the text color in the button 
+}*/
+
+/*
+background-color
+background-image
+color
+border-color
+border-image
+border-radius
+border-width
+border-style
+padding
+margin
+transition
+*/
