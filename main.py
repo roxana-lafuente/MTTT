@@ -1057,4 +1057,4 @@ Gtk.main()
 
 # TODOs
 # 1- Check that files source and target have at least 100 lines.
- -# 2- Add buttons for choosing number of cores to use and other parameters.
+# 2- Add buttons for choosing number of cores to use and other parameters.
