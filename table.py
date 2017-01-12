@@ -54,6 +54,7 @@ class Table:
         self.update_table()
 
         self.modified_references =  []
+        self.last_cell_focused = None
 
         # Post Editing: Table
         search_frame = Gtk.Frame()
@@ -173,6 +174,12 @@ class Table:
         if tag is None: text_buffer.create_tag(color,background=color); tag = tagtable.lookup(color)
         text_buffer.apply_tag(tag, match_start, match_end)
 
+    def cell_in_translation_table_is_being_focused(self, a, b, c, d,  segment_index):
+        if self.last_cell_focused is not None:
+            self.last_cell_focused.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1.0, 1.0, 1.0, 1.0))
+        self.last_cell_focused = self.tables_content[self.reference_text_views][segment_index]
+        self.last_cell_focused.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0.9, 1, 1, 1))
+
     def cell_in_translation_table_changed(self, text_buffer_object, segment_index):
         if not self.REC_button.get_active():
             self.save_post_editing_changes_button.show()
@@ -280,13 +287,14 @@ class Table:
     def create_cell(self, text_line_type, text_view_type, row_index, editable):
         cell = Gtk.TextView()
         cell.set_editable(editable)
-        cell.set_cursor_visible(False)
+        cell.set_cursor_visible(editable)
         cellTextBuffer = cell.get_buffer()
         index = row_index + self.tables_content[self.table_index]
         cellTextBuffer.set_text(self.tables_content[text_line_type][index].rstrip('\n'))
         self.tables_content[text_view_type][index] = cell
         if self.table_type == "translation_table":
             cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index)
+            cell.connect("move-cursor", self.cell_in_translation_table_is_being_focused, index)
             if index in self.translation_reference_text_TextViews_modified_flag:
                 self.tables_content[self.reference_text_views][index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0.7, 249, 249, 240))
 
