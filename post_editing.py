@@ -97,7 +97,7 @@ class PostEditing:
         self.saved_modified_references = []
 
         self.tables = {}
-        self.paulaslog = {}
+        self.source_log = {}
 
         self.saved_absolute_path = os.path.abspath("saved")
         filename = post_editing_source[post_editing_source.rfind('/'):]
@@ -108,7 +108,7 @@ class PostEditing:
 
         self.tables["translation_table"] =  Table("translation_table",self.post_editing_source,self.post_editing_reference, self.saveChangedFromPostEditing_event,self.saveChangedFromPostEditing, self.calculate_statistics_event, self.translation_tab_grid)
 
-        self.paulas_log_filepath = self.saved_absolute_path + '/paulaslog.json'
+        self.source_log_filepath = self.saved_absolute_path + '/source_log.json'
 
 
         if os.path.exists(self.saved_absolute_path):
@@ -137,10 +137,10 @@ class PostEditing:
             return itertools.izip(a, b)
 
         #calculate time spent by segment
-        for current_timestamp,next_timestamp in pairwise(sorted(self.paulaslog.keys())):
-            #for current_timestamp,next_timestamp in sorted(self.paulaslog.keys()):
+        for current_timestamp,next_timestamp in pairwise(sorted(self.source_log.keys())):
+            #for current_timestamp,next_timestamp in sorted(self.source_log.keys()):
             delta = (int(next_timestamp) - int(current_timestamp))/1000
-            for segment_index in self.paulaslog[current_timestamp]:
+            for segment_index in self.source_log[current_timestamp]:
                 if segment_index in seconds_spent_by_segment:
                     seconds_spent_by_segment[segment_index] += delta
                 else:
@@ -279,25 +279,25 @@ class PostEditing:
             text_file.close()
         savefile('\n'.join(self.tables["translation_table"].tables_content[self.tables["translation_table"].source_text_lines]), self.saved_origin_filepath)
 
-    def load_paulas_log(self):
-        anonymousjsonlog = {}
+    def load_source_log(self):
+        jsonlog = {}
         try:
-            with open(self.paulas_log_filepath) as json_data:
-                anonymousjsonlog= json.load(json_data)
-        except: open(self.paulas_log_filepath, 'w').close()
-        return anonymousjsonlog
+            with open(self.source_log_filepath) as json_data:
+                jsonlog= json.load(json_data)
+        except: open(self.source_log_filepath, 'w').close()
+        return jsonlog
 
-    def save_using_paulas_version_of_a_version_control_system(self):
+    def save_using_log(self):
         for index in range(0, len(self.tables["translation_table"].tables_content[1])):
             if index in self.tables["translation_table"].translation_reference_text_TextViews_modified_flag:
                 modified_reference = self.tables["translation_table"].translation_reference_text_TextViews_modified_flag[index]
                 if modified_reference not in self.saved_modified_references:
                     self.saved_modified_references.append(modified_reference)
-                    if self.last_change_timestamp not in self.paulaslog:
-                        self.paulaslog[self.last_change_timestamp] = {}
-                    self.paulaslog[self.last_change_timestamp][index] = modified_reference
-        with open(self.paulas_log_filepath, 'w') as outfile:
-            json.dump(self.paulaslog, outfile)
+                    if self.last_change_timestamp not in self.source_log:
+                        self.source_log[self.last_change_timestamp] = {}
+                    self.source_log[self.last_change_timestamp][index] = modified_reference
+        with open(self.source_log_filepath, 'w') as outfile:
+            json.dump(self.source_log, outfile)
 
 
     def saveChangedFromPostEditing(self):
@@ -316,7 +316,7 @@ class PostEditing:
         self.diff_tab_grid.set_row_spacing(1)
         self.diff_tab_grid.set_column_spacing(20)
 
-        self.save_using_paulas_version_of_a_version_control_system()
+        self.save_using_log()
         self.tables["diff_table"] = Table("diff_table",self.post_editing_source,self.post_editing_reference, self.saveChangedFromPostEditing_event,self.saveChangedFromPostEditing, self.calculate_statistics_event, self.diff_tab_grid)
         self.addDifferencesTab()
 

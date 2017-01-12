@@ -192,7 +192,7 @@ class Table:
         self.tables_content[self.reference_text_views][segment_index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0.7, 249, 249, 240))
 
     def _fill_table(self):
-        last_modifications = self.get_lastest_modifications()
+        last_modifications_to_source = self.get_latest_modifications()
         origin = self.source
         reference = self.reference
 
@@ -212,14 +212,21 @@ class Table:
         if self.source != "" and self.reference != "":
             with open(origin) as fp:
                 for line in fp:
-                    line = unicode(line, 'iso8859-15')
+                    #line = unicode(line, 'iso8859-15')
                     if line != '\n':
                        self.tables_content[self.source_text_lines].append(line)
+            with open(reference) as fp:
+                for line in fp:
+                    #line = unicode(line, 'iso8859-15')
+                    if line != '\n':
+                       self.tables_content[self.reference_text_lines].append(line)
+            '''
             for index, line in enumerate(self.tables_content[self.source_text_lines]):
-                if str(index) in last_modifications:
-                    self.tables_content[self.reference_text_lines].append(last_modifications[str(index)])
+                if str(index) in last_modifications_to_source:
+                    self.tables_content[self.reference_text_lines].append(last_modifications_to_source[str(index)])
                 else:
                     self.tables_content[self.reference_text_lines].append(line)
+            '''
 
 
     def _table_initializing(self):
@@ -333,26 +340,25 @@ class Table:
 
             except IndexError:
                 self.next_button.set_visible(False)
-    def get_lastest_modifications (self):
-        paulaslog = self.load_paulas_log()
-        last_modifications = {}
+    def get_latest_modifications (self):
+        source_log = self.load_source_log()
+        last_modifications_to_source = {}
 
-        for a in sorted(paulaslog.keys()):
-            for b in paulaslog[a]:
-                last_modifications[b] = paulaslog[a][b]
-        return last_modifications
+        for a in sorted(source_log.keys()):
+            for b in source_log[a]:
+                last_modifications_to_source[b] = source_log[a][b]
+        return last_modifications_to_source
     def create_diff(self, text_buffers_array, color):
-        last_modifications = self.get_lastest_modifications()
+        last_modifications_to_source = self.get_latest_modifications()
         for row_index in range (0,self.tables_content[self.rows_ammount]):
             try:
                 index = row_index + self.tables_content[self.table_index]
-                if str(index) in last_modifications:
+                if str(index) in last_modifications_to_source:
                     text_buffer = text_buffers_array[index].get_buffer()
 
                     original = self.tables_content[self.source_text_lines][index]
                     #modified = self.tables_content[self.reference_text_lines][index]
-                    modified = last_modifications[str(index)]
-                    #TODO USE PAULA'S LOG INSTEAD OF A WHOLE TEXT CALLED original_modified.txt
+                    modified = last_modifications_to_source[str(index)]
                     insertions,deletions = self.get_insertion_and_deletions(original,modified)
                     if color == "green": start = insertions[0][0]; end = insertions[0][1]
                     if color == "red": start = deletions[0][0]; end = deletions[0][1]
@@ -400,11 +406,11 @@ class Table:
     def _search_button_action(self, button, line_index):
         self._move_in_table(line_index - self.tables_content[self.table_index] - 1)
 
-    def load_paulas_log(self):
-        anonymousjsonlog = {}
-        paulas_log_filepath = os.path.abspath('saved/paulaslog.json')
+    def load_source_log(self):
+        jsonlog = {}
+        source_log_filepath = os.path.abspath('saved/source_log.json')
         try:
-            with open(paulas_log_filepath) as json_data:
-                anonymousjsonlog = json.load(json_data)
+            with open(source_log_filepath) as json_data:
+                jsonlog = json.load(json_data)
         except:pass
-        return anonymousjsonlog
+        return jsonlog

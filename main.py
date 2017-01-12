@@ -383,10 +383,12 @@ class MyWindow(Gtk.Window):
         # Start corpus preprocessing button.
         sbutton = Gtk.Button(label="Start corpus preprocessing")
         sbutton.connect("clicked", self._prepare_corpus)
+        # self.preparation.set_border_width(10)
         grid.attach_next_to(sbutton, s_frame, Gtk.PositionType.BOTTOM, 1, 1)
         grid.set_row_spacing(20)
         grid.set_column_spacing(20)
 
+        # self.preparation.add(grid)
         self.preparation.pack_start(grid,
                                     expand=True,
                                     fill=True,
@@ -498,7 +500,7 @@ class MyWindow(Gtk.Window):
             if all_ok:
                 self.is_corpus_preparation_ready = True
         else:
-            output += "ERROR. You need to complete all fields." 
+            output += "ERROR. You need to complete all fields."
         self.preprocessResultsTextBuffer.set_text(output)
         os.chdir(self.original_directory)
 
@@ -610,6 +612,8 @@ class MyWindow(Gtk.Window):
                                              self.lm_arpa,
                                              self.blm))
 
+            # Set output / error to the output label.
+            # self.training_output_label.set_text(output)
             self.trainingResultsTextBuffer.set_text(output)
 
             # Train the translation model.
@@ -766,6 +770,7 @@ class MyWindow(Gtk.Window):
                                    in_file,
                                    out_file)
             # use Popen for non-blocking
+            print cmd
             proc = subprocess.Popen([cmd],
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE,
@@ -852,6 +857,8 @@ class MyWindow(Gtk.Window):
 
         texts_menu_frame.add(inside_grid)
         grid.add(texts_menu_frame)
+        # Align the label at the right of the frame.
+        # lm_frame.set_label_align(1.0, 1.0)
         grid.set_row_spacing(1)
         grid.set_column_spacing(20)
 
@@ -973,6 +980,8 @@ class MyWindow(Gtk.Window):
 
     def _check_if_both_files_are_choosen_post_edition(self, object):
         if self.post_editing_source.get_text() != "" and self.post_editing_reference.get_text() != "":
+            print self.post_editing_source.get_text()
+            print self.post_editing_reference.get_text()
             post_editing_source_text = self.post_editing_source.get_text()
             post_editing_reference_text = self.post_editing_reference.get_text()
             self._set_post_editing()
@@ -1047,7 +1056,6 @@ class MyWindow(Gtk.Window):
             self.PostEditing.delete_generated_files()
 
 win = MyWindow()
-win.set_name('TTT')
 win.gtk_change_visuals(light_option="gtk", theme="paper")
 win.connect("delete-event", Gtk.main_quit)
 win.show_all()
@@ -1055,4 +1063,3 @@ Gtk.main()
 
 # TODOs
 # 1- Check that files source and target have at least 100 lines.
-# 2- Add buttons for choosing number of cores to use and other parameters.
