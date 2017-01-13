@@ -171,6 +171,8 @@ class MyWindow(Gtk.Window):
         self.target_lang = None
         self.original_directory = os.getcwd()
 
+        self.notebook.set_current_page(2)
+
     def _check_moses_installation(self, directory):
         """@brief     Determines if directory contains moses."""
         # TODO: TRY catch OSError when permission denied!!
@@ -704,12 +706,31 @@ class MyWindow(Gtk.Window):
                                    Gtk.PositionType.BOTTOM,
                                    1,
                                    10)
+        self.mt_out2_button = Gtk.Button("Choose a Model")
+        self.mt_out2_button.connect("clicked",
+                                   self._on_dir_clicked,
+                                   self.output_text)
+        inside_grid.attach_next_to(self.mt_out2_button,
+                                   self.mt_in_button,
+                                   Gtk.PositionType.RIGHT,
+                                   1,
+                                   50)
+
+        self.mt_out3_button = Gtk.Button("Create a Model")
+        self.mt_out3_button.connect("clicked",
+                self._create_model,
+                self.mt_out_text)
+        inside_grid.attach_next_to(self.mt_out3_button,
+                self.mt_out2_button,
+                Gtk.PositionType.RIGHT,
+                1,
+                50)
 
         # Start machine translation button.
         sbutton = Gtk.Button(label="Start machine translation")
         sbutton.connect("clicked", self._machine_translation)
         inside_grid.attach_next_to(sbutton,
-                                   self.mt_out_text,
+                                   self.mt_out_button,
                                    Gtk.PositionType.BOTTOM,
                                    1,
                                    10)
@@ -738,6 +759,9 @@ class MyWindow(Gtk.Window):
         self.translation.add(grid)
         self.notebook.insert_page(self.translation,
                                   Gtk.Label('Machine Translation'),2)
+
+    def _create_model(self, a, b):
+        self.notebook.set_current_page(0)
 
     def _is_file_not_empty(self, fn):
         """@brief     Determines if the given file is empty."""
