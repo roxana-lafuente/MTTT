@@ -93,5 +93,6 @@ ENV/
 
 # Specific TTT files and folders
 saved/
+saved_but_to_be_deleted_soon/
 statistics/generated
-moses.ini
+moses.config
