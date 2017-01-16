@@ -870,7 +870,7 @@ class MyWindow(Gtk.Window):
         self.ot_button = Gtk.Button("Choose File")
         self.ot_button.connect("clicked",
                                self._on_file_clicked,
-                               self.evaluation_reference)
+                               self.evaluation_output)
         inside_grid.attach_next_to(self.ot_button,
                                    self.tt_button,
                                    Gtk.PositionType.BOTTOM, 1, 10)
