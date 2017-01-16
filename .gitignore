@@ -89,3 +89,9 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+
+# Specific TTT files and folders
+saved/
+statistics/generated
+moses.ini
