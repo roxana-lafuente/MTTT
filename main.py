@@ -506,7 +506,7 @@ class MyWindow(Gtk.Window):
         self.preprocessResultsTextBuffer.set_text(output)
         os.chdir(self.original_directory)
 
-    def _on_file_clicked(self, widget, labelToUpdate):
+    def _on_file_clicked(self, widget, labelToUpdate, tab_name = "undefined"):
         """@brief     Get file path from dialog."""
         dialog = Gtk.FileChooserDialog("Please choose a file", None,
                                        Gtk.FileChooserAction.OPEN,
@@ -522,6 +522,9 @@ class MyWindow(Gtk.Window):
         elif response == Gtk.ResponseType.CANCEL:
             labelToUpdate.set_text("")
 
+        if tab_name == "Machine translation":
+            self.mt_out_text = os.path.dirname(dialog.get_filename()) 
+            print self.mt_out_text
         dialog.destroy()
 
     def _on_dir_clicked(self, widget, labelToUpdate):
@@ -680,32 +683,12 @@ class MyWindow(Gtk.Window):
         self.mt_in_button = Gtk.Button("Choose File")
         self.mt_in_button.connect("clicked",
                                   self._on_file_clicked,
-                                  self.mt_in_text)
+                                  self.mt_in_text,
+                                  "Machine translation")
         inside_grid.add(self.mt_in_button)
 
-        # Target Text Picker
-        mt_out_label = Gtk.Label("MT output file")
-        inside_grid.attach_next_to(mt_out_label,
-                                   mt_in_label,
-                                   Gtk.PositionType.BOTTOM,
-                                   1,
-                                   10)
-        self.mt_out_text = Gtk.Entry()
-        self.mt_out_text.set_text("")
-        inside_grid.attach_next_to(self.mt_out_text,
-                                   self.mt_in_text,
-                                   Gtk.PositionType.BOTTOM,
-                                   1,
-                                   10)
-        self.mt_out_button = Gtk.Button("Choose File")
-        self.mt_out_button.connect("clicked",
-                                   self._on_file_clicked,
-                                   self.mt_out_text)
-        inside_grid.attach_next_to(self.mt_out_button,
-                                   self.mt_in_button,
-                                   Gtk.PositionType.BOTTOM,
-                                   1,
-                                   10)
+        self.mt_out_text = ""
+
         self.mt_out2_button = Gtk.Button("Choose a Model")
         self.mt_out2_button.connect("clicked",
                                    self._on_dir_clicked,
@@ -730,7 +713,7 @@ class MyWindow(Gtk.Window):
         sbutton = Gtk.Button(label="Start machine translation")
         sbutton.connect("clicked", self._machine_translation)
         inside_grid.attach_next_to(sbutton,
-                                   self.mt_out_button,
+                                   self.mt_in_button,
                                    Gtk.PositionType.BOTTOM,
                                    1,
                                    10)
