@@ -215,25 +215,30 @@ class Table:
             #then read the saved files
             origin = self.saved_origin_filepath
             #reference = self.saved_reference_filepath
+            if self.source != "" and self.reference != "":
+                with open(origin) as fp:
+                    for line in fp:
+                        #line = unicode(line, 'iso8859-15')
+                        if line != '\n':
+                           self.tables_content[self.source_text_lines].append(line)
+                for index, line in enumerate(self.tables_content[self.source_text_lines]):
+                    if str(index) in last_modifications_to_source:
+                        self.tables_content[self.reference_text_lines].append(last_modifications_to_source[str(index)])
+                    else:
+                        self.tables_content[self.reference_text_lines].append(line)
+        else:
+            if self.source != "" and self.reference != "":
+                with open(origin) as fp:
+                    for line in fp:
+                        #line = unicode(line, 'iso8859-15')
+                        if line != '\n':
+                           self.tables_content[self.source_text_lines].append(line)
+                with open(reference) as fp:
+                    for line in fp:
+                        #line = unicode(line, 'iso8859-15')
+                        if line != '\n':
+                           self.tables_content[self.reference_text_lines].append(line)
 
-        if self.source != "" and self.reference != "":
-            with open(origin) as fp:
-                for line in fp:
-                    #line = unicode(line, 'iso8859-15')
-                    if line != '\n':
-                       self.tables_content[self.source_text_lines].append(line)
-            with open(reference) as fp:
-                for line in fp:
-                    #line = unicode(line, 'iso8859-15')
-                    if line != '\n':
-                       self.tables_content[self.reference_text_lines].append(line)
-            '''
-            for index, line in enumerate(self.tables_content[self.source_text_lines]):
-                if str(index) in last_modifications_to_source:
-                    self.tables_content[self.reference_text_lines].append(last_modifications_to_source[str(index)])
-                else:
-                    self.tables_content[self.reference_text_lines].append(line)
-            '''
 
 
     def _table_initializing(self):
@@ -368,9 +373,12 @@ class Table:
                     #modified = self.tables_content[self.reference_text_lines][index]
                     modified = last_modifications_to_source[str(index)]
                     insertions,deletions = self.get_insertion_and_deletions(original,modified)
-                    if color == "green": start = insertions[0][0]; end = insertions[0][1]
-                    if color == "red": start = deletions[0][0]; end = deletions[0][1]
-                    self.apply_tag( start, end,text_buffer, color)
+                    array_to_work_with = []
+                    if color == "green": array_to_work_with = insertions
+                    if color == "red": array_to_work_with = deletions
+                    for tuple in array_to_work_with:
+                        start = tuple[0]; end = tuple[1]
+                        self.apply_tag( start, end,text_buffer, color)
             except IndexError: pass
 
     def create_diffs(self):
