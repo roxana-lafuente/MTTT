@@ -189,7 +189,7 @@ class PostEditing:
         return ','.join(pie_as_json_string_list)
 
     def calculate_statistics_event(self, button, statistics_name):
-        self.tables["translation_table"].statistics_button.hide()
+        #self.tables["translation_table"].statistics_button.hide()
         if statistics_name == "statistics_in_general":
             self.show_the_available_stats(False)
         else:
@@ -244,7 +244,7 @@ class PostEditing:
             self.tables["translation_table"].insertions_statistics_button.hide()
             self.tables["translation_table"].deletions_statistics_button.hide()
             self.tables["translation_table"].time_statistics_button.hide()
-            self.tables["translation_table"].statistics_button.hide()
+            #self.tables["translation_table"].statistics_button.hide()
     def show_the_available_stats(self, do_show_the_general_statistics_button_and_not_the_others = True):
         #if the json string is empty, then no calculations have been made
         #and so the buttons should not be shown
