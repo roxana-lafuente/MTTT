@@ -218,7 +218,7 @@ class Table:
           if self.table_type == "diff_table" or (self.table_type == "translation_table" and self.monolingual):
               #then read the saved files
               #source = self.saved_source_filepath
-              if self.source != "" and self.reference != "":
+              if self.reference != "":
                   with open(self.reference) as fp:
                       for line in fp:
                           #line = unicode(line, 'iso8859-15')
@@ -291,6 +291,9 @@ class Table:
         self.btn_post_editing_mode = Gtk.Button("Monolingual")
         self.btn_post_editing_mode.connect("clicked", self.toggle_post_editing_mode)
         self.tables_content[self.get_menu_grid].attach(self.btn_post_editing_mode, 2, 2, 30, 3)
+        self.btn_post_editing_mode.set_no_show_all(True)
+        if not self.source: self.btn_post_editing_mode.hide()
+        else: self.btn_post_editing_mode.show()
 
 
         self.table.set_col_spacings(5)

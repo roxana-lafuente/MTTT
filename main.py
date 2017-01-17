@@ -160,6 +160,7 @@ class MyWindow(Gtk.Window):
         # Evaluation tab
         self._set_evaluation()
         # Post Editing tab
+        self.init_persistent_post_editing_state()
         self._set_post_editing()
         # Init
         self.source_lang = None
@@ -936,6 +937,11 @@ class MyWindow(Gtk.Window):
                           self.evaluation_reference.get_text())
         self.resultsTextBuffer.set_text(result)
 
+    def init_persistent_post_editing_state(self):
+        self.post_editing_source_text = ""
+        self.post_editing_reference_text = ""
+        self.choosed_bilingual_post_editing_mode = False
+
     def _set_post_editing(self):
         self.notebook.remove_page(4)
         self.preparation = Gtk.VBox()
@@ -947,36 +953,58 @@ class MyWindow(Gtk.Window):
         self.postEditing_file_menu_grid = Gtk.Grid()
         texts_menu_frame = Gtk.Frame(label="Post-Editing")
         # Post Editing : Source Text Picker
-        post_editing_source_label = Gtk.Label("Select source file")
-        self.postEditing_file_menu_grid.add(post_editing_source_label)
-        self.post_editing_source = Gtk.Entry()
-        self.post_editing_source.set_text("")
-        self.postEditing_file_menu_grid.add(self.post_editing_source)
-        self.post_editing_source_button = Gtk.Button("Choose File")
-        self.post_editing_source_button.connect("clicked",
-                                                self._on_file_clicked,
-                                                self.post_editing_source)
-        self.postEditing_file_menu_grid.add(self.post_editing_source_button)
-
-        # Post Editing : Reference Text Picker
-        post_editing_reference_label = Gtk.Label("Select MT file")
-        self.postEditing_file_menu_grid.attach_next_to(post_editing_reference_label, post_editing_source_label, Gtk.PositionType.BOTTOM, 1, 10)
+        self.post_editing_reference_label = Gtk.Label("Select MT file")
+        self.postEditing_file_menu_grid.add(self.post_editing_reference_label)
         self.post_editing_reference = Gtk.Entry()
-        self.post_editing_reference.set_text("")
-        self.postEditing_file_menu_grid.attach_next_to(self.post_editing_reference, self.post_editing_source, Gtk.PositionType.BOTTOM, 1, 10)
+        self.post_editing_reference.set_text(self.post_editing_reference_text)
+        self.postEditing_file_menu_grid.add(self.post_editing_reference)
         self.post_editing_reference_button = Gtk.Button("Choose File")
-        self.post_editing_reference_button.connect("clicked", self._on_file_clicked, self.post_editing_reference)
-        self.postEditing_file_menu_grid.attach_next_to(self.post_editing_reference_button, self.post_editing_source_button, Gtk.PositionType.BOTTOM, 1, 10)
-        self.post_editing_source.connect("changed", self._check_if_both_files_are_choosen_post_edition)
-        self.post_editing_reference.connect("changed", self._check_if_both_files_are_choosen_post_edition)
+        self.post_editing_reference_button.connect("clicked",
+                                              self._on_file_clicked,
+                                              self.post_editing_reference)
+        self.postEditing_file_menu_grid.add(self.post_editing_reference_button)
+
+        self.btn_check_bilingual = Gtk.CheckButton.new_with_label("bilingual")
+        self.postEditing_file_menu_grid.attach_next_to(self.btn_check_bilingual, self.post_editing_reference_button, Gtk.PositionType.RIGHT, 1, 10)
+        self.btn_check_bilingual.set_active(self.choosed_bilingual_post_editing_mode)
+        self.btn_check_bilingual.connect("clicked", self.toggle_bilingual)
+
+
+        self.post_editing_source_label = Gtk.Label("Select source file")
+        self.postEditing_file_menu_grid.attach_next_to(self.post_editing_source_label, self.post_editing_reference_label, Gtk.PositionType.BOTTOM, 1, 10)
+        self.post_editing_source = Gtk.Entry()
+        self.post_editing_source.set_text(self.post_editing_source_text)
+        self.postEditing_file_menu_grid.attach_next_to(self.post_editing_source, self.post_editing_reference, Gtk.PositionType.BOTTOM, 1, 10)
+        self.post_editing_source_button = Gtk.Button("Choose File")
+        self.post_editing_source_button.connect("clicked", self._on_file_clicked, self.post_editing_source)
+        self.postEditing_file_menu_grid.attach_next_to(self.post_editing_source_button, self.post_editing_reference_button, Gtk.PositionType.BOTTOM, 1, 10)
+        self.post_editing_reference.connect("changed", self._check_if_both_files_are_choosen_post_edition, "reference")
+        self.post_editing_source.connect("changed", self._check_if_both_files_are_choosen_post_edition, "source")
+
 
         self.postEdition_grid.add(self.postEditing_file_menu_grid)
         self.preparation.pack_start(self.postEdition_grid, expand=True, fill=True, padding =0)
         self.notebook.insert_page(self.preparation, Gtk.Label('Post Editing'), 4)
+        self.post_editing_source_label.set_no_show_all(True)
+        self.post_editing_source.set_no_show_all(True)
+        self.post_editing_source_button.set_no_show_all(True)
+        self.post_editing_source_label.set_no_show_all(True)
+        self.toggle_bilingual(None)
+        
         self.notebook.show_all()
 
-    def _check_if_both_files_are_choosen_post_edition(self, object):
-        if self.post_editing_source.get_text() != "" and self.post_editing_reference.get_text() != "":
+    def toggle_bilingual(self,button):
+        visibility = self.btn_check_bilingual.get_active()
+        self.choosed_bilingual_post_editing_mode = visibility
+        self.post_editing_source_label.set_visible(visibility)
+        self.post_editing_source.set_visible(visibility)
+        self.post_editing_source_button.set_visible(visibility)
+        self.post_editing_source_label.set_visible(visibility)
+
+    def _check_if_both_files_are_choosen_post_edition(self, object, file_type=""):
+        if file_type  == "source": self.post_editing_source_text = self.post_editing_source.get_text()
+        if file_type  == "reference": self.post_editing_reference_text = self.post_editing_reference.get_text()
+        if (self.post_editing_source.get_text() != "" and self.post_editing_reference.get_text() != "") or not self.btn_check_bilingual.get_active():
             post_editing_source_text = self.post_editing_source.get_text()
             post_editing_reference_text = self.post_editing_reference.get_text()
             self._set_post_editing()
