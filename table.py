@@ -173,9 +173,10 @@ class Table:
         match_end = text_buffer.get_iter_at_offset(end)
 
         tagtable = text_buffer.get_tag_table()
-        tag = tagtable.lookup(color)
         if color == "red": color = "#F8CBCB"
         if color == "green": color = "#A6F3A6"
+
+        tag = tagtable.lookup(color)
         if tag is None: text_buffer.create_tag(color,background=color); tag = tagtable.lookup(color)
         text_buffer.apply_tag(tag, match_start, match_end)
 
@@ -334,6 +335,8 @@ class Table:
         index = row_index + self.tables_content[self.table_index]
         text = textwrap.fill(self.tables_content[text_line_type][index].rstrip('\n'), width=40)
         cellTextBuffer.set_text(text)
+        cellTextBuffer.create_tag("#F8CBCB",background="#F8CBCB")
+        cellTextBuffer.create_tag("#A6F3A6",background="#A6F3A6")
         self.tables_content[text_view_type][index] = cell
         if self.table_type == "translation_table":
             cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index)
