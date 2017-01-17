@@ -219,8 +219,7 @@ class PostEditing:
         uri = urlparse.urlunparse(uri)
         is_linux = os.name == 'posix'
         is_windows = os.name == 'nt'
-        if is_linux:
-            try:
+        try:
                 self.notebook.remove_page(6)
                 html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
                 view = WebKit.WebView()
@@ -229,9 +228,7 @@ class PostEditing:
                 childWidget = view
                 self.notebook.insert_page(childWidget, Gtk.Label('Statistics'), 6)
                 self.update_notebook()
-            except:
-                webbrowser.open(uri,new=2)
-        if is_windows:
+        except:
             webbrowser.open(uri,new=2)
 
     def addDifferencesTab(self):
