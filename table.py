@@ -364,8 +364,12 @@ class Table:
 
         total_insertions_or_deletions = 0
         insertions_or_deletions_per_segment = {}
-        source_segments = self.tables_content[self.source_text_lines]
-        modified_segments = self.tables_content[self.reference_text_lines]
+        if self.monolingual:
+            source_segments = self.tables_content[self.source_text_lines]
+            modified_segments = self.tables_content[self.reference_text_lines]
+        else:
+            source_segments = self.tables_content[self.reference_text_lines]
+            modified_segments = self.tables_content[self.bilingual_reference_text_lines]
 
         for index, (a,b) in enumerate(zip(source_segments, modified_segments)):
             insertions_or_deletions = self.get_insertion_and_deletions(a,b)[get_removals_percentaje]
