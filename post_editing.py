@@ -131,11 +131,16 @@ class PostEditing:
             next(b, None)
             return itertools.izip(a, b)
 
+        now = int(time.time()*1000)
+        myList = sorted(self.source_log.keys())
+        my_source_log = self.source_log
+        my_source_log[now] = self.source_log[myList[-1]]
+
         #calculate time spent by segment
-        for current_timestamp,next_timestamp in pairwise(sorted(self.source_log.keys())):
+        for current_timestamp,next_timestamp in pairwise(sorted(my_source_log.keys())):
             #for current_timestamp,next_timestamp in sorted(self.source_log.keys()):
             delta = (int(next_timestamp) - int(current_timestamp))/1000
-            for segment_index in self.source_log[current_timestamp]:
+            for segment_index in my_source_log[current_timestamp]:
                 if segment_index in seconds_spent_by_segment:
                     seconds_spent_by_segment[segment_index] += delta
                 else:
@@ -145,7 +150,7 @@ class PostEditing:
             total_time_spent += seconds_spent_by_segment[a]
         #calculate percentajes
         for a in seconds_spent_by_segment:
-            percentaje_spent_by_segment[a] = float(seconds_spent_by_segment[a]) *100 / float(total_time_spent)
+            percentaje_spent_by_segment[a] = float(seconds_spent_by_segment[a]) *100 / float(max(1,total_time_spent))
 
 
         title = "<th>Segment </th><th>" + '%'+ " of the time spent </th>"
