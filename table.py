@@ -215,7 +215,7 @@ class Table:
           self.saved_reference_filepath = os.path.abspath("saved") + filename
           #self.saved_source_filepath = os.path.abspath("saved") + filename_without_extension + "_modified" + filename_extension
 
-          if self.table_type == "diff_table" or self.monolingual:
+          if self.table_type == "diff_table" or (self.table_type == "translation_table" and self.monolingual):
               #then read the saved files
               #source = self.saved_source_filepath
               if self.source != "" and self.reference != "":
@@ -368,6 +368,9 @@ class Table:
         total_insertions_or_deletions = 0
         insertions_or_deletions_per_segment = {}
         if self.monolingual:
+            print len(self.tables_content[self.source_text_lines])
+            print len(self.tables_content[self.reference_text_lines])
+            print len(self.tables_content[self.bilingual_reference_text_lines])
             source_segments = self.tables_content[self.source_text_lines]
             modified_segments = self.tables_content[self.reference_text_lines]
         else:

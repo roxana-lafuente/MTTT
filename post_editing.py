@@ -167,7 +167,7 @@ class PostEditing:
     def format_table_data(self, segment_index, table_contents, monolingual):
         if monolingual:
             segment_source = table_contents[0][segment_index]
-            segment_modified = table_contents[1][segment_index]
+            segment_modified = table_contents[2][segment_index]
         else:
             segment_source = table_contents[1][segment_index]
             segment_modified = table_contents[2][segment_index]
@@ -292,7 +292,10 @@ class PostEditing:
         return jsonlog
 
     def save_using_log(self):
-        for index in range(0, len(self.tables["translation_table"].tables_content[1])):
+        text_lines_to_save = self.tables["translation_table"].bilingual_reference_text_lines
+        if self.tables["translation_table"].monolingual:
+            text_lines_to_save = self.tables["translation_table"].reference_text_lines
+        for index in range(0, len(self.tables["translation_table"].tables_content[text_lines_to_save])):
             if index in self.tables["translation_table"].translation_reference_text_TextViews_modified_flag:
                 modified_reference = self.tables["translation_table"].translation_reference_text_TextViews_modified_flag[index]
                 if modified_reference not in self.saved_modified_references:
