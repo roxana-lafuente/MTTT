@@ -95,7 +95,7 @@ class PostEditing:
         self.source_log = {}
 
         self.saved_absolute_path = os.path.abspath("saved")
-        filename = post_editing_source[post_editing_source.rfind('/'):]
+        filename = post_editing_reference[post_editing_reference.rfind('/'):]
         filename_without_extension = os.path.splitext(filename)[0]
         filename_extension = os.path.splitext(filename)[1]
         self.saved_origin_filepath = os.path.abspath("saved") + filename
@@ -290,7 +290,6 @@ class PostEditing:
         text_lines_to_save = self.tables["translation_table"].reference_text_lines
 
         for index in range(0, len(self.tables["translation_table"].tables_content[text_lines_to_save])):
-            print "saving", index
             if index in self.tables["translation_table"].translation_reference_text_TextViews_modified_flag:
                 modified_reference = self.tables["translation_table"].translation_reference_text_TextViews_modified_flag[index]
                 if modified_reference not in self.saved_modified_references:
