@@ -287,10 +287,10 @@ class PostEditing:
         return jsonlog
 
     def save_using_log(self):
-        text_lines_to_save = self.tables["translation_table"].bilingual_reference_text_lines
-        if self.tables["translation_table"].monolingual:
-            text_lines_to_save = self.tables["translation_table"].reference_text_lines
+        text_lines_to_save = self.tables["translation_table"].reference_text_lines
+
         for index in range(0, len(self.tables["translation_table"].tables_content[text_lines_to_save])):
+            print "saving", index
             if index in self.tables["translation_table"].translation_reference_text_TextViews_modified_flag:
                 modified_reference = self.tables["translation_table"].translation_reference_text_TextViews_modified_flag[index]
                 if modified_reference not in self.saved_modified_references:

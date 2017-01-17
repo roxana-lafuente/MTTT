@@ -205,7 +205,7 @@ class Table:
         self.tables_content[self.reference_text_views][segment_index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0.7, 249, 249, 240))
 
     def _fill_table(self):
-          last_modifications_to_source = self.get_latest_modifications()
+          last_modifications = self.get_latest_modifications()
 
           saved_absolute_path = os.path.abspath("saved")
           filename = self.reference[self.reference.rfind('/'):]
@@ -225,8 +225,8 @@ class Table:
                           if line != '\n':
                              self.tables_content[self.source_text_lines].append(line)
                   for index, line in enumerate(self.tables_content[self.source_text_lines]):
-                      if str(index) in last_modifications_to_source:
-                          self.tables_content[self.reference_text_lines].append(last_modifications_to_source[str(index)])
+                      if str(index) in last_modifications:
+                          self.tables_content[self.reference_text_lines].append(last_modifications[str(index)])
                       else:
                           self.tables_content[self.reference_text_lines].append(line)
           else:
@@ -240,12 +240,12 @@ class Table:
                       for line in fp:
                           #line = unicode(line, 'iso8859-15')
                           if line != '\n':
-                             self.tables_content[self.reference_text_lines].append(line)
-                  for index, line in enumerate(self.tables_content[self.reference_text_lines]):
-                      if str(index) in last_modifications_to_source:
-                          self.tables_content[self.bilingual_reference_text_lines].append(last_modifications_to_source[str(index)])
+                             self.tables_content[self.unedited_reference_text_lines].append(line)
+                  for index, line in enumerate(self.tables_content[self.unedited_reference_text_lines]):
+                      if str(index) in last_modifications:
+                          self.tables_content[self.reference_text_lines].append(last_modifications[str(index)])
                       else:
-                          self.tables_content[self.bilingual_reference_text_lines].append(line)
+                          self.tables_content[self.reference_text_lines].append(line)
 
 
     def toggle_post_editing_mode(self, button):
@@ -254,6 +254,7 @@ class Table:
         if not self.monolingual:
             self.btn_post_editing_mode.set_label("Monolingual")
         self.monolingual = not self.monolingual
+        self.save_function()
         self.tables_content[self.source_text_lines] = []
         self.tables_content[self.reference_text_lines] = []
         self._fill_table()
@@ -261,7 +262,7 @@ class Table:
 
     def _table_initializing(self):
         (self.source_text_lines,
-        self.bilingual_reference_text_lines,
+        self.unedited_reference_text_lines,
         self.reference_text_lines,
         self.table_index,
         self.source_text_views,
@@ -270,7 +271,7 @@ class Table:
         self.rows_ammount,
         self.get_menu_grid,
         self.initialized) = range(10)
-        #source_text_lines,bilingual_reference_text_lines, reference_text_lines, table_index, source_text_views, reference_text_views, bilingual_reference_text_views, rows_ammount, get_menu_grid, initialized
+        #source_text_lines,unedited_reference_text_lines, reference_text_lines, table_index, source_text_views, reference_text_views, bilingual_reference_text_views, rows_ammount, get_menu_grid, initialized
         self.tables_content = [[],[],[],0,{},{},{}, 0, None, False]
         self.tables_content[self.rows_ammount] = 5
         self.search_buttons_array = []
@@ -371,8 +372,8 @@ class Table:
             source_segments = self.tables_content[self.source_text_lines]
             modified_segments = self.tables_content[self.reference_text_lines]
         else:
-            source_segments = self.tables_content[self.reference_text_lines]
-            modified_segments = self.tables_content[self.bilingual_reference_text_lines]
+            source_segments = self.tables_content[self.unedited_reference_text_lines]
+            modified_segments = self.tables_content[self.reference_text_lines]
 
         for index, (a,b) in enumerate(zip(source_segments, modified_segments)):
             insertions_or_deletions = self.get_insertion_and_deletions(a,b)[get_removals_percentaje]
@@ -398,7 +399,7 @@ class Table:
                     self.create_cell(self.reference_text_lines, self.reference_text_views, row_index, True)
                 elif self.table_type == "translation_table" and not self.monolingual:
                     self.create_cell(self.source_text_lines, self.source_text_views, row_index, False)
-                    self.create_cell(self.bilingual_reference_text_lines, self.bilingual_reference_text_views, row_index, False)
+                    self.create_cell(self.unedited_reference_text_lines, self.bilingual_reference_text_views, row_index, False)
                     self.create_cell(self.reference_text_lines, self.reference_text_views, row_index, True)
                 elif self.table_type == "diff_table":
                     self.create_cell(self.source_text_lines, self.source_text_views, row_index, False)
@@ -408,23 +409,23 @@ class Table:
                 self.next_button.set_visible(False)
     def get_latest_modifications (self):
         source_log = self.load_source_log()
-        last_modifications_to_source = {}
+        last_modifications = {}
 
         for a in sorted(source_log.keys()):
             for b in source_log[a]:
-                last_modifications_to_source[b] = source_log[a][b]
-        return last_modifications_to_source
+                last_modifications[b] = source_log[a][b]
+        return last_modifications
     def create_diff(self, text_buffers_array, color):
-        last_modifications_to_source = self.get_latest_modifications()
+        last_modifications = self.get_latest_modifications()
         for row_index in range (0,self.tables_content[self.rows_ammount]):
             try:
                 index = row_index + self.tables_content[self.table_index]
-                if str(index) in last_modifications_to_source:
+                if str(index) in last_modifications:
                     text_buffer = text_buffers_array[index].get_buffer()
 
                     original = self.tables_content[self.source_text_lines][index]
                     #modified = self.tables_content[self.reference_text_lines][index]
-                    modified = last_modifications_to_source[str(index)]
+                    modified = last_modifications[str(index)]
                     insertions,deletions = self.get_insertion_and_deletions(original,modified)
                     array_to_work_with = []
                     if color == "green": array_to_work_with = insertions
