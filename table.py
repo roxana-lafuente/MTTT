@@ -240,6 +240,11 @@ class Table:
                           #line = unicode(line, 'iso8859-15')
                           if line != '\n':
                              self.tables_content[self.reference_text_lines].append(line)
+                  for index, line in enumerate(self.tables_content[self.reference_text_lines]):
+                      if str(index) in last_modifications_to_source:
+                          self.tables_content[self.bilingual_reference_text_lines].append(last_modifications_to_source[str(index)])
+                      else:
+                          self.tables_content[self.bilingual_reference_text_lines].append(line)
 
 
     def toggle_post_editing_mode(self, button):
@@ -255,15 +260,17 @@ class Table:
 
     def _table_initializing(self):
         (self.source_text_lines,
+        self.bilingual_reference_text_lines,
         self.reference_text_lines,
         self.table_index,
         self.source_text_views,
         self.reference_text_views,
+        self.bilingual_reference_text_views,
         self.rows_ammount,
         self.get_menu_grid,
-        self.initialized) = range(8)
-        #source_text_lines, reference_text_lines, table_index, source_text_views, reference_text_views, rows_ammount, get_menu_grid, initialized
-        self.tables_content = [[],[],0,{},{}, 0, None, False]
+        self.initialized) = range(10)
+        #source_text_lines,bilingual_reference_text_lines, reference_text_lines, table_index, source_text_views, reference_text_views, bilingual_reference_text_views, rows_ammount, get_menu_grid, initialized
+        self.tables_content = [[],[],[],0,{},{},{}, 0, None, False]
         self.tables_content[self.rows_ammount] = 5
         self.search_buttons_array = []
 
@@ -297,13 +304,27 @@ class Table:
             if isinstance(element,Gtk.TextView) or isinstance(element,Gtk.Label):
                 self.table.remove(element)
         #re-attach the source and target labels
-        if self.monolingual: source_label = Gtk.Label("Unedited MT")
-        else: source_label = Gtk.Label("Original")
-        source_label.show()
-        self.table.attach(source_label, 1, 1+1, 0, 1+0)
-        target_label = Gtk.Label("Edited MT")
-        target_label.show()
-        self.table.attach(target_label, 2, 2+1, 0, 1+0)
+        if self.monolingual:
+            source_label = Gtk.Label("Unedited MT")
+            self.table.attach(source_label, 1, 1+1, 0, 1+0)
+            source_label.show()
+
+            target_label = Gtk.Label("Edited MT")
+            self.table.attach(target_label, 3, 3+1, 0, 1+0)
+            target_label.show()
+
+        else:
+            source_label = Gtk.Label("Original")
+            self.table.attach(source_label, 1, 1+1, 0, 1+0)
+            source_label.show()
+
+            non_modified_target_label = Gtk.Label("Non Edited MT")
+            self.table.attach(non_modified_target_label, 2, 2+1, 0, 1+0)
+            non_modified_target_label.show()
+
+            modified_target_label = Gtk.Label("Edited MT")
+            self.table.attach(modified_target_label, 3, 3+1, 0, 1+0)
+            modified_target_label.show()
 
     def create_cell(self, text_line_type, text_view_type, row_index, editable):
         cell = Gtk.TextView()
@@ -322,7 +343,12 @@ class Table:
 
         cell.set_right_margin(20)
         cell.show()
-        self.table.attach(cell, text_line_type + 1, text_line_type + 2, row_index + 1, row_index + 2)
+        self.table.attach(
+        cell,
+        text_line_type + 1,
+        text_line_type + 2,
+        row_index + 1,
+        row_index + 2)
 
     def get_insertion_and_deletions(self, original, modified):
         s = difflib.SequenceMatcher(None, original, modified)
@@ -360,8 +386,12 @@ class Table:
     def create_cells(self):
         for row_index in range (0,self.tables_content[self.rows_ammount]):
             try:
-                if self.table_type == "translation_table":
+                if self.table_type == "translation_table" and self.monolingual:
                     self.create_cell(self.source_text_lines, self.source_text_views, row_index, False)
+                    self.create_cell(self.reference_text_lines, self.reference_text_views, row_index, True)
+                elif self.table_type == "translation_table" and not self.monolingual:
+                    self.create_cell(self.source_text_lines, self.source_text_views, row_index, False)
+                    self.create_cell(self.bilingual_reference_text_lines, self.bilingual_reference_text_views, row_index, False)
                     self.create_cell(self.reference_text_lines, self.reference_text_views, row_index, True)
                 elif self.table_type == "diff_table":
                     self.create_cell(self.source_text_lines, self.source_text_views, row_index, False)
