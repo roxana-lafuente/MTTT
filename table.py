@@ -368,9 +368,6 @@ class Table:
         total_insertions_or_deletions = 0
         insertions_or_deletions_per_segment = {}
         if self.monolingual:
-            print len(self.tables_content[self.source_text_lines])
-            print len(self.tables_content[self.reference_text_lines])
-            print len(self.tables_content[self.bilingual_reference_text_lines])
             source_segments = self.tables_content[self.source_text_lines]
             modified_segments = self.tables_content[self.reference_text_lines]
         else:

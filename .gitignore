@@ -95,4 +95,5 @@ ENV/
 saved/
 saved_but_to_be_deleted_soon/
 statistics/generated
+installation/TTT-CygwinInstaller/installer
 moses.config

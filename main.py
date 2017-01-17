@@ -27,18 +27,13 @@
 # os is one of the modules that I know comes with 2.7, no questions asked.
 import os
 
-SHOW_STATISTICS = True
 try:
     import gi
     gi.require_version('Gtk', '3.0')
     from gi.repository import Gtk
     from gi.repository import Gdk
-    if not os.name == 'nt':  # Windows
-        try:
-            gi.require_version('WebKit', '3.0')
-            from gi.repository import WebKit
-        except:
-            SHOW_STATISTICS = False
+    gi.require_version('WebKit', '3.0')
+    from gi.repository import WebKit
 except ImportError:
     print "Dependency unfulfilled, please install gi library"
     exit(1)
@@ -523,7 +518,7 @@ class MyWindow(Gtk.Window):
             labelToUpdate.set_text("")
 
         if tab_name == "Machine translation":
-            self.mt_out_text = os.path.dirname(dialog.get_filename()) 
+            self.mt_out_text = os.path.dirname(dialog.get_filename())
             print self.mt_out_text
         dialog.destroy()
 
