@@ -757,7 +757,8 @@ class MyWindow(Gtk.Window):
         """@brief     Runs the decoder."""
         output = ""
         in_file = self.mt_in_text.get_text()
-        out_file = self.mt_out_text.get_text()
+        base=os.path.basename(in_file)
+        out_file = os.path.dirname(in_file) +  os.path.splitext(base)[0] + "_translated" + os.path.splitext(base)[1]
 
         if self._is_file_not_empty(in_file) and \
            self._is_file_not_empty(out_file) and \
@@ -990,7 +991,7 @@ class MyWindow(Gtk.Window):
         self.post_editing_source_button.set_no_show_all(True)
         self.post_editing_source_label.set_no_show_all(True)
         self.toggle_bilingual(None)
-        
+
         self.notebook.show_all()
 
     def toggle_bilingual(self,button):
