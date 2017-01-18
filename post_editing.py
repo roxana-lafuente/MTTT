@@ -93,7 +93,12 @@ class PostEditing:
 
         self.tables = {}
         self.source_log = {}
-
+        self.HTML_view = WebKit.WebView()
+        uri = "statistics/generated/stats.html"
+        uri = os.path.realpath(uri)
+        uri = urlparse.ParseResult('file', '', uri, '', '', '')
+        uri = urlparse.urlunparse(uri)
+        self.HTML_view.load_uri(uri)
         self.saved_absolute_path = os.path.abspath("saved")
         filename = post_editing_reference[post_editing_reference.rfind('/'):]
         filename_without_extension = os.path.splitext(filename)[0]
@@ -215,23 +220,10 @@ class PostEditing:
             self.add_statistics(statistics_name)
 
     def add_statistics(self, statistic_to_show):
-        uri = "statistics/generated/" + statistic_to_show + '.html'
-        uri = os.path.realpath(uri)
-        uri = urlparse.ParseResult('file', '', uri, '', '', '')
-        uri = urlparse.urlunparse(uri)
-        is_linux = os.name == 'posix'
-        is_windows = os.name == 'nt'
-        try:
-                self.notebook.remove_page(6)
-                html = "<h1>This is HTML content</h1><p>I am displaying this in python</p"
-                view = WebKit.WebView()
-                view.open(html)
-                view.load_uri(uri)
-                childWidget = view
-                self.notebook.insert_page(childWidget, Gtk.Label('Statistics'), 6)
-                self.update_notebook()
-        except:
-            webbrowser.open(uri,new=2)
+        self.notebook.remove_page(6)
+        self.HTML_view.reload_bypass_cache()
+        self.notebook.insert_page(self.HTML_view, Gtk.Label('Statistics'), 6)
+        self.update_notebook()
 
     def addDifferencesTab(self):
         self.preparation = Gtk.VBox()
