@@ -164,7 +164,7 @@ class Table:
             a.destroy()
         self.search_buttons_array[:]=[]
         if text_to_search_for != "":
-            for line in self.tables_content[1]:
+            for line in self.tables_content[self.reference_text_lines]:
                 line_index += 1
                 if text_to_search_for.upper() in line.upper():
                     self.create_search_button(line, line_index)
