@@ -918,28 +918,36 @@ class MyWindow(Gtk.Window):
                                   Gtk.Label('Evaluation'), 3)
 
     def _evaluate(self, button):
-        # checkbox_indexes["WER","PER","HTER", "GTM", "BLEU","BLEU2GRAM","BLEU3GRAM"]
-        checkbox_indexes = [False] * 8
-        if self.check_WER.get_active():
-            checkbox_indexes[0] = True
-        if self.check_PER.get_active():
-            checkbox_indexes[1] = True
-        if self.check_HTER.get_active():
-            checkbox_indexes[2] = True
-        if self.check_GTM.get_active():
-            checkbox_indexes[3] = True
-        if self.check_BLEU.get_active():
-            checkbox_indexes[4] = True
-        if self.check_BLEU2GRAM.get_active():
-            checkbox_indexes[5] = True
-        if self.check_BLEU3GRAM.get_active():
-            checkbox_indexes[6] = True
-        if self.check_BLEU4GRAM.get_active():
-            checkbox_indexes[7] = True
-        result = evaluate(checkbox_indexes,
-                          self.evaluation_source.get_text(),
-                          self.evaluation_reference.get_text())
-        self.resultsTextBuffer.set_text(result)
+        if (self.evaluation_source.get_text()
+        and self.evaluation_reference.get_text()
+        and self.evaluation_output.get_text()):
+            # checkbox_indexes["WER","PER","HTER", "GTM", "BLEU","BLEU2GRAM","BLEU3GRAM"]
+            checkbox_indexes = [False] * 8
+            if self.check_WER.get_active():
+                checkbox_indexes[0] = True
+            if self.check_PER.get_active():
+                checkbox_indexes[1] = True
+            if self.check_HTER.get_active():
+                checkbox_indexes[2] = True
+            if self.check_GTM.get_active():
+                checkbox_indexes[3] = True
+            if self.check_BLEU.get_active():
+                checkbox_indexes[4] = True
+            if self.check_BLEU2GRAM.get_active():
+                checkbox_indexes[5] = True
+            if self.check_BLEU3GRAM.get_active():
+                checkbox_indexes[6] = True
+            if self.check_BLEU4GRAM.get_active():
+                checkbox_indexes[7] = True
+            result = evaluate(checkbox_indexes,
+                              self.evaluation_source.get_text(),
+                              self.evaluation_reference.get_text())
+            f = open(self.evaluation_output.get_text(), 'w')
+            f.write(result)
+            f.close()
+            self.resultsTextBuffer.set_text(result)
+        else:
+            self.resultsTextBuffer.set_text("ERROR. You need to complete all fields.")
 
     def init_persistent_post_editing_state(self):
         self.post_editing_source_text = ""
@@ -1092,8 +1100,8 @@ style_provider = Gtk.CssProvider()
 style_provider.load_from_path("css/style.css")
 
 Gtk.StyleContext.add_provider_for_screen(
-    Gdk.Screen.get_default(), 
-    style_provider,     
+    Gdk.Screen.get_default(),
+    style_provider,
     Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
