@@ -911,9 +911,13 @@ class MyWindow(Gtk.Window):
                                   Gtk.Label('Evaluation'), 3)
 
     def _evaluate(self, button):
-        if (self.evaluation_source.get_text()
-        and self.evaluation_reference.get_text()
-        and self.evaluation_output.get_text()):
+        fields_filled = (self.evaluation_source.get_text()
+                and self.evaluation_reference.get_text()
+                and self.evaluation_output.get_text())
+        files_exists = (os.path.exists(self.evaluation_source.get_text())
+                and os.path.exists(self.evaluation_reference.get_text())
+                and os.path.exists(self.evaluation_output.get_text()))
+        if fields_filled and files_exists:
             # checkbox_indexes["WER","PER","HTER", "GTM", "BLEU","BLEU2GRAM","BLEU3GRAM"]
             checkbox_indexes = [False] * 8
             if self.check_WER.get_active():
@@ -939,8 +943,15 @@ class MyWindow(Gtk.Window):
             f.write(result)
             f.close()
             self.resultsTextBuffer.set_text(result)
-        else:
+        if not fields_filled:
             self.resultsTextBuffer.set_text("ERROR. You need to complete all fields.")
+        if not files_exists:
+            if not os.path.exists(self.evaluation_source.get_text()):
+                self.resultsTextBuffer.set_text("ERROR. The evaluation source file does not exist.")
+            if not os.path.exists(self.evaluation_reference.get_text()):
+                self.resultsTextBuffer.set_text("ERROR. The evaluation reference file does not exist.")
+            if not os.path.exists(self.evaluation_output.get_text()):
+                self.resultsTextBuffer.set_text("ERROR. The evaluation output file does not exist.")
 
     def init_persistent_post_editing_state(self):
         self.post_editing_source_text = ""
