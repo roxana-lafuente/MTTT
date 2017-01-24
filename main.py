@@ -749,8 +749,11 @@ class MyWindow(Gtk.Window):
     def _has_empty_last_line(self, fn):
         """@brief     Determines if last line of file is empty."""
         last_line_is_empty = False
-        with open(fn, 'r') as f:
-            last_line_is_empty = "\n" in (f.readlines()[-1])
+        try:
+            with open(fn, 'r') as f:
+                last_line_is_empty = "\n" in (f.readlines()[-1])
+        except Exception as e:
+            last_line_is_empty = False
         return last_line_is_empty
 
     def _machine_translation(self, button):
@@ -1083,8 +1086,20 @@ win = MyWindow()
 win.set_name('TTT')
 win.gtk_change_visuals(light_option="gtk", theme="paper")
 win.connect("delete-event", Gtk.main_quit)
+
+style_provider = Gtk.CssProvider()
+
+style_provider.load_from_path("css/style.css")
+
+Gtk.StyleContext.add_provider_for_screen(
+    Gdk.Screen.get_default(), 
+    style_provider,     
+    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+)
+
 win.show_all()
 Gtk.main()
+
 
 # TODOs
 # 1- Check that files source and target have at least 100 lines.
