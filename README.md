@@ -12,9 +12,16 @@ TTT is an under development post-editing suite which aims to improve the transla
 
 
 ### Features
+
 - Portable (Windows / Linux)
 - Friendly Graphical User Interface (GUI) for MOSES.
 - Use machine translation tool MOSES, post-edit the output and run evaluation metrics.
+
+##### Corpus preparation tab
+![Screenshot1](./images/v1_corpus_preparation.png)
+
+##### Training tab
+![Screenshot2](./images/v1_training_tab.png)
 
 
 
