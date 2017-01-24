@@ -11,7 +11,7 @@ def combine_and_save_to_html(filename):
 
     with open ("statistics/generated/content.html", 'r') as f:
         content = f.read()
-    filepath_complete = "statistics/generated/" + filename + ".html"
+    filepath_complete = "statistics/generated/stats.html"
     text_file = open(filepath_complete, "w")
     text_file.write(header)
     text_file.write(content)

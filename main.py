@@ -27,18 +27,13 @@
 # os is one of the modules that I know comes with 2.7, no questions asked.
 import os
 
-SHOW_STATISTICS = True
 try:
     import gi
     gi.require_version('Gtk', '3.0')
     from gi.repository import Gtk
     from gi.repository import Gdk
-    if not os.name == 'nt':  # Windows
-        try:
-            gi.require_version('WebKit', '3.0')
-            from gi.repository import WebKit
-        except:
-            SHOW_STATISTICS = False
+    gi.require_version('WebKit', '3.0')
+    from gi.repository import WebKit
 except ImportError:
     print "Dependency unfulfilled, please install gi library"
     exit(1)
@@ -165,11 +160,14 @@ class MyWindow(Gtk.Window):
         # Evaluation tab
         self._set_evaluation()
         # Post Editing tab
+        self.init_persistent_post_editing_state()
         self._set_post_editing()
         # Init
         self.source_lang = None
         self.target_lang = None
         self.original_directory = os.getcwd()
+
+        self.notebook.set_current_page(2)
 
     def _check_moses_installation(self, directory):
         """@brief     Determines if directory contains moses."""
@@ -500,11 +498,11 @@ class MyWindow(Gtk.Window):
             if all_ok:
                 self.is_corpus_preparation_ready = True
         else:
-            output += "ERROR. You need to complete all fields." 
+            output += "ERROR. You need to complete all fields."
         self.preprocessResultsTextBuffer.set_text(output)
         os.chdir(self.original_directory)
 
-    def _on_file_clicked(self, widget, labelToUpdate):
+    def _on_file_clicked(self, widget, labelToUpdate, tab_name = "undefined"):
         """@brief     Get file path from dialog."""
         dialog = Gtk.FileChooserDialog("Please choose a file", None,
                                        Gtk.FileChooserAction.OPEN,
@@ -520,6 +518,9 @@ class MyWindow(Gtk.Window):
         elif response == Gtk.ResponseType.CANCEL:
             labelToUpdate.set_text("")
 
+        if tab_name == "Machine translation":
+            self.mt_out_text = os.path.dirname(dialog.get_filename())
+            print self.mt_out_text
         dialog.destroy()
 
     def _on_dir_clicked(self, widget, labelToUpdate):
@@ -612,8 +613,6 @@ class MyWindow(Gtk.Window):
                                              self.lm_arpa,
                                              self.blm))
 
-            # Set output / error to the output label.
-            # self.training_output_label.set_text(output)
             self.trainingResultsTextBuffer.set_text(output)
 
             # Train the translation model.
@@ -680,38 +679,37 @@ class MyWindow(Gtk.Window):
         self.mt_in_button = Gtk.Button("Choose File")
         self.mt_in_button.connect("clicked",
                                   self._on_file_clicked,
-                                  self.mt_in_text)
+                                  self.mt_in_text,
+                                  "Machine translation")
         inside_grid.add(self.mt_in_button)
 
-        # Target Text Picker
-        mt_out_label = Gtk.Label("MT output file")
-        inside_grid.attach_next_to(mt_out_label,
-                                   mt_in_label,
-                                   Gtk.PositionType.BOTTOM,
-                                   1,
-                                   10)
-        self.mt_out_text = Gtk.Entry()
-        self.mt_out_text.set_text("")
-        inside_grid.attach_next_to(self.mt_out_text,
-                                   self.mt_in_text,
-                                   Gtk.PositionType.BOTTOM,
-                                   1,
-                                   10)
-        self.mt_out_button = Gtk.Button("Choose File")
-        self.mt_out_button.connect("clicked",
-                                   self._on_file_clicked,
-                                   self.mt_out_text)
-        inside_grid.attach_next_to(self.mt_out_button,
+        self.mt_out_text = ""
+
+        self.mt_out2_button = Gtk.Button("Choose a Model")
+        self.mt_out2_button.connect("clicked",
+                                   self._on_dir_clicked,
+                                   self.output_text)
+        inside_grid.attach_next_to(self.mt_out2_button,
                                    self.mt_in_button,
-                                   Gtk.PositionType.BOTTOM,
+                                   Gtk.PositionType.RIGHT,
                                    1,
-                                   10)
+                                   50)
+
+        self.mt_out3_button = Gtk.Button("Create a Model")
+        self.mt_out3_button.connect("clicked",
+                self._create_model,
+                self.mt_out_text)
+        inside_grid.attach_next_to(self.mt_out3_button,
+                self.mt_out2_button,
+                Gtk.PositionType.RIGHT,
+                1,
+                50)
 
         # Start machine translation button.
         sbutton = Gtk.Button(label="Start machine translation")
         sbutton.connect("clicked", self._machine_translation)
         inside_grid.attach_next_to(sbutton,
-                                   self.mt_out_text,
+                                   self.mt_in_button,
                                    Gtk.PositionType.BOTTOM,
                                    1,
                                    10)
@@ -741,6 +739,9 @@ class MyWindow(Gtk.Window):
         self.notebook.insert_page(self.translation,
                                   Gtk.Label('Machine Translation'),2)
 
+    def _create_model(self, a, b):
+        self.notebook.set_current_page(0)
+
     def _is_file_not_empty(self, fn):
         """@brief     Determines if the given file is empty."""
         return fn is not None and fn != ""
@@ -756,7 +757,8 @@ class MyWindow(Gtk.Window):
         """@brief     Runs the decoder."""
         output = ""
         in_file = self.mt_in_text.get_text()
-        out_file = self.mt_out_text.get_text()
+        base=os.path.basename(in_file)
+        out_file = os.path.dirname(in_file) +  os.path.splitext(base)[0] + "_translated" + os.path.splitext(base)[1]
 
         if self._is_file_not_empty(in_file) and \
            self._is_file_not_empty(out_file) and \
@@ -770,7 +772,6 @@ class MyWindow(Gtk.Window):
                                    in_file,
                                    out_file)
             # use Popen for non-blocking
-            print cmd
             proc = subprocess.Popen([cmd],
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE,
@@ -849,7 +850,7 @@ class MyWindow(Gtk.Window):
         self.ot_button = Gtk.Button("Choose File")
         self.ot_button.connect("clicked",
                                self._on_file_clicked,
-                               self.evaluation_reference)
+                               self.evaluation_output)
         inside_grid.attach_next_to(self.ot_button,
                                    self.tt_button,
                                    Gtk.PositionType.BOTTOM, 1, 10)
@@ -857,8 +858,6 @@ class MyWindow(Gtk.Window):
 
         texts_menu_frame.add(inside_grid)
         grid.add(texts_menu_frame)
-        # Align the label at the right of the frame.
-        # lm_frame.set_label_align(1.0, 1.0)
         grid.set_row_spacing(1)
         grid.set_column_spacing(20)
 
@@ -939,6 +938,11 @@ class MyWindow(Gtk.Window):
                           self.evaluation_reference.get_text())
         self.resultsTextBuffer.set_text(result)
 
+    def init_persistent_post_editing_state(self):
+        self.post_editing_source_text = ""
+        self.post_editing_reference_text = ""
+        self.choosed_bilingual_post_editing_mode = False
+
     def _set_post_editing(self):
         self.notebook.remove_page(4)
         self.preparation = Gtk.VBox()
@@ -950,36 +954,58 @@ class MyWindow(Gtk.Window):
         self.postEditing_file_menu_grid = Gtk.Grid()
         texts_menu_frame = Gtk.Frame(label="Post-Editing")
         # Post Editing : Source Text Picker
-        post_editing_source_label = Gtk.Label("Select source file")
-        self.postEditing_file_menu_grid.add(post_editing_source_label)
-        self.post_editing_source = Gtk.Entry()
-        self.post_editing_source.set_text("")
-        self.postEditing_file_menu_grid.add(self.post_editing_source)
-        self.post_editing_source_button = Gtk.Button("Choose File")
-        self.post_editing_source_button.connect("clicked",
-                                                self._on_file_clicked,
-                                                self.post_editing_source)
-        self.postEditing_file_menu_grid.add(self.post_editing_source_button)
-
-        # Post Editing : Reference Text Picker
-        post_editing_reference_label = Gtk.Label("Select MT file")
-        self.postEditing_file_menu_grid.attach_next_to(post_editing_reference_label, post_editing_source_label, Gtk.PositionType.BOTTOM, 1, 10)
+        self.post_editing_reference_label = Gtk.Label("Select MT file")
+        self.postEditing_file_menu_grid.add(self.post_editing_reference_label)
         self.post_editing_reference = Gtk.Entry()
-        self.post_editing_reference.set_text("")
-        self.postEditing_file_menu_grid.attach_next_to(self.post_editing_reference, self.post_editing_source, Gtk.PositionType.BOTTOM, 1, 10)
+        self.post_editing_reference.set_text(self.post_editing_reference_text)
+        self.postEditing_file_menu_grid.add(self.post_editing_reference)
         self.post_editing_reference_button = Gtk.Button("Choose File")
-        self.post_editing_reference_button.connect("clicked", self._on_file_clicked, self.post_editing_reference)
-        self.postEditing_file_menu_grid.attach_next_to(self.post_editing_reference_button, self.post_editing_source_button, Gtk.PositionType.BOTTOM, 1, 10)
-        self.post_editing_source.connect("changed", self._check_if_both_files_are_choosen_post_edition)
-        self.post_editing_reference.connect("changed", self._check_if_both_files_are_choosen_post_edition)
+        self.post_editing_reference_button.connect("clicked",
+                                              self._on_file_clicked,
+                                              self.post_editing_reference)
+        self.postEditing_file_menu_grid.add(self.post_editing_reference_button)
+
+        self.btn_check_bilingual = Gtk.CheckButton.new_with_label("bilingual")
+        self.postEditing_file_menu_grid.attach_next_to(self.btn_check_bilingual, self.post_editing_reference_button, Gtk.PositionType.RIGHT, 1, 10)
+        self.btn_check_bilingual.set_active(self.choosed_bilingual_post_editing_mode)
+        self.btn_check_bilingual.connect("clicked", self.toggle_bilingual)
+
+
+        self.post_editing_source_label = Gtk.Label("Select source file")
+        self.postEditing_file_menu_grid.attach_next_to(self.post_editing_source_label, self.post_editing_reference_label, Gtk.PositionType.BOTTOM, 1, 10)
+        self.post_editing_source = Gtk.Entry()
+        self.post_editing_source.set_text(self.post_editing_source_text)
+        self.postEditing_file_menu_grid.attach_next_to(self.post_editing_source, self.post_editing_reference, Gtk.PositionType.BOTTOM, 1, 10)
+        self.post_editing_source_button = Gtk.Button("Choose File")
+        self.post_editing_source_button.connect("clicked", self._on_file_clicked, self.post_editing_source)
+        self.postEditing_file_menu_grid.attach_next_to(self.post_editing_source_button, self.post_editing_reference_button, Gtk.PositionType.BOTTOM, 1, 10)
+        self.post_editing_reference.connect("changed", self._check_if_both_files_are_choosen_post_edition, "reference")
+        self.post_editing_source.connect("changed", self._check_if_both_files_are_choosen_post_edition, "source")
+
 
         self.postEdition_grid.add(self.postEditing_file_menu_grid)
         self.preparation.pack_start(self.postEdition_grid, expand=True, fill=True, padding =0)
         self.notebook.insert_page(self.preparation, Gtk.Label('Post Editing'), 4)
+        self.post_editing_source_label.set_no_show_all(True)
+        self.post_editing_source.set_no_show_all(True)
+        self.post_editing_source_button.set_no_show_all(True)
+        self.post_editing_source_label.set_no_show_all(True)
+        self.toggle_bilingual(None)
+
         self.notebook.show_all()
 
-    def _check_if_both_files_are_choosen_post_edition(self, object):
-        if self.post_editing_source.get_text() != "" and self.post_editing_reference.get_text() != "":
+    def toggle_bilingual(self,button):
+        visibility = self.btn_check_bilingual.get_active()
+        self.choosed_bilingual_post_editing_mode = visibility
+        self.post_editing_source_label.set_visible(visibility)
+        self.post_editing_source.set_visible(visibility)
+        self.post_editing_source_button.set_visible(visibility)
+        self.post_editing_source_label.set_visible(visibility)
+
+    def _check_if_both_files_are_choosen_post_edition(self, object, file_type=""):
+        if file_type  == "source": self.post_editing_source_text = self.post_editing_source.get_text()
+        if file_type  == "reference": self.post_editing_reference_text = self.post_editing_reference.get_text()
+        if (self.post_editing_source.get_text() != "" and self.post_editing_reference.get_text() != "") or not self.btn_check_bilingual.get_active():
             post_editing_source_text = self.post_editing_source.get_text()
             post_editing_reference_text = self.post_editing_reference.get_text()
             self._set_post_editing()

@@ -15,6 +15,12 @@ except ImportError:
     exit(1)
 
 try:
+    import textwrap
+except ImportError:
+    print "Dependency unfulfilled, please install textwrap library"
+    exit(1)
+
+try:
     import os
 except ImportError:
     print "Dependency unfulfilled, please install os library"
@@ -46,7 +52,6 @@ class Table:
         self.reference = reference
         self.tab_grid = tab_grid
 
-        self.saved_origin_filepath = ""
         self.saved_reference_filepath = ""
         self.last_segment_changed = -1
         self._table_initializing()
@@ -54,6 +59,7 @@ class Table:
         self.update_table()
 
         self.modified_references =  []
+        self.last_cell_focused = None
 
         # Post Editing: Table
         search_frame = Gtk.Frame()
@@ -96,7 +102,7 @@ class Table:
           if self.table_type == "translation_table":
             #Add save buttons
             self.REC_button = Gtk.CheckButton.new_with_label("Autosave")
-            self.tables_content[self.get_menu_grid].attach_next_to(self.REC_button, self.next_button, Gtk.PositionType.RIGHT, 1, 10)
+            self.tables_content[self.get_menu_grid].attach_next_to(self.REC_button, self.increase_rows_translation_table, Gtk.PositionType.RIGHT, 1, 50)
 
             self.save_post_editing_changes_button = Gtk.Button()
             self.save_post_editing_changes_button.set_image(Gtk.Image(stock=Gtk.STOCK_SAVE))
@@ -167,11 +173,18 @@ class Table:
         match_end = text_buffer.get_iter_at_offset(end)
 
         tagtable = text_buffer.get_tag_table()
-        tag = tagtable.lookup(color)
         if color == "red": color = "#F8CBCB"
         if color == "green": color = "#A6F3A6"
+
+        tag = tagtable.lookup(color)
         if tag is None: text_buffer.create_tag(color,background=color); tag = tagtable.lookup(color)
         text_buffer.apply_tag(tag, match_start, match_end)
+
+    def cell_in_translation_table_is_being_focused(self, a, b, segment_index):
+        if self.last_cell_focused is not None:
+            self.last_cell_focused.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1.0, 1.0, 1.0, 1.0))
+        self.last_cell_focused = self.tables_content[self.reference_text_views][segment_index]
+        self.last_cell_focused.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0.9, 1, 1, 1))
 
     def cell_in_translation_table_changed(self, text_buffer_object, segment_index):
         if not self.REC_button.get_active():
@@ -192,47 +205,74 @@ class Table:
         self.tables_content[self.reference_text_views][segment_index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0.7, 249, 249, 240))
 
     def _fill_table(self):
-        last_modifications = self.get_lastest_modifications()
-        origin = self.source
-        reference = self.reference
+          last_modifications = self.get_latest_modifications()
 
-        saved_absolute_path = os.path.abspath("saved")
-        filename = origin[origin.rfind('/'):]
-        filename_without_extension = os.path.splitext(filename)[0]
-        filename_extension = os.path.splitext(filename)[1]
+          saved_absolute_path = os.path.abspath("saved")
+          filename = self.reference[self.reference.rfind('/'):]
+          filename_without_extension = os.path.splitext(filename)[0]
+          filename_extension = os.path.splitext(filename)[1]
 
-        self.saved_origin_filepath = os.path.abspath("saved") + filename
-        #self.saved_reference_filepath = os.path.abspath("saved") + filename_without_extension + "_modified" + filename_extension
+          self.saved_reference_filepath = os.path.abspath("saved") + filename
+          #self.saved_source_filepath = os.path.abspath("saved") + filename_without_extension + "_modified" + filename_extension
 
-        if self.table_type == "diff_table":
-            #then read the saved files
-            origin = self.saved_origin_filepath
-            #reference = self.saved_reference_filepath
+          if self.table_type == "diff_table" or (self.table_type == "translation_table" and self.monolingual):
+              #then read the saved files
+              #source = self.saved_source_filepath
+              if self.reference != "":
+                  with open(self.reference) as fp:
+                      for line in fp:
+                          #line = unicode(line, 'iso8859-15')
+                          if line != '\n':
+                             self.tables_content[self.source_text_lines].append(line)
+                  for index, line in enumerate(self.tables_content[self.source_text_lines]):
+                      if str(index) in last_modifications:
+                          self.tables_content[self.reference_text_lines].append(last_modifications[str(index)])
+                      else:
+                          self.tables_content[self.reference_text_lines].append(line)
+          else:
+              if self.source != "" and self.reference != "":
+                  with open(self.source) as fp:
+                      for line in fp:
+                          #line = unicode(line, 'iso8859-15')
+                          if line != '\n':
+                             self.tables_content[self.source_text_lines].append(line)
+                  with open(self.reference) as fp:
+                      for line in fp:
+                          #line = unicode(line, 'iso8859-15')
+                          if line != '\n':
+                             self.tables_content[self.unedited_reference_text_lines].append(line)
+                  for index, line in enumerate(self.tables_content[self.unedited_reference_text_lines]):
+                      if str(index) in last_modifications:
+                          self.tables_content[self.reference_text_lines].append(last_modifications[str(index)])
+                      else:
+                          self.tables_content[self.reference_text_lines].append(line)
 
-        if self.source != "" and self.reference != "":
-            with open(origin) as fp:
-                for line in fp:
-                    line = unicode(line, 'iso8859-15')
-                    if line != '\n':
-                       self.tables_content[self.source_text_lines].append(line)
-            for index, line in enumerate(self.tables_content[self.source_text_lines]):
-                if str(index) in last_modifications:
-                    self.tables_content[self.reference_text_lines].append(last_modifications[str(index)])
-                else:
-                    self.tables_content[self.reference_text_lines].append(line)
 
+    def toggle_post_editing_mode(self, button):
+        if self.monolingual:
+            self.btn_post_editing_mode.set_label("Bilingual")
+        if not self.monolingual:
+            self.btn_post_editing_mode.set_label("Monolingual")
+        self.monolingual = not self.monolingual
+        self.save_function()
+        self.tables_content[self.source_text_lines] = []
+        self.tables_content[self.reference_text_lines] = []
+        self._fill_table()
+        self.update_table()
 
     def _table_initializing(self):
         (self.source_text_lines,
+        self.unedited_reference_text_lines,
         self.reference_text_lines,
         self.table_index,
         self.source_text_views,
         self.reference_text_views,
+        self.bilingual_reference_text_views,
         self.rows_ammount,
         self.get_menu_grid,
-        self.initialized) = range(8)
-        #source_text_lines, reference_text_lines, table_index, source_text_views, reference_text_views, rows_ammount, get_menu_grid, initialized
-        self.tables_content = [[],[],0,{},{}, 0, None, False]
+        self.initialized) = range(10)
+        #source_text_lines,unedited_reference_text_lines, reference_text_lines, table_index, source_text_views, reference_text_views, bilingual_reference_text_views, rows_ammount, get_menu_grid, initialized
+        self.tables_content = [[],[],[],0,{},{},{}, 0, None, False]
         self.tables_content[self.rows_ammount] = 5
         self.search_buttons_array = []
 
@@ -246,10 +286,16 @@ class Table:
         table = Gtk.Table(1,1, True)
         self.table = table
         self.search_buttons_table = Gtk.Table(1,1, True)
-        source_label = Gtk.Label("Source")
-        self.table.attach(source_label, 1, 1+1, 0, 1+0)
-        target_label = Gtk.Label("Target")
-        self.table.attach(target_label, 2, 2+1, 0, 1+0)
+
+        self.monolingual = True
+        self.btn_post_editing_mode = Gtk.Button("Monolingual")
+        self.btn_post_editing_mode.connect("clicked", self.toggle_post_editing_mode)
+        self.tables_content[self.get_menu_grid].attach(self.btn_post_editing_mode, 2, 2, 30, 3)
+        self.btn_post_editing_mode.set_no_show_all(True)
+        if not self.source: self.btn_post_editing_mode.hide()
+        else: self.btn_post_editing_mode.show()
+
+
         self.table.set_col_spacings(5)
         self.table.set_row_spacings(5)
         self.table.set_homogeneous(False)
@@ -263,30 +309,53 @@ class Table:
             if isinstance(element,Gtk.TextView) or isinstance(element,Gtk.Label):
                 self.table.remove(element)
         #re-attach the source and target labels
-        source_label = Gtk.Label("Source")
-        source_label.show()
-        self.table.attach(source_label, 1, 1+1, 0, 1+0)
-        target_label = Gtk.Label("Target")
-        target_label.show()
-        self.table.attach(target_label, 2, 2+1, 0, 1+0)
+        if self.monolingual:
+            source_label = Gtk.Label("Unedited MT")
+            self.table.attach(source_label, 1, 1+1, 0, 1+0)
+            source_label.show()
+
+            target_label = Gtk.Label("Edited MT")
+            self.table.attach(target_label, 3, 3+1, 0, 1+0)
+            target_label.show()
+
+        else:
+            source_label = Gtk.Label("Original")
+            self.table.attach(source_label, 1, 1+1, 0, 1+0)
+            source_label.show()
+
+            non_modified_target_label = Gtk.Label("Non Edited MT")
+            self.table.attach(non_modified_target_label, 2, 2+1, 0, 1+0)
+            non_modified_target_label.show()
+
+            modified_target_label = Gtk.Label("Edited MT")
+            self.table.attach(modified_target_label, 3, 3+1, 0, 1+0)
+            modified_target_label.show()
 
     def create_cell(self, text_line_type, text_view_type, row_index, editable):
         cell = Gtk.TextView()
         cell.set_editable(editable)
-        cell.set_cursor_visible(False)
+        cell.set_cursor_visible(editable)
         cellTextBuffer = cell.get_buffer()
         index = row_index + self.tables_content[self.table_index]
-        cellTextBuffer.set_text(self.tables_content[text_line_type][index].rstrip('\n'))
+        text = textwrap.fill(self.tables_content[text_line_type][index].rstrip('\n'), width=40)
+        cellTextBuffer.set_text(text)
+        cellTextBuffer.create_tag("#F8CBCB",background="#F8CBCB")
+        cellTextBuffer.create_tag("#A6F3A6",background="#A6F3A6")
         self.tables_content[text_view_type][index] = cell
         if self.table_type == "translation_table":
             cellTextBuffer.connect("changed", self.cell_in_translation_table_changed, index)
+            cell.connect("button-press-event", self.cell_in_translation_table_is_being_focused, index)
             if index in self.translation_reference_text_TextViews_modified_flag:
                 self.tables_content[self.reference_text_views][index].override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0.7, 249, 249, 240))
 
         cell.set_right_margin(20)
-        cell.set_wrap_mode(2)#2 == Gtk.WRAP_WORD
         cell.show()
-        self.table.attach(cell, text_line_type + 1, text_line_type + 2, row_index + 1, row_index + 2)
+        self.table.attach(
+        cell,
+        text_line_type + 1,
+        text_line_type + 2,
+        row_index + 1,
+        row_index + 2)
 
     def get_insertion_and_deletions(self, original, modified):
         s = difflib.SequenceMatcher(None, original, modified)
@@ -302,8 +371,12 @@ class Table:
 
         total_insertions_or_deletions = 0
         insertions_or_deletions_per_segment = {}
-        source_segments = self.tables_content[self.source_text_lines]
-        modified_segments = self.tables_content[self.reference_text_lines]
+        if self.monolingual:
+            source_segments = self.tables_content[self.source_text_lines]
+            modified_segments = self.tables_content[self.reference_text_lines]
+        else:
+            source_segments = self.tables_content[self.unedited_reference_text_lines]
+            modified_segments = self.tables_content[self.reference_text_lines]
 
         for index, (a,b) in enumerate(zip(source_segments, modified_segments)):
             insertions_or_deletions = self.get_insertion_and_deletions(a,b)[get_removals_percentaje]
@@ -324,8 +397,12 @@ class Table:
     def create_cells(self):
         for row_index in range (0,self.tables_content[self.rows_ammount]):
             try:
-                if self.table_type == "translation_table":
+                if self.table_type == "translation_table" and self.monolingual:
                     self.create_cell(self.source_text_lines, self.source_text_views, row_index, False)
+                    self.create_cell(self.reference_text_lines, self.reference_text_views, row_index, True)
+                elif self.table_type == "translation_table" and not self.monolingual:
+                    self.create_cell(self.source_text_lines, self.source_text_views, row_index, False)
+                    self.create_cell(self.unedited_reference_text_lines, self.bilingual_reference_text_views, row_index, False)
                     self.create_cell(self.reference_text_lines, self.reference_text_views, row_index, True)
                 elif self.table_type == "diff_table":
                     self.create_cell(self.source_text_lines, self.source_text_views, row_index, False)
@@ -333,16 +410,16 @@ class Table:
 
             except IndexError:
                 self.next_button.set_visible(False)
-    def get_lastest_modifications (self):
-        paulaslog = self.load_paulas_log()
+    def get_latest_modifications (self):
+        source_log = self.load_source_log()
         last_modifications = {}
 
-        for a in sorted(paulaslog.keys()):
-            for b in paulaslog[a]:
-                last_modifications[b] = paulaslog[a][b]
+        for a in sorted(source_log.keys()):
+            for b in source_log[a]:
+                last_modifications[b] = source_log[a][b]
         return last_modifications
     def create_diff(self, text_buffers_array, color):
-        last_modifications = self.get_lastest_modifications()
+        last_modifications = self.get_latest_modifications()
         for row_index in range (0,self.tables_content[self.rows_ammount]):
             try:
                 index = row_index + self.tables_content[self.table_index]
@@ -352,11 +429,13 @@ class Table:
                     original = self.tables_content[self.source_text_lines][index]
                     #modified = self.tables_content[self.reference_text_lines][index]
                     modified = last_modifications[str(index)]
-                    #TODO USE PAULA'S LOG INSTEAD OF A WHOLE TEXT CALLED original_modified.txt
                     insertions,deletions = self.get_insertion_and_deletions(original,modified)
-                    if color == "green": start = insertions[0][0]; end = insertions[0][1]
-                    if color == "red": start = deletions[0][0]; end = deletions[0][1]
-                    self.apply_tag( start, end,text_buffer, color)
+                    array_to_work_with = []
+                    if color == "green": array_to_work_with = insertions
+                    if color == "red": array_to_work_with = deletions
+                    for tuple in array_to_work_with:
+                        start = tuple[0]; end = tuple[1]
+                        self.apply_tag( start, end,text_buffer, color)
             except IndexError: pass
 
     def create_diffs(self):
@@ -367,6 +446,7 @@ class Table:
         if not self.tables_content[self.initialized]:
             self.tables_content[self.initialized] = True
             self._fill_table()
+
         self._clean_table()
         if ammount_of_lines_to_move > 0 or self.tables_content[self.table_index] > 0:
              self.tables_content[self.table_index] += ammount_of_lines_to_move
@@ -400,11 +480,11 @@ class Table:
     def _search_button_action(self, button, line_index):
         self._move_in_table(line_index - self.tables_content[self.table_index] - 1)
 
-    def load_paulas_log(self):
-        anonymousjsonlog = {}
-        paulas_log_filepath = os.path.abspath('saved/paulaslog.json')
+    def load_source_log(self):
+        jsonlog = {}
+        source_log_filepath = os.path.abspath('saved/source_log.json')
         try:
-            with open(paulas_log_filepath) as json_data:
-                anonymousjsonlog = json.load(json_data)
+            with open(source_log_filepath) as json_data:
+                jsonlog = json.load(json_data)
         except:pass
-        return anonymousjsonlog
+        return jsonlog
