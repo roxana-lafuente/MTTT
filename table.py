@@ -60,6 +60,7 @@ class Table:
 
         self.modified_references =  []
         self.last_cell_focused = None
+        self.last_cell_focused_index = -1
 
         # Post Editing: Table
         search_frame = Gtk.Frame()
@@ -182,9 +183,13 @@ class Table:
 
     def cell_in_translation_table_is_being_focused(self, a, b, segment_index):
         if self.last_cell_focused is not None:
-            self.last_cell_focused.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1.0, 1.0, 1.0, 1.0))
+            if self.last_cell_focused_index in self.translation_reference_text_TextViews_modified_flag.keys():
+                self.last_cell_focused.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0.7, 249, 249, 240))
+            else:
+                self.last_cell_focused.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1.0, 1.0, 1.0, 1.0))
         self.last_cell_focused = self.tables_content[self.reference_text_views][segment_index]
         self.last_cell_focused.override_background_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(0.9, 1, 1, 1))
+        self.last_cell_focused_index = segment_index
 
     def cell_in_translation_table_changed(self, text_buffer_object, segment_index):
         if not self.REC_button.get_active():
