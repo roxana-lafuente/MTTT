@@ -760,12 +760,12 @@ class MyWindow(Gtk.Window):
         """@brief     Runs the decoder."""
         output = ""
         in_file = self.mt_in_text.get_text()
-        base=os.path.basename(in_file)
-        out_file = os.path.dirname(in_file) +  os.path.splitext(base)[0] + "_translated" + os.path.splitext(base)[1]
+        if not self._is_file_not_empty(in_file) or not os.path.exists(in_file):
+            output = "ERROR: %s should be a valid file." % in_file
+        else:
+            base = os.path.basename(in_file)
+            out_file = os.path.dirname(in_file) + os.path.splitext(base)[0] + "_translated" + os.path.splitext(base)[1]
 
-        if self._is_file_not_empty(in_file) and \
-           self._is_file_not_empty(out_file) and \
-           self._has_empty_last_line(in_file):
             in_file = adapt_path_for_cygwin(self.is_windows, in_file)
             out_file = adapt_path_for_cygwin(self.is_windows, out_file)
             output += "Running decoder....\n\n"
@@ -791,13 +791,6 @@ class MyWindow(Gtk.Window):
                 output += "Best translation: " + mt_result
 
             f.close()
-        else:
-            if not self._is_file_not_empty(in_file):
-                output += "ERROR. Missing source text path.\n"
-            elif not self._has_empty_last_line(in_file):
-                output += "ERROR. Last line of %s is not empty.\n" % in_file
-            if not self._is_file_not_empty(out_file):
-                output += "ERROR. Missing target text path.\n"
 
         # Set output to the output label.
         self.mttrainingResultsTextBuffer.set_text(output)
