@@ -838,7 +838,7 @@ class MyWindow(Gtk.Window):
         inside_grid.set_column_spacing(10)
 
         #  Evaluation Metrics: Output Text Picker
-        ot_label = Gtk.Label("Output directory")
+        ot_label = Gtk.Label("Output file")
         inside_grid.attach_next_to(ot_label,
                                    tt_label,
                                    Gtk.PositionType.BOTTOM, 1, 10)
