@@ -749,8 +749,11 @@ class MyWindow(Gtk.Window):
     def _has_empty_last_line(self, fn):
         """@brief     Determines if last line of file is empty."""
         last_line_is_empty = False
-        with open(fn, 'r') as f:
-            last_line_is_empty = "\n" in (f.readlines()[-1])
+        try:
+            with open(fn, 'r') as f:
+                last_line_is_empty = "\n" in (f.readlines()[-1])
+        except Exception as e:
+            last_line_is_empty = False
         return last_line_is_empty
 
     def _machine_translation(self, button):
