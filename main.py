@@ -72,7 +72,7 @@ from commands import *
 from files_processing import *
 from evaluation import *
 from post_editing import PostEditing
-from constants import moses_dir_fn, is_valid_dir, is_valid_file
+from constants import moses_dir_fn, is_valid_dir, is_valid_file, languages
 
 UI_INFO = """
 <ui>
