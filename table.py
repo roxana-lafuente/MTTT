@@ -235,6 +235,8 @@ class Table:
                       else:
                           self.tables_content[self.reference_text_lines].append(line)
           else:
+              print self.reference
+              print self.source
               if self.source != "" and self.reference != "":
                   with open(self.source) as fp:
                       for line in fp:
@@ -259,7 +261,10 @@ class Table:
         if not self.monolingual:
             self.btn_post_editing_mode.set_label("Monolingual")
         self.monolingual = not self.monolingual
-        self.save_function()
+        try:
+            #try to save even if there is nothing to be saved, yet.
+            self.save_function()
+        except: pass
         self.tables_content[self.source_text_lines] = []
         self.tables_content[self.reference_text_lines] = []
         self._fill_table()
@@ -393,7 +398,7 @@ class Table:
             modified_segments = self.tables_content[self.reference_text_lines]
 
         source_segments = map(str.strip, source_segments)
-        modified_segments = map(str.strip, modified_segments) 
+        modified_segments = map(str.strip, modified_segments)
         for index, (a,b) in enumerate(zip(source_segments, modified_segments)):
             insertions_or_deletions = self.get_insertion_and_deletions(a,b)[get_removals_percentaje]
             for c in insertions_or_deletions:
