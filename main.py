@@ -1008,7 +1008,7 @@ class MyWindow(Gtk.Window):
                                    self.post_editing_source_label,
                                    Gtk.PositionType.BOTTOM, 1, 10)
         self.post_editing_output = Gtk.Entry()
-        self.post_editing_output.set_text("")
+        self.post_editing_output.set_text(self.output_directory)
         self.postEditing_file_menu_grid.attach_next_to(self.post_editing_output,
                                    self.post_editing_source,
                                    Gtk.PositionType.BOTTOM, 1, 10)
