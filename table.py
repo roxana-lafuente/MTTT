@@ -43,7 +43,7 @@ except ImportError:
 
 
 class Table:
-    def __init__(self, table_type, source, reference, save_callback_function, save_function,  stats_callback_function, tab_grid):
+    def __init__(self, table_type, source, reference, save_callback_function, save_function,  stats_callback_function, tab_grid, output_directory):
         self.save_callback_function = save_callback_function
         self.stats_callback_function = stats_callback_function
         self.save_function = save_function
@@ -51,6 +51,7 @@ class Table:
         self.source = source
         self.reference = reference
         self.tab_grid = tab_grid
+        self.output_directory = output_directory
 
         self.saved_reference_filepath = ""
         self.last_segment_changed = -1
@@ -212,12 +213,12 @@ class Table:
     def _fill_table(self):
           last_modifications = self.get_latest_modifications()
 
-          saved_absolute_path = os.path.abspath("saved")
+          saved_absolute_path = self.output_directory
           filename = self.reference[self.reference.rfind('/'):]
           filename_without_extension = os.path.splitext(filename)[0]
           filename_extension = os.path.splitext(filename)[1]
 
-          self.saved_reference_filepath = os.path.abspath("saved") + filename
+          self.saved_reference_filepath = self.output_directory + filename
           #self.saved_source_filepath = os.path.abspath("saved") + filename_without_extension + "_modified" + filename_extension
 
           if self.table_type == "diff_table" or (self.table_type == "translation_table" and self.monolingual):
@@ -398,7 +399,6 @@ class Table:
             modified_segments = self.tables_content[self.reference_text_lines]
 
         source_segments = map(str.strip, source_segments)
-        modified_segments = map(str.strip, modified_segments)
         for index, (a,b) in enumerate(zip(source_segments, modified_segments)):
             insertions_or_deletions = self.get_insertion_and_deletions(a,b)[get_removals_percentaje]
             for c in insertions_or_deletions:
@@ -503,7 +503,7 @@ class Table:
 
     def load_source_log(self):
         jsonlog = {}
-        source_log_filepath = os.path.abspath('saved/source_log.json')
+        source_log_filepath = self.output_directory + '/source_log.json'
         try:
             with open(source_log_filepath) as json_data:
                 jsonlog = json.load(json_data)

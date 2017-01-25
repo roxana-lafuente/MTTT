@@ -83,7 +83,7 @@ import html_injector
 
 class PostEditing:
 
-    def __init__(self, post_editing_source, post_editing_reference, notebook, grid):
+    def __init__(self, post_editing_source, post_editing_reference, notebook, grid, output_directory):
         self.post_editing_source = post_editing_source
         self.post_editing_reference = post_editing_reference
         self.translation_tab_grid = grid
@@ -91,6 +91,7 @@ class PostEditing:
         self.modified_references =  []
         self.saved_modified_references = []
         self.toggle_the_visibility_of_statistics_menu = True
+        self.output_directory = output_directory
 
         self.tables = {}
         self.source_log = {}
@@ -100,23 +101,18 @@ class PostEditing:
         uri = urlparse.ParseResult('file', '', uri, '', '', '')
         uri = urlparse.urlunparse(uri)
         self.HTML_view.load_uri(uri)
-        self.saved_absolute_path = os.path.abspath("saved")
+        self.saved_absolute_path = os.path.abspath(output_directory)
         filename = post_editing_reference[post_editing_reference.rfind('/'):]
         filename_without_extension = os.path.splitext(filename)[0]
         filename_extension = os.path.splitext(filename)[1]
-        self.saved_origin_filepath = os.path.abspath("saved") + filename
+        self.saved_origin_filepath = os.path.abspath(output_directory) + filename
 
 
-        self.tables["translation_table"] =  Table("translation_table",self.post_editing_source,self.post_editing_reference, self.preparePostEditingAnalysis_event,self.preparePostEditingAnalysis, self.calculate_statistics_event, self.translation_tab_grid)
+        self.tables["translation_table"] =  Table("translation_table",self.post_editing_source,self.post_editing_reference, self.preparePostEditingAnalysis_event,self.preparePostEditingAnalysis, self.calculate_statistics_event, self.translation_tab_grid, self.output_directory)
 
         self.source_log_filepath = self.saved_absolute_path + '/source_log.json'
 
 
-        if os.path.exists(self.saved_absolute_path):
-            if os.path.exists(self.saved_absolute_path + "_but_to_be_deleted_soon"):
-                    shutil.rmtree(self.saved_absolute_path + "_but_to_be_deleted_soon", ignore_errors=True)
-            os.rename(self.saved_absolute_path,self.saved_absolute_path + "_but_to_be_deleted_soon")
-        os.makedirs(self.saved_absolute_path)
         shutil.rmtree("./statistics/generated", ignore_errors=True)
         os.makedirs(os.path.abspath("statistics/generated"))
 
@@ -299,6 +295,7 @@ class PostEditing:
         with open(self.source_log_filepath, 'w') as outfile:
             json.dump(self.source_log, outfile)
 
+
     def saveChangedFromPostEditing(self):
         self.last_change_timestamp = int(time.time() * 1000)
         #reconstruct all cells from the table of the target column
@@ -314,19 +311,15 @@ class PostEditing:
         self.diff_tab_grid = Gtk.Grid()
         self.diff_tab_grid.set_row_spacing(1)
         self.diff_tab_grid.set_column_spacing(20)
-        self.tables["diff_table"] = Table("diff_table",self.post_editing_source,self.post_editing_reference, self.preparePostEditingAnalysis_event,self.preparePostEditingAnalysis, self.calculate_statistics_event, self.diff_tab_grid)
+        self.tables["diff_table"] = Table("diff_table",self.post_editing_source,self.post_editing_reference, self.preparePostEditingAnalysis_event,self.preparePostEditingAnalysis, self.calculate_statistics_event, self.diff_tab_grid,self.output_directory)
         self.addDifferencesTab()
 
         self.tables["translation_table"].save_post_editing_changes_button.hide()
         self.show_the_available_stats()
+
 
     def preparePostEditingAnalysis_event(self, button):
         self.preparePostEditingAnalysis()
 
     def delete_generated_files(self):
         shutil.rmtree("./statistics/generated", ignore_errors=True)
-
-        if os.path.exists(self.saved_absolute_path):
-            if os.path.exists(self.saved_absolute_path + "_but_to_be_deleted_soon"):
-                    shutil.rmtree(self.saved_absolute_path + "_but_to_be_deleted_soon", ignore_errors=True)
-            os.rename(self.saved_absolute_path,self.saved_absolute_path + "_but_to_be_deleted_soon")

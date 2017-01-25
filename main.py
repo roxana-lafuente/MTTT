@@ -105,6 +105,7 @@ class MyWindow(Gtk.Window):
             exit(1)
         # Check Moses Config file.
         self.moses_dir = ""
+        self.output_directory = ""
         try:
             f = open(moses_dir_fn, 'r')
             self.moses_dir = f.read()
@@ -122,11 +123,6 @@ class MyWindow(Gtk.Window):
                 f = open(moses_dir_fn, 'w')
                 f.write(self.moses_dir)
                 f.close()
-
-        self.saved_absolute_path = os.path.abspath("saved")
-        self.saved_relative_filepath = "./saved"
-        if not os.path.exists(self.saved_absolute_path):
-            os.makedirs(self.saved_absolute_path)
 
         # Main title
         Gtk.Window.__init__(self, title="Translators' Training Tool")
@@ -365,13 +361,14 @@ class MyWindow(Gtk.Window):
         s_frame = Gtk.Frame(label="Settings")
         inside_grid = Gtk.Grid()
         inside_grid.add(Gtk.Label("Output directory"))
-        self.output_text = Gtk.Entry()
-        self.output_text.set_text("")
-        inside_grid.add(self.output_text)
+        self.language_model_directory_entry = Gtk.Entry()
+        self.language_model_directory_entry.set_text("")
+        inside_grid.add(self.language_model_directory_entry)
         self.s_button = Gtk.Button("Choose Directory")
         self.s_button.connect("clicked",
                               self._on_dir_clicked,
-                              self.output_text)
+                              self.language_model_directory_entry,
+                              "change output directory")
         inside_grid.add(self.s_button)
         inside_grid.set_row_spacing(10)
         inside_grid.set_column_spacing(10)
@@ -398,9 +395,9 @@ class MyWindow(Gtk.Window):
         """@brief     Determines if source and target language have been chosen."""
         return not self.source_lang is None and not self.target_lang is None
 
-    def _has_chosen_preprocess_params(self, output_directory):
+    def _has_chosen_preprocess_params(self, language_model_directory):
         """@brief     Determines if all data for preprocessing is ready"""
-        is_ready = is_valid_dir(output_directory) and self._has_chosen_lang()
+        is_ready = is_valid_dir(language_model_directory) and self._has_chosen_lang()
         is_ready = is_ready and is_valid_file(self.tt_train.get_text())
         is_ready = is_ready and is_valid_file(self.st_train.get_text())
         is_ready = is_ready and is_valid_file(self.lm_text.get_text())
@@ -409,11 +406,11 @@ class MyWindow(Gtk.Window):
     def _prepare_corpus(self, button):
         """@brief     Runs moses truecaser, tokenizer and cleaner."""
         output = ""
-        win_output_directory = self.output_text.get_text()
+        win_output_directory = self.language_model_directory_entry.get_text()
         if self._has_chosen_preprocess_params(win_output_directory):
-            output_directory = adapt_path_for_cygwin(self.is_windows,
+            language_model_directory = adapt_path_for_cygwin(self.is_windows,
                                                      win_output_directory)
-            # Change directory to the output_directory.
+            # Change directory to the language_model_directory.
             try:
                 os.chdir(win_output_directory)
             except:
@@ -424,20 +421,20 @@ class MyWindow(Gtk.Window):
             # 1) Tokenization
             # a) Target text
             self.target_tok = generate_input_tok_fn(self.target_lang,
-                                                    output_directory)
+                                                    language_model_directory)
             cmds.append(get_tokenize_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                              self.target_lang,
                                              adapt_path_for_cygwin(self.is_windows, self.tt_train.get_text()),
                                              self.target_tok))
             # b) Source text
             self.source_tok = generate_input_tok_fn(self.source_lang,
-                                                    output_directory)
+                                                    language_model_directory)
             cmds.append(get_tokenize_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                              self.source_lang,
                                              adapt_path_for_cygwin(self.is_windows, self.st_train.get_text()),
                                              self.source_tok))
             # c) Language model
-            self.lm_tok = generate_lm_tok_fn(output_directory)
+            self.lm_tok = generate_lm_tok_fn(language_model_directory)
             cmds.append(get_tokenize_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                              self.source_lang,
                                              adapt_path_for_cygwin(self.is_windows,self.lm_text.get_text()),
@@ -455,27 +452,27 @@ class MyWindow(Gtk.Window):
                                                     self.lm_tok))
 
             # 3) Truecaser
-            self.input_true = output_directory + "/input.true"
+            self.input_true = language_model_directory + "/input.true"
             # a) Target text
             self.target_true = generate_input_true_fn(self.target_lang,
-                                                      output_directory)
+                                                      language_model_directory)
             cmds.append(get_truecaser_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                               self.target_tok,
                                               self.target_true))
             # b) Source text
             self.source_true = generate_input_true_fn(self.source_lang,
-                                                      output_directory)
+                                                      language_model_directory)
             cmds.append(get_truecaser_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                               self.source_tok,
                                               self.source_true))
             # c) Language model
-            self.lm_true = generate_lm_true_fn(output_directory)
+            self.lm_true = generate_lm_true_fn(language_model_directory)
             cmds.append(get_truecaser_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
                                               self.target_tok, self.lm_true))
 
             # 4) Cleaner
             # a) Target text
-            self.input_clean = generate_input_clean_fn(output_directory)
+            self.input_clean = generate_input_clean_fn(language_model_directory)
             self.source_clean = self.input_true + "." + self.source_lang
             self.target_clean = self.input_true + "." + self.target_lang
             cmds.append(get_cleaner_command(adapt_path_for_cygwin(self.is_windows, self.moses_dir),
@@ -520,10 +517,9 @@ class MyWindow(Gtk.Window):
 
         if tab_name == "Machine translation":
             self.mt_out_text = os.path.dirname(dialog.get_filename())
-            print self.mt_out_text
         dialog.destroy()
 
-    def _on_dir_clicked(self, widget, labelToUpdate):
+    def _on_dir_clicked(self, widget, labelToUpdate, command = ""):
         """@brief     Get folder path from dialog."""
         dialog = Gtk.FileChooserDialog("Please choose a directory", None,
                                        Gtk.FileChooserAction.OPEN,
@@ -536,11 +532,20 @@ class MyWindow(Gtk.Window):
 
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
+            print "changing label to", dialog.get_filename()
             labelToUpdate.set_text(dialog.get_filename())
         elif response == Gtk.ResponseType.CANCEL:
             labelToUpdate.set_text("")
 
+        if "change output directory" in command:
+            self.output_directory = dialog.get_filename()
+            self.post_editing_output.set_text(self.output_directory)
+            self.evaluation_output.set_text(self.output_directory)
+
         dialog.destroy()
+        if command == "change output directory and maybe create post edition table":
+            self._check_if_both_files_are_choosen_post_edition(None, "")
+
 
     def _add_dir_filters(self, dialog):
         """@brief     Add folder filters for folder choosing."""
@@ -593,21 +598,21 @@ class MyWindow(Gtk.Window):
 
     def _train(self, button):
         """@brief     Runs MT and LM training."""
-        output_directory = adapt_path_for_cygwin(self.is_windows,
-                                                 self.output_text.get_text())
-        if is_valid_dir(output_directory) and self.is_corpus_preparation_ready:
-            os.chdir(self.output_text.get_text())
+        language_model_directory = adapt_path_for_cygwin(self.is_windows,
+                                                 self.language_model_directory_entry.get_text())
+        if is_valid_dir(language_model_directory) and self.is_corpus_preparation_ready:
+            os.chdir(self.language_model_directory_entry.get_text())
             cmds = []
             output = "Log:\n\n"
             # Train the language model.
-            self.lm_arpa = generate_lm_fn(output_directory)
+            self.lm_arpa = generate_lm_fn(language_model_directory)
             cmds.append(get_lmtrain_command(self.moses_dir,
                                             self.target_lang,
                                             self.lm_true,
                                             self.lm_arpa))
 
             # Binarize arpa
-            self.blm = generate_blm_fn(output_directory)
+            self.blm = generate_blm_fn(language_model_directory)
             cmds.append(get_blmtrain_command(self.moses_dir,
                                              self.target_lang,
                                              self.lm_arpa,
@@ -616,13 +621,13 @@ class MyWindow(Gtk.Window):
             self.trainingResultsTextBuffer.set_text(output)
 
             # Train the translation model.
-            out_file = generate_tm_fn(output_directory)
+            out_file = generate_tm_fn(language_model_directory)
             cmds.append(get_tmtrain_command(self.moses_dir,
                                             self.source_lang,
                                             self.target_lang,
                                             self.blm,
                                             self.input_clean,
-                                            output_directory))
+                                            language_model_directory))
 
             # TODO!
             # Binarize phase-table.gz
@@ -648,7 +653,7 @@ class MyWindow(Gtk.Window):
                     output += err
 
             # Adding output from training.out
-            training = adapt_path_for_cygwin(self.is_windows, self.output_text.get_text()) + "/training.out"
+            training = adapt_path_for_cygwin(self.is_windows, self.language_model_directory_entry.get_text()) + "/training.out"
             try:
                 with open(training, "r") as f:
                     output += "\n" + f.read()
@@ -688,7 +693,7 @@ class MyWindow(Gtk.Window):
         self.mt_out2_button = Gtk.Button("Choose a Model")
         self.mt_out2_button.connect("clicked",
                                    self._on_dir_clicked,
-                                   self.output_text)
+                                   self.language_model_directory_entry)
         inside_grid.attach_next_to(self.mt_out2_button,
                                    self.mt_in_button,
                                    Gtk.PositionType.RIGHT,
@@ -771,7 +776,7 @@ class MyWindow(Gtk.Window):
             output += "Running decoder....\n\n"
             # Run the decoder.
             cmd = get_test_command(self.moses_dir,
-                                   adapt_path_for_cygwin(self.is_windows, self.output_text.get_text()) + "/train/model/moses.ini",
+                                   adapt_path_for_cygwin(self.is_windows, self.language_model_directory_entry.get_text()) + "/train/model/moses.ini",
                                    in_file,
                                    out_file)
             # use Popen for non-blocking
@@ -831,7 +836,6 @@ class MyWindow(Gtk.Window):
         inside_grid.attach_next_to(self.tt_button,
                                    self.st_button,
                                    Gtk.PositionType.BOTTOM, 1, 10)
-        inside_grid.set_column_spacing(10)
 
         #  Evaluation Metrics: Output Text Picker
         ot_label = Gtk.Label("Output file")
@@ -843,11 +847,12 @@ class MyWindow(Gtk.Window):
         inside_grid.attach_next_to(self.evaluation_output,
                                    self.evaluation_reference,
                                    Gtk.PositionType.BOTTOM, 1, 10)
-        self.ot_button = Gtk.Button("Choose File")
-        self.ot_button.connect("clicked",
-                               self._on_file_clicked,
-                               self.evaluation_output)
-        inside_grid.attach_next_to(self.ot_button,
+        ot_button = Gtk.Button("Choose Directory")
+        ot_button.connect("clicked",
+                               self._on_dir_clicked,
+                               self.evaluation_output,
+                               "change output directory")
+        inside_grid.attach_next_to(ot_button,
                                    self.tt_button,
                                    Gtk.PositionType.BOTTOM, 1, 10)
         inside_grid.set_column_spacing(10)
@@ -997,6 +1002,25 @@ class MyWindow(Gtk.Window):
         self.post_editing_reference.connect("changed", self._check_if_both_files_are_choosen_post_edition, "reference")
         self.post_editing_source.connect("changed", self._check_if_both_files_are_choosen_post_edition, "source")
 
+        #  Post Editing: Output Text Picker
+        ot_label = Gtk.Label("Output file")
+        self.postEditing_file_menu_grid.attach_next_to(ot_label,
+                                   self.post_editing_source_label,
+                                   Gtk.PositionType.BOTTOM, 1, 10)
+        self.post_editing_output = Gtk.Entry()
+        self.post_editing_output.set_text("")
+        self.postEditing_file_menu_grid.attach_next_to(self.post_editing_output,
+                                   self.post_editing_source,
+                                   Gtk.PositionType.BOTTOM, 1, 10)
+        ot_button = Gtk.Button("Choose Directory")
+        ot_button.connect("clicked",
+                               self._on_dir_clicked,
+                               self.post_editing_output,
+                               "change output directory and maybe create post edition table")
+        self.postEditing_file_menu_grid.attach_next_to(ot_button,
+                                   self.post_editing_source_button,
+                                   Gtk.PositionType.BOTTOM, 1, 10)
+
 
         self.postEdition_grid.add(self.postEditing_file_menu_grid)
         self.preparation.pack_start(self.postEdition_grid, expand=True, fill=True, padding =0)
@@ -1020,17 +1044,21 @@ class MyWindow(Gtk.Window):
     def _check_if_both_files_are_choosen_post_edition(self, object, file_type=""):
         if file_type  == "source": self.post_editing_source_text = self.post_editing_source.get_text()
         if file_type  == "reference": self.post_editing_reference_text = self.post_editing_reference.get_text()
-        if (self.post_editing_source.get_text() != "" and self.post_editing_reference.get_text() != "") or not self.btn_check_bilingual.get_active():
-            post_editing_source_text = self.post_editing_source.get_text()
-            post_editing_reference_text = self.post_editing_reference.get_text()
-            self._set_post_editing()
-            self.notebook.set_current_page(4)
-            # binding of the buttons events to the PostEditing methods
-            self.PostEditing = PostEditing(
-                post_editing_source_text,  # so that it can read the source file
-                post_editing_reference_text,  # so that it can read the reference file
-                self.notebook,  # so that it can add the diff tab when needed
-                self.postEdition_grid)  # so that it can add search entry and table
+        if self.output_directory:
+            if ((self.post_editing_source.get_text()
+            and self.post_editing_reference.get_text())
+            or not self.btn_check_bilingual.get_active()):
+                post_editing_source_text = self.post_editing_source.get_text()
+                post_editing_reference_text = self.post_editing_reference.get_text()
+                self._set_post_editing()
+                self.notebook.set_current_page(4)
+                # binding of the buttons events to the PostEditing methods
+                self.PostEditing = PostEditing(
+                    post_editing_source_text,  # so that it can read the source file
+                    post_editing_reference_text,  # so that it can read the reference file
+                    self.notebook,  # so that it can add the diff tab when needed
+                    self.postEdition_grid, # so that it can add search entry and table
+                    self.output_directory) # so that it can save files on the output directory
 
     def gtk_change_visuals(self, light_option="unchanged", theme="unchanged"):
         if Gtk.MAJOR_VERSION >= 3 and Gtk.MINOR_VERSION >= 14:
