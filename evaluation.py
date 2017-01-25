@@ -84,7 +84,7 @@ cached_results = {}
 def evaluate(checkbox_indexes, test, reference):
     checkbox_indexes_constants = ["WER","PER","HTER", "GTM", "BLEU","BLEU2GRAM","BLEU3GRAM","BLEU4GRAM"]
     DIRECTORY = os.path.abspath("evaluation_scripts") + "/"
-    TER_DIRECTORY = DIRECTORY + "tercom-0.7.25/src/"
+    TER_DIRECTORY = DIRECTORY + "tercom-0.7.25/tercom.7.25.jar"
     GTM_DIRECTORY = DIRECTORY + "gtm-1.4/"
     EXEC_PERL = "perl "
     EXEC_JAVA = "java "
@@ -104,7 +104,7 @@ def evaluate(checkbox_indexes, test, reference):
                     cached_results[key] =  result
 
                 if checkbox_indexes_constants[checkbox_index] == "HTER":
-                    command_2 = EXEC_JAVA + "-cp " + TER_DIRECTORY + " TERtest " + " -r " + reference + " -h " + test
+                    command_2 = EXEC_JAVA + "-jar " + TER_DIRECTORY + " -r " + reference + " -h " + test
                     proc = subprocess.Popen(command_2, shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     result = "\n" + checkbox_indexes_constants[checkbox_index] + "....." + filter_output(proc,"TER")
                     return_results += result
