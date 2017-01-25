@@ -90,6 +90,7 @@ class PostEditing:
         self.notebook = notebook
         self.modified_references =  []
         self.saved_modified_references = []
+        self.toggle_the_visibility_of_statistics_menu = True
 
         self.tables = {}
         self.source_log = {}
@@ -203,7 +204,9 @@ class PostEditing:
     def calculate_statistics_event(self, button, statistics_name):
         #self.tables["translation_table"].statistics_button.hide()
         if statistics_name == "statistics_in_general":
-            self.show_the_available_stats(False)
+            self.toggle_the_visibility_of_statistics_menu = \
+                not self.toggle_the_visibility_of_statistics_menu
+            self.show_the_available_stats(self.toggle_the_visibility_of_statistics_menu)
         else:
             self.calculate_statistics(statistics_name)
             self.notebook.set_current_page(6)
@@ -241,20 +244,20 @@ class PostEditing:
             self.tables["translation_table"].deletions_statistics_button.hide()
             self.tables["translation_table"].time_statistics_button.hide()
             #self.tables["translation_table"].statistics_button.hide()
-    def show_the_available_stats(self, do_show_the_general_statistics_button_and_not_the_others = True):
+    def show_the_available_stats(self, toggle_the_visibility_of_statistics_menu = True):
         #if the json string is empty, then no calculations have been made
         #and so the buttons should not be shown
         insertions =  self.calculate_insertions_per_segment()[0]
         deletions = self.calculate_deletions_per_segment()[0]
         time = self.calculate_time_per_segment()[0]
-        if do_show_the_general_statistics_button_and_not_the_others:
+        if toggle_the_visibility_of_statistics_menu:
             self.tables["translation_table"].insertions_statistics_button.hide()
             self.tables["translation_table"].deletions_statistics_button.hide()
             self.tables["translation_table"].time_statistics_button.hide()
             if (insertions or deletions or time):
                 self.tables["translation_table"].statistics_button.show()
 
-        if not do_show_the_general_statistics_button_and_not_the_others:
+        if not toggle_the_visibility_of_statistics_menu:
             if insertions:self.tables["translation_table"].insertions_statistics_button.show()
             else: self.tables["translation_table"].insertions_statistics_button.hide()
             if deletions:self.tables["translation_table"].deletions_statistics_button.show()
