@@ -33,6 +33,8 @@ ENG = "en"
 FR = "fr"
 DE = "de"
 
+tutorialTips = ["The translated file is saved\n alongside the original one"]
+shown_tips = []
 
 def adapt_path_for_cygwin(is_windows, directory):
     """@brief     Adapts a linux path to a windows one."""

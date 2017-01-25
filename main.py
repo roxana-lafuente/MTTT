@@ -688,6 +688,21 @@ class MyWindow(Gtk.Window):
                                   "Machine translation")
         inside_grid.add(self.mt_in_button)
 
+        self.checkbox_tutorialTip1 = Gtk.CheckButton.new_with_label("see tip")
+        inside_grid.attach(self.checkbox_tutorialTip1, 0,1,1,1)
+        self.checkbox_tutorialTip1.set_active(False)
+        def showTip(tipLabel, tip_index):
+            print tutorialTips[tip_index]
+            if tip_index not in shown_tips:
+                shown_tips.append(tip_index)
+                tipLabel.set_text(tutorialTips[tip_index])
+                tipLabel.show()
+            else: shown_tips.remove(tip_index);tipLabel.hide()
+
+        tipLabel = Gtk.Label("")
+        inside_grid.attach(tipLabel, 1,1,1,1)
+        self.checkbox_tutorialTip1.connect("clicked", lambda button:showTip(tipLabel,0))
+
         self.mt_out_text = ""
 
         self.mt_out2_button = Gtk.Button("Choose a Model")
