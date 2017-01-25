@@ -6,7 +6,7 @@
 GtkButton {
     /*border: 2px solid #7b8ba5;*/
     /*font-weight: bold;*/
-    color: green;
+    color: #2f344f;
     /*border: 0px solid;*/
 }
 
@@ -18,9 +18,9 @@ GtkFrame {
 }
 
 #GtkGrid {
-    border: #F00;
+/*    border: #F00;
     background-color: #F00;
-    color: #F00;
+    color: #F00;*/
 }
 
 /*GtkNotebook tab {
