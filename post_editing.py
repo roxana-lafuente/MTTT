@@ -107,7 +107,7 @@ class PostEditing:
         self.saved_origin_filepath = os.path.abspath("saved") + filename
 
 
-        self.tables["translation_table"] =  Table("translation_table",self.post_editing_source,self.post_editing_reference, self.saveChangedFromPostEditing_event,self.saveChangedFromPostEditing, self.calculate_statistics_event, self.translation_tab_grid)
+        self.tables["translation_table"] =  Table("translation_table",self.post_editing_source,self.post_editing_reference, self.preparePostEditingAnalysis_event,self.preparePostEditingAnalysis, self.calculate_statistics_event, self.translation_tab_grid)
 
         self.source_log_filepath = self.saved_absolute_path + '/source_log.json'
 
@@ -299,7 +299,6 @@ class PostEditing:
         with open(self.source_log_filepath, 'w') as outfile:
             json.dump(self.source_log, outfile)
 
-
     def saveChangedFromPostEditing(self):
         self.last_change_timestamp = int(time.time() * 1000)
         #reconstruct all cells from the table of the target column
@@ -308,24 +307,21 @@ class PostEditing:
                 self.modified_references.append(self.tables["translation_table"].translation_reference_text_TextViews_modified_flag[index])
             else:
                 self.modified_references.append(self.tables["translation_table"].tables_content[1][index])
-
         self.save_not_using_git()
-        string = self.post_editing_reference
-
+        self.save_using_log()
+    def preparePostEditingAnalysis(self):
+        self.saveChangedFromPostEditing()
         self.diff_tab_grid = Gtk.Grid()
         self.diff_tab_grid.set_row_spacing(1)
         self.diff_tab_grid.set_column_spacing(20)
-
-        self.save_using_log()
-        self.tables["diff_table"] = Table("diff_table",self.post_editing_source,self.post_editing_reference, self.saveChangedFromPostEditing_event,self.saveChangedFromPostEditing, self.calculate_statistics_event, self.diff_tab_grid)
+        self.tables["diff_table"] = Table("diff_table",self.post_editing_source,self.post_editing_reference, self.preparePostEditingAnalysis_event,self.preparePostEditingAnalysis, self.calculate_statistics_event, self.diff_tab_grid)
         self.addDifferencesTab()
 
         self.tables["translation_table"].save_post_editing_changes_button.hide()
         self.show_the_available_stats()
 
-
-    def saveChangedFromPostEditing_event(self, button):
-        self.saveChangedFromPostEditing()
+    def preparePostEditingAnalysis_event(self, button):
+        self.preparePostEditingAnalysis()
 
     def delete_generated_files(self):
         shutil.rmtree("./statistics/generated", ignore_errors=True)
