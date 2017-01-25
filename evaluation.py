@@ -47,10 +47,9 @@ def filterTER (lines):
     warning = False
     lines = lines.splitlines()
     for line in lines:
-        print line
         if "Total TER:" in line:
-            result += line
-        if "Warning" in line:
+            result += line.replace("Total TER:","")
+        if "Warning, Invalid line:" in line:
             warning = True
     if warning:
         result += " There are lines unchanged from source to reference. HTER cannot work in those cases."
@@ -65,7 +64,6 @@ def filterBLEU (line, BLEU_type):
     return line
 
 def filterGTM (line):
-    print line
     if "You should not be comparing equal runs" in line:
         line = "There are lines unchanged from source to reference. GTM cannot work in those cases.\n"
     return line
@@ -124,7 +122,7 @@ def evaluate(checkbox_indexes, test, reference):
                     cached_results[key] =  result
 
                 if "BLEU" in checkbox_indexes_constants[checkbox_index] and BLEU_cached_results == "":
-                    command = EXEC_PERL + DIRECTORY + "BLEU.pl " + test +" < " + reference
+                    command = EXEC_PERL + DIRECTORY + "BLEU.pl " + reference +" < " + test
                     proc = subprocess.Popen(command, shell=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     while True:
                       line = proc.stdout.readline()
