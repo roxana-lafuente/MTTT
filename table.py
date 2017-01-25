@@ -362,13 +362,22 @@ class Table:
         row_index + 1,
         row_index + 2)
 
-    def get_insertion_and_deletions(self, original, modified):
+    def get_insertion_and_deletions_and_replaced(self, original, modified):
         s = difflib.SequenceMatcher(None, original, modified)
         insertions = []
         deletions = []
         for tag, i1, i2, j1, j2 in s.get_opcodes():
             if tag == "insert" or tag == "replace":insertions.append((j1,j2))
             if tag == "delete"or tag == "replace": deletions.append((i1,i2))
+        return (insertions,deletions)
+
+    def get_insertion_and_deletions(self, original, modified):
+        s = difflib.SequenceMatcher(None, original, modified)
+        insertions = []
+        deletions = []
+        for tag, i1, i2, j1, j2 in s.get_opcodes():
+            if tag == "insert":insertions.append((j1,j2))
+            if tag == "delete": deletions.append((i1,i2))
         return (insertions,deletions)
 
 
@@ -383,6 +392,8 @@ class Table:
             source_segments = self.tables_content[self.unedited_reference_text_lines]
             modified_segments = self.tables_content[self.reference_text_lines]
 
+        source_segments = map(str.strip, source_segments)
+        modified_segments = map(str.strip, modified_segments) 
         for index, (a,b) in enumerate(zip(source_segments, modified_segments)):
             insertions_or_deletions = self.get_insertion_and_deletions(a,b)[get_removals_percentaje]
             for c in insertions_or_deletions:
@@ -434,7 +445,7 @@ class Table:
                     original = self.tables_content[self.source_text_lines][index]
                     #modified = self.tables_content[self.reference_text_lines][index]
                     modified = last_modifications[str(index)]
-                    insertions,deletions = self.get_insertion_and_deletions(original,modified)
+                    insertions,deletions = self.get_insertion_and_deletions_and_replaced(original,modified)
                     array_to_work_with = []
                     if color == "green": array_to_work_with = insertions
                     if color == "red": array_to_work_with = deletions
