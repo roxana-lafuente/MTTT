@@ -766,6 +766,8 @@ class MyWindow(Gtk.Window):
         in_file = self.mt_in_text.get_text()
         if not self._is_file_not_empty(in_file) or not os.path.exists(in_file):
             output = "ERROR: %s should be a valid file." % in_file
+        elif self._has_empty_last_line(in_file):
+            output = "ERROR: %s lacks an empty line at the end of the file." % in_file
         else:
             base = os.path.basename(in_file)
             out_file = os.path.dirname(in_file) + os.path.splitext(base)[0] + "_translated" + os.path.splitext(base)[1]
