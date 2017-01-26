@@ -229,26 +229,24 @@ class Table:
                       for line in fp:
                           #line = unicode(line, 'iso8859-15')
                           if line != '\n':
-                             self.tables_content[self.source_text_lines].append(line)
+                             self.tables_content[self.source_text_lines].append(line.strip())
                   for index, line in enumerate(self.tables_content[self.source_text_lines]):
                       if str(index) in last_modifications:
                           self.tables_content[self.reference_text_lines].append(last_modifications[str(index)])
                       else:
-                          self.tables_content[self.reference_text_lines].append(line)
+                          self.tables_content[self.reference_text_lines].append(line.strip())
           else:
               print self.reference
               print self.source
               if self.source != "" and self.reference != "":
                   with open(self.source) as fp:
                       for line in fp:
-                          #line = unicode(line, 'iso8859-15')
                           if line != '\n':
-                             self.tables_content[self.source_text_lines].append(line)
+                             self.tables_content[self.source_text_lines].append(line.strip())
                   with open(self.reference) as fp:
                       for line in fp:
-                          #line = unicode(line, 'iso8859-15')
                           if line != '\n':
-                             self.tables_content[self.unedited_reference_text_lines].append(line)
+                             self.tables_content[self.unedited_reference_text_lines].append(line.strip())
                   for index, line in enumerate(self.tables_content[self.unedited_reference_text_lines]):
                       if str(index) in last_modifications:
                           self.tables_content[self.reference_text_lines].append(last_modifications[str(index)])
