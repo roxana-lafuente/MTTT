@@ -945,7 +945,9 @@ class MyWindow(Gtk.Window):
             result = evaluate(checkbox_indexes,
                               self.evaluation_source.get_text(),
                               self.evaluation_reference.get_text())
-            f = open(self.evaluation_output.get_text(), 'w')
+            evaluation_output_filename = self.evaluation_output.get_text()+"/evaluation_output.txt"
+            print evaluation_output_filename
+            f = open(evaluation_output_filename, 'w')
             f.write(result)
             f.close()
             self.resultsTextBuffer.set_text(result)
