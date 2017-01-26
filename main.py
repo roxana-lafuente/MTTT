@@ -766,7 +766,7 @@ class MyWindow(Gtk.Window):
         in_file = self.mt_in_text.get_text()
         if not self._is_file_not_empty(in_file) or not os.path.exists(in_file):
             output = "ERROR: %s should be a valid file." % in_file
-        elif self._has_empty_last_line(in_file):
+        elif not self._has_empty_last_line(in_file):
             output = "ERROR: %s lacks an empty line at the end of the file." % in_file
         else:
             base = os.path.basename(in_file)
@@ -775,28 +775,31 @@ class MyWindow(Gtk.Window):
             in_file = adapt_path_for_cygwin(self.is_windows, in_file)
             out_file = adapt_path_for_cygwin(self.is_windows, out_file)
             output += "Running decoder....\n\n"
-            # Run the decoder.
-            cmd = get_test_command(self.moses_dir,
-                                   adapt_path_for_cygwin(self.is_windows, self.language_model_directory_entry.get_text()) + "/train/model/moses.ini",
-                                   in_file,
-                                   out_file)
-            # use Popen for non-blocking
-            proc = subprocess.Popen([cmd],
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    shell=True)
-            (out, err) = proc.communicate()
-            f = open(out_file, 'r')
-            mt_result = f.read()
-            if mt_result == "":
-                if out != "":
-                    output += out
-                elif err != "":
-                    output += err
+            lmdir = self.language_model_directory_entry.get_text()
+            if os.path.exists(lmdir):
+                # Run the decoder.
+                cmd = get_test_command(self.moses_dir,
+                                       adapt_path_for_cygwin(self.is_windows, lmdir) + "/train/model/moses.ini",
+                                       in_file,
+                                       out_file)
+                # use Popen for non-blocking
+                proc = subprocess.Popen([cmd],
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE,
+                                        shell=True)
+                (out, err) = proc.communicate()
+                f = open(out_file, 'r')
+                mt_result = f.read()
+                if mt_result == "":
+                    if out != "":
+                        output += out
+                    elif err != "":
+                        output += err
+                else:
+                    output += "Best translation: " + mt_result
+                f.close()
             else:
-                output += "Best translation: " + mt_result
-
-            f.close()
+                output += "ERROR. You need to load or create a model first."
 
         # Set output to the output label.
         self.mttrainingResultsTextBuffer.set_text(output)
