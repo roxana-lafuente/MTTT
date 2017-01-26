@@ -397,6 +397,7 @@ class Table:
             modified_segments = self.tables_content[self.reference_text_lines]
 
         for index, (a,b) in enumerate(zip(source_segments, modified_segments)):
+            if get_removals_percentaje: b = b + " " #so that empty segments are not ignored
             insertions_or_deletions = self.get_insertion_and_deletions(a,b)[get_removals_percentaje]
             for c in insertions_or_deletions:
                 if index not in insertions_or_deletions_per_segment:
