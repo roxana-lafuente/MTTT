@@ -838,7 +838,7 @@ class MyWindow(Gtk.Window):
                                    Gtk.PositionType.BOTTOM, 1, 10)
 
         #  Evaluation Metrics: Output Text Picker
-        ot_label = Gtk.Label("Output file")
+        ot_label = Gtk.Label("Output Directory")
         inside_grid.attach_next_to(ot_label,
                                    tt_label,
                                    Gtk.PositionType.BOTTOM, 1, 10)
@@ -956,7 +956,7 @@ class MyWindow(Gtk.Window):
             if not os.path.exists(self.evaluation_reference.get_text()):
                 self.resultsTextBuffer.set_text("ERROR. The evaluation reference file does not exist.")
             if not os.path.exists(self.evaluation_output.get_text()):
-                self.resultsTextBuffer.set_text("ERROR. The evaluation output file does not exist.")
+                self.resultsTextBuffer.set_text("ERROR. The evaluation output directory is not choosen.")
 
     def init_persistent_post_editing_state(self):
         self.post_editing_source_text = ""
@@ -1003,7 +1003,7 @@ class MyWindow(Gtk.Window):
         self.post_editing_source.connect("changed", self._check_if_both_files_are_choosen_post_edition, "source")
 
         #  Post Editing: Output Text Picker
-        ot_label = Gtk.Label("Output file")
+        ot_label = Gtk.Label("Output Directory")
         self.postEditing_file_menu_grid.attach_next_to(ot_label,
                                    self.post_editing_source_label,
                                    Gtk.PositionType.BOTTOM, 1, 10)
