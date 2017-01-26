@@ -532,7 +532,6 @@ class MyWindow(Gtk.Window):
 
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
-            print "changing label to", dialog.get_filename()
             labelToUpdate.set_text(dialog.get_filename())
         elif response == Gtk.ResponseType.CANCEL:
             labelToUpdate.set_text("")
