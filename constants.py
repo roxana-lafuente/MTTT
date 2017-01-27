@@ -55,6 +55,7 @@ def is_valid_dir(directory):
     """
     is_valid = directory is not None and directory != ""
     is_valid = is_valid and os.path.exists(directory)
+    is_valid = is_valid and os.path.isdir(directory)
     return is_valid
 
 def is_valid_file(filepath):
@@ -65,6 +66,7 @@ def is_valid_file(filepath):
     """
     is_valid = filepath is not None and filepath != ""
     is_valid = is_valid and os.path.exists(filepath)
+    is_valid = is_valid and os.path.isfile(filepath)
     return is_valid
 
 # Languages we show in the GUI to work with Moses.

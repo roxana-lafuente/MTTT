@@ -746,10 +746,6 @@ class MyWindow(Gtk.Window):
     def _create_model(self, a, b):
         self.notebook.set_current_page(0)
 
-    def _is_file_not_empty(self, fn):
-        """@brief     Determines if the given file is empty."""
-        return fn is not None and fn != ""
-
     def _has_empty_last_line(self, fn):
         """@brief     Determines if last line of file is empty."""
         last_line_is_empty = False
@@ -764,7 +760,7 @@ class MyWindow(Gtk.Window):
         """@brief     Runs the decoder."""
         output = ""
         in_file = self.mt_in_text.get_text()
-        if not self._is_file_not_empty(in_file) or not os.path.exists(in_file):
+        if not is_valid_file(in_file):
             output = "ERROR: %s should be a valid file." % in_file
         elif not self._has_empty_last_line(in_file):
             output = "ERROR: %s lacks an empty line at the end of the file." % in_file
@@ -776,7 +772,7 @@ class MyWindow(Gtk.Window):
             out_file = adapt_path_for_cygwin(self.is_windows, out_file)
             output += "Running decoder....\n\n"
             lmdir = self.language_model_directory_entry.get_text()
-            if os.path.exists(lmdir):
+            if is_valid_dir(lmdir):
                 # Run the decoder.
                 cmd = get_test_command(self.moses_dir,
                                        adapt_path_for_cygwin(self.is_windows, lmdir) + "/train/model/moses.ini",
@@ -923,9 +919,9 @@ class MyWindow(Gtk.Window):
         fields_filled = (self.evaluation_source.get_text()
                 and self.evaluation_reference.get_text()
                 and self.evaluation_output.get_text())
-        files_exists = (os.path.exists(self.evaluation_source.get_text())
-                and os.path.exists(self.evaluation_reference.get_text())
-                and os.path.exists(self.evaluation_output.get_text()))
+        files_exists = (is_valid_file(self.evaluation_source.get_text())
+                and is_valid_file(self.evaluation_reference.get_text())
+                and is_valid_dir(self.evaluation_output.get_text()))
         if fields_filled and files_exists:
             # checkbox_indexes["WER","PER","HTER", "GTM", "BLEU","BLEU2GRAM","BLEU3GRAM"]
             checkbox_indexes = [False] * 8
@@ -957,11 +953,11 @@ class MyWindow(Gtk.Window):
         if not fields_filled:
             self.resultsTextBuffer.set_text("ERROR. You need to complete all fields.")
         if not files_exists:
-            if not os.path.exists(self.evaluation_source.get_text()):
+            if not is_valid_file(self.evaluation_source.get_text()):
                 self.resultsTextBuffer.set_text("ERROR. The evaluation source file does not exist.")
-            if not os.path.exists(self.evaluation_reference.get_text()):
+            if not is_valid_file(self.evaluation_reference.get_text()):
                 self.resultsTextBuffer.set_text("ERROR. The evaluation reference file does not exist.")
-            if not os.path.exists(self.evaluation_output.get_text()):
+            if not is_valid_dir(self.evaluation_output.get_text()):
                 self.resultsTextBuffer.set_text("ERROR. The evaluation output directory is not choosen.")
 
     def init_persistent_post_editing_state(self):
