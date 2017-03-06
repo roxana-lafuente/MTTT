@@ -1,9 +1,8 @@
-# TTT: Translators' Training Tool
-
+# MTTT: Machine Translation Training Tool
 
 
 ## Machine translation made easy for human translators!
-TTT is an under development post-editing suite which aims to improve the translators experience with machine translation tools such as moses. It provides the user with a graphical user interface to:
+MTTT is an under development post-editing suite which aims to improve the translators experience with machine translation tools such as moses. It provides the user with a graphical user interface to:
 
 - Work with the moses machine translation pipeline.
 - Apply evaluation metrics such as BLEU.
