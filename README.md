@@ -1,4 +1,4 @@
-# MTTT: Machine Translation Training Tool
+# Machine Translation Training Tool (MTTT) -- Gtk-based version
 
 
 ## Machine translation made easy for human translators!
@@ -110,3 +110,7 @@ More details on this soon!
 - Miguel Lemos <miguelemosreverte at gmail dot com>
 
 We welcome new contributions! If you would like to be part of the team, create a new pull request and contact Paula or Roxana to let us know. If it is merged into the project you will be added as a contributor.
+
+Please, check out our other contributions:
+- MTTT PyQt-based version: https://github.com/PaulaEstrella/TTT_PyQT
+- MTTT Web-based version POC: https://github.com/miguelemosreverte/TTT_web

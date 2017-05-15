@@ -155,8 +155,8 @@ class MyWindow(Gtk.Window):
         # Evaluation tab
         self._set_evaluation()
         # Post Editing tab
-        self.init_persistent_post_editing_state()
-        self._set_post_editing()
+        # self.init_persistent_post_editing_state()
+        # self._set_post_editing()
         # Init
         self.source_lang = None
         self.target_lang = None
